@@ -12,8 +12,8 @@ import scipy.optimize as optimize
 import matplotlib.pyplot as plt
 
 class ModeAnalysis():
-    def __init__(self, shells=4, Vtrap = [0.0,-200.0,-400.0], Ctrap = 1.0, 
-                 fz=1000, B=4.4609, frot=60, Vwall=1, wall_order=2, mult=1e14):
+    def __init__(self, shells=4, Vtrap = [0.0,-1750.0,-2000.0], Ctrap = 1.0, 
+                 fz=1000, B=4.4588, frot=60, Vwall=1, wall_order=2, mult=1e14):
         self.quiet = False        
         self.Evects = 0 #Eigen vectors
         self.Evals = 0 #Eigen frequencies
@@ -62,10 +62,10 @@ class ModeAnalysis():
             print("Warning: Rotation frequency below magnetron frequency of {0.1f}".format(self.wmag))
         self.u0[:] = self.find_scaled_lattice_guess(mins, res)
         #self.show_crystal(self.u0)
-        print("Calculating Equilibrium Positions")
+        print "Calculating Equilibrium Positions"
         self.u = self.find_eq_pos(self.u0)
         #self.show_crystal(self.u)
-        print("Calculate transverse axial modes")
+        print "Calculate transverse axial modes"
         self.Evals,self.Evects = self.calc_axial_modes(self.u)
         
         #sort arrays
@@ -116,7 +116,7 @@ class ModeAnalysis():
         return uthen
             
     def generate_2D_hex_lattice(self, shells = 1, scale = 1):
-        posvect =  np.array([0.0, 0.0]) #always a point [0,0]
+        posvect =  np.array([0.0,0.0])#always a point [0,0]
         
         for s in range(1,self.shells+1):
             posvect = np.append(posvect, self.add_hex_shell(s))
@@ -126,22 +126,22 @@ class ModeAnalysis():
         return np.reshape(posvect,2*self.Nion)
     
     def add_hex_shell(self, s):
-        a = np.arange(s, -s-1, -1)
-        a = np.append(a, -s * np.ones(s-1))
-        a = np.append(a, np.arange(-s, s+1))
-        a = np.append(a, s *np.ones(s-1))
+        a = range(s,-s-1,-1)
+        a.extend(-s*np.ones(s-1))
+        a.extend(range(-s,s+1))
+        a.extend(s*np.ones(s-1))
     
-        b = np.arange(0, s+1)
-        b = np.append(b, s * np.ones(s-1))
-        b = np.append(b, np.arange(s, -s-1, -1))
-        b = np.append(b, -s * np.ones(s-1))
-        b = np.append(b, np.arange(-s, 0))
+        b = range(0,s+1)
+        b.extend(s*np.ones(s-1))
+        b.extend(range(s,-s-1,-1))
+        b.extend(-s*np.ones(s-1))
+        b.extend(range(-s,0))
         
         x = np.sqrt(3)/2.0 * np.array(b)
         y = 0.5 * np.array(b) + np.array(a)
         
         pair = np.column_stack((x,y)).flatten()
-        return (x,y) #pair
+        return pair
     
     def pot_energy(self, pos_array):
         w = self.wrot
@@ -331,7 +331,7 @@ class ModeAnalysis():
         plt.xlabel('x position [um]')
         plt.ylabel('y position [um]')
         plt.axes().set_aspect('equal')
-        plt.axis([-200,200,-200,200])     
+        plt.axis([-300,300,-300,300])     
         
         plt.show()
         
@@ -339,16 +339,27 @@ class ModeAnalysis():
         plt.figure(1)
         
         for i in range(modes):
-            plt.subplot(1,modes,i+1,aspect='equal')
-            plt.scatter(1e6*pos_vect[0:self.Nion],1e6*pos_vect[self.Nion:],c=Evects[:,i], vmin=-.25, vmax=0.25)
-            #ax.set_aspect('equal')
+            plt.subplot(modes,1,i+1,aspect='equal')
+            plt.scatter(1e6*pos_vect[0:self.Nion],1e6*pos_vect[self.Nion:],c=Evects[:,i], vmin=-.25, vmax=0.25, cmap='RdGy')
             plt.xlabel('x position [um]')
             plt.ylabel('y position [um]')
-            plt.axis([-200,200,-200,200])
-            #plt.axes().set_aspect('equal')
-            
+            plt.axis([-200,200,-200,200])            
         plt.tight_layout()
+    
+    def get_low_freq_mode(self):
+        num_modes = np.size(self.Evals)
+        low_mode_freq = self.Evals[-1]
+        low_mode_vect = self.Evects[-1]
         
+        plt.scatter(1e6*self.u[0:self.Nion],1e6*self.u[self.Nion:],
+                    c=low_mode_vect, vmin=-.25, vmax=0.25, cmap='RdGy')
+        plt.axes().set_aspect('equal')
+        plt.xlabel('x position [um]', fontsize=12)
+        plt.ylabel('y position [um]', fontsize=12)
+        plt.axis([-300,300,-300,300])
+        print(num_modes)
+        print("Lowest frequency mode at {0:0.1f} kHz".format(float(np.real(low_mode_freq))))
+        return 0
         
     
     def save_positions(self, u):
@@ -358,13 +369,13 @@ class ModeAnalysis():
         return np.sqrt(2/(np.sqrt(3)*offset*np.sqrt(1-(r*curvature)**(2))))
                 
 if __name__ == "__main__":
-    a = ModeAnalysis(shells=7 ,Vtrap=[-0.0,-495.0,-596.0], Ctrap = 1.0, frot=58.0, Vwall= 0.10, wall_order=2)
+    a = ModeAnalysis(shells=9 ,Vtrap=[-0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=177.0, Vwall= 0.10, wall_order=2)
     a.run_quiet()
     Evals = a.Evals
     Evect = a.Evects
 #    plt.close()
 #    plt.plot((Evals,Evals),(np.ones(np.size(Evals)),np.zeros(np.size(Evals))),linestyle="-",color='black')
-#    plt.axis([800,900,0,1.1])
+#    plt.axis([800,1.550,0,1.1])
 #    plt.ylabel('arb')
 #    plt.xlabel('Mode Frequency [kHz]')
 #    a.show_crystal_modes(a.u, a.Evects, 3)
@@ -403,14 +414,8 @@ if __name__ == "__main__":
     plt.ylim(0,2)
     print(popt)
 
-    #
-    ma = ModeAnalysis()
-    (x,y) = ma.add_hex_shell(3)
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.set_xlabel("xlabel")
-    ax.plot(x,y,"o")
-    fig.show()
+
+
 
 
 
