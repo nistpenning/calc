@@ -62,10 +62,10 @@ class ModeAnalysis():
             print("Warning: Rotation frequency below magnetron frequency of {0.1f}".format(self.wmag))
         self.u0[:] = self.find_scaled_lattice_guess(mins, res)
         #self.show_crystal(self.u0)
-        print "Calculating Equilibrium Positions"
+        print("Calculating Equilibrium Positions")
         self.u = self.find_eq_pos(self.u0)
         #self.show_crystal(self.u)
-        print "Calculate transverse axial modes"
+        print("Calculate transverse axial modes")
         self.Evals,self.Evects = self.calc_axial_modes(self.u)
         
         #sort arrays
@@ -116,7 +116,7 @@ class ModeAnalysis():
         return uthen
             
     def generate_2D_hex_lattice(self, shells = 1, scale = 1):
-        posvect =  np.array([0.0,0.0])#always a point [0,0]
+        posvect =  np.array([0.0, 0.0]) #always a point [0,0]
         
         for s in range(1,self.shells+1):
             posvect = np.append(posvect, self.add_hex_shell(s))
@@ -126,22 +126,22 @@ class ModeAnalysis():
         return np.reshape(posvect,2*self.Nion)
     
     def add_hex_shell(self, s):
-        a = range(s,-s-1,-1)
-        a.extend(-s*np.ones(s-1))
-        a.extend(range(-s,s+1))
-        a.extend(s*np.ones(s-1))
+        a = np.arange(s, -s-1, -1)
+        a = np.append(a, -s * np.ones(s-1))
+        a = np.append(a, np.arange(-s, s+1))
+        a = np.append(a, s *np.ones(s-1))
     
-        b = range(0,s+1)
-        b.extend(s*np.ones(s-1))
-        b.extend(range(s,-s-1,-1))
-        b.extend(-s*np.ones(s-1))
-        b.extend(range(-s,0))
+        b = np.arange(0, s+1)
+        b = np.append(b, s * np.ones(s-1))
+        b = np.append(b, np.arange(s, -s-1, -1))
+        b = np.append(b, -s * np.ones(s-1))
+        b = np.append(b, np.arange(-s, 0))
         
         x = np.sqrt(3)/2.0 * np.array(b)
         y = 0.5 * np.array(b) + np.array(a)
         
         pair = np.column_stack((x,y)).flatten()
-        return pair
+        return (x,y) #pair
     
     def pot_energy(self, pos_array):
         w = self.wrot
@@ -403,8 +403,14 @@ if __name__ == "__main__":
     plt.ylim(0,2)
     print(popt)
 
-
-
+    #
+    ma = ModeAnalysis()
+    (x,y) = ma.add_hex_shell(3)
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_xlabel("xlabel")
+    ax.plot(x,y,"o")
+    fig.show()
 
 
 
