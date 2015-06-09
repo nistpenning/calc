@@ -1,0 +1,173 @@
+\documentclass[11pt, oneside,reqno]{amsart}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+											
+\setcounter{secnumdepth}{-2}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{braket}
+%\usepackage{mathtools}
+
+\newcommand{\gausslaw}{ \oint \vec{E} \cdotp d\vec{A} = \frac{Q_{encl}}{\epsilon_0}}
+\newcommand{\eqn}[1]{\begin{equation}#1 \end{equation}}
+\renewcommand{\vec}[1]{\textbf{#1}}
+\renewcommand{\bold}[1]{\textbf{#1}}
+\newcommand{\tperp}{$T_{\perp}$}
+
+\title{ Scattering Rate, Energy Balance, and Torque \\ June 9$^{th}$ 2015}
+\author{Steven Torrisi }
+
+\begin{document}
+\maketitle
+\emph{Described below is a derivation of expressions used in the Wayne Itano code for predicting the steady-state equilibrium temperature, net torque, and total scattering events of a doppler cooling laser incident on an ion plasma in a penning trap.}
+%
+%\emph{Note: We will indicate whenever constant coefficients unimportant to the integration are dropped or other substitutions are made.} \\
+%
+%\textbf{Functions:}
+%
+%Intensity: $ I(y)= I_0 e^{-(y-d)^2 /\omega_y^2} $ 
+%
+%Density: $ \rho (x,y)= \Sigma_0 \sqrt{1- \frac{x^2+y^2}{R^2}}$ , if  $ x^2+y^y \leq R^2;   0$  otherwise.
+%
+%Scattering Energy: $ E(v_x, y) = \hbar k (v_x - \omega_r y) + 2R $
+%
+%Scattering Rate: $ \gamma_L= \frac{I \sigma_0}{\hbar \omega_L} \frac{ \gamma_0^2 /4}{\gamma_0^2 /4 + \Delta^2}$
+%
+%\textbf{Useful Constants}
+%
+%$vk = \frac{\gamma_0}{2 k}$ 
+%
+%To be completed later...
+
+\section{Total Scattering Rate}
+
+In order to calculate the total scattering rate, we begin with the expression for the scattering rate from Itano 1988:
+\eqn{\gamma_L = \frac{I \sigma_0}{\hbar \omega_L} \frac{\gamma_0^2/4}{(\gamma/2)^2 + \Delta^2}}
+
+Where I is the laser intensity function, $\sigma_0$ is the cross-section/probability of interaction, $\omega_L$ is the laser frequency, $\gamma_0$ is the transition line width, and $\Delta$ is the laser detuning.
+
+This scattering rate thus depends on two \emph{functions}; intensity $I$, and $\gamma$ modified for saturation effects.
+
+The intensity is the beam profile, which we write here as 
+\eqn{ I= I_0 \exp[ -2(y-d)^2/\omega_y^2]}
+assuming a Gaussian beam profile with offset d and beam width $\omega_y$. If we are dealing with a 2-dimensional ion crystal, we neglect the z-dependence of the laser beam intensity.
+
+The saturation-adjusted $\gamma$ is written more simply in the $\gamma^2$ form as  \eqn{ \gamma^2 = \gamma_0^2 (1+2S)}
+where S is a saturation parameter defined as
+\eqn{S= \frac{S_0}{I_0} I = \frac{I_0 \sigma_0}{\hbar \omega_0 \gamma_0}  \exp[ -2(y-d)^2/\omega_y^2]}
+noting \eqn{S_0 =  \frac{I_0 \sigma_0}{\hbar \omega_0 \gamma_0} }
+After some simplification we can write the scattering rate $\gamma_L$ as
+
+\eqn{ \frac{\gamma_0 S_0 \exp [ -2 (y-d)^2/\omega_y^2] }{\left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2 \Delta^2 \right]}}
+
+Now, we can weight this total scattering rate $\gamma_L$ over the entire cloud by multiplying it by density,
+ \eqn{ \text{ If $x^2+y^2 \leq R_p^2$, then } n(x,y) = \Sigma_0 \sqrt{1-\frac{x^2+y^2}{R_p^2}} }
+\eqn{ \text{else, } n(x,y)= 0}
+
+Defining the density function in this piecewise way is suggested for numerical studies, as it permits rectangular integration bounds ($[-R_p,R_p]$ for and $y$ as opposed to integrating y from $\pm \sqrt{R_p^2-x^2}$, for example).
+
+We additionally need to integrate over $v_x$ to account for Doppler shift effects in the laser detuning (a crucial physical effect in the math).
+
+The total scatter rate can be written then as
+\eqn{ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x \gamma_L n(x,y) P(v_x| y, u,\omega)}
+where $P(v_x| y, u,\omega)$ represents a Maxwell-Boltzmann velocity distribution for the x component of the velocity, with mean parameter $u$ and dependence on $\omega y$ to account for weighting over the spinning cloud.  Recalling that  \eqn{\Delta= \omega_L - \omega_0 - \frac{R}{\hbar} - kv_x}
+continue on:
+\eqn{ \gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x 
+ \frac{
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} P(v_x| y, u,\omega)}
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2 \Delta^2 \right]}
+ }
+or expanding $P(v_x)$ and $\Delta$,
+\eqn{ \gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x 
+ \frac{
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [- (v_x-\omega y)^2 /u^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_L - \omega_0 - \frac{R}{\hbar} - kv_x)^2 \right]\sqrt{\pi} u}
+ }
+ 
+ Make the substitution $v'= v_x-\omega_r y$ and redefine $\omega_l-\omega_0$ as $\omega_0'$ to get
+
+ \eqn{ \gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv' 
+ \frac{
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v'^2 /u^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v'))^2 \right]\sqrt{\pi} u}
+ } 
+
+and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\emph{ (Watch carefully; the u in the denominator is cancelled by $\frac{dv'}{u} = dv$)}
+
+ \eqn{ \gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]\sqrt{\pi}}
+ } 
+ 
+ Which when integrated over the cloud will yield the total scattering rate, accounting for saturation effects.
+
+ \section{Torque}
+
+ We need only modify the most recent equation to add in a factor for the torque imparted per scattering event.
+ 
+ Because the momentum transfer per scattering event is given as $\hbar k$, where k is the wave number of the photon, we can multiply in the momentum incurred per event times the y coordinate (through $\tau = \vec{r} \times \vec{F}$ to get the following expression for total torque:
+ 
+ \eqn{ \gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ (\hbar k y)
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]\sqrt{\pi}}
+ \label{torque}
+ } 
+ 
+ \section{Energy Balance}
+ 
+ Finally, we may modify the total scattering rate integral so that it reflects the change in energy per second.
+ 
+ Just as we introduced a factor into the integrand which represented the momentum imparted per scattering event for the torque, we will replace the $\hbar k y$ factor with a term representing the energy per scattering event.
+ 
+ The functional purpose of this equation is to numerically solve for a root of $< \frac{dE}{dt}>$ so that we can find the steady-state temperature.
+ 
+ Thus, we can throw away the constant coefficients found in equation \ref{torque} of $\gamma_0, S_0,$ and $ \Sigma_0$ since they will not affect a root. This makes it easier for a computer to compute the values of this integral.
+ 
+ Replacing the momentum per scattering event $\hbar k y$ with the energy per scattering event, given by laser vector $\vec{k}$ and ion velocity $\vec{v}$ to be
+ \eqn{ \hbar \vec{k} \cdot \vec{v} + 2 R} where R is a recoil energy term defined by  \eqn{R= \frac{ (\hbar k )^2}{2m}}.
+ 
+  The laser is exclusively in the x direction, so we can rewrite this energy term as 
+  \eqn{\hbar k v_x + 2R}
+  
+  and adjust for the doppler effect by replacing $v_x$ with
+  \eqn{ \hbar k (v_x-\omega y)}
+  
+  Recall earlier we made a substitution which eliminated $v_x$ and replaced it with $v$; we will do the same here in a truncated fashion:
+ \eqn{ v_x - \omega y \rightarrow v' \rightarrow vu }
+ leaving us with 
+ \eqn{ \hbar k uv + 2R}
+ since we will be eventually solving for a zero, we may factor out  $\hbar k u $ from both terms and throw away the constant coefficients when factored into the integrand.
+ 
+ We finally have \eqn{ v + \frac{2R}{\hbar k u} = v+ \frac{\hbar k}{m u}}
+ 
+ Which we now substitute into the total scattering rate integral to get our final expression:
+
+  \eqn{ 
+ <\frac{dE}{dt}> = 
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ (v- \frac{\hbar k}{m u})
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]\sqrt{\pi}}
+ \label{dedt}
+  }
+  which may be numerically solved for to find the steady-state temperature as a function of $u$ in the \textbf{Wayne/Itano code}.
+
+\end{document}
