@@ -35,22 +35,18 @@ class TestCalculationConsistency(unittest.TestCase):
         a = ModeAnalysis(shells=10, Vtrap=[-0.0, -1750.0, -2000.0], Ctrap=1.0, frot=177.5, Vwall=2.13, wall_order=2)
         a.run()
         # Using units of hertz
-        self.assertTrue(a.wz / (2 * pi) * .90 <= 1.576E6 and 1.576E6 <= 1.10 * a.wz / (2 * pi))
+        self.assertTrue(a.wz / (2 * pi) * .90 <= 1.576E6 <= 1.10 * a.wz / (2 * pi))
         # b = ModeAnalysis(shells=10 ,Vtrap=[-0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=180.0, Vwall= 2.13, wall_order=2)
         # b.run_quiet()
         # self.assertTrue(b.wz/(2*pi)*.90<= 1.578E6 and 1.578E6 <= 1.10*b.wz/(2*pi))
 
-    """
     def test_051415_plane_stability(self):
-    """
-    # Checks to make sure that we start to see a 1-2 plane transistion at appropriate frequencies.
-    """
-    transsitionseen=False
+        # Checks to make sure that we start to see a 1-2 plane transistion at appropriate frequencies.
 
-    while not transsitionseen:
-        for w in np.linspace(187,210,10):
+        for w in np.linspace(187.5,210,20):
             a = ModeAnalysis(shells=10 ,Vtrap=[0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=w, Vwall= 2.13, wall_order=2)
-    """
+            a.run()
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculationConsistency)
