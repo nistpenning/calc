@@ -43,8 +43,8 @@ class TestCalculationConsistency(unittest.TestCase):
     def test_051415_plane_stability(self):
         # Checks to make sure that we start to see a 1-2 plane transistion at appropriate frequencies.
 
-        for w in np.linspace(187.5,210,20):
-            a = ModeAnalysis(shells=10 ,Vtrap=[0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=w, Vwall= 2.13, wall_order=2)
+        for w in np.linspace(187.5, 210, 20):
+            a = ModeAnalysis(shells=10, Vtrap=[0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=w, Vwall= 2.13, wall_order=2)
             a.run()
 
 

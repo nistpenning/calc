@@ -12,23 +12,34 @@ Contains the ModeAnalysis class, which can simulate the positions of ions in a c
 of desired size. The class contains methods for the generation of a crystal,
 relaxation to a minimum potential energy state, and determination of axial and (eventually) planar modes of motion
 by methods derived by Wang, Keith, and Freericks in 2013.
+
+Translated from MATLAB code written by Adam Keith by Justin Bohnet.
+Standardized and slightly revised by Steven Torrisi.
 """
 
 
 class ModeAnalysis:
+    """
+    Simulates a 2-dimensional ion crystal, determining an equilibrium plane configuration given
+    Penning trap parameters, and then calculates the eigenvectors and eigenmodes.
+    Methods:
+
+    run(): Instantiates a crystal and
+    """
     def __init__(self, shells=4, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0,
                  fz=1000, B=4.4588, frot=60., Vwall=1., wall_order=2, mult=1e14, quiet=True):
         """
+        :param shells:  integer, number of shells to instantiate the plasma with
+        :param Vtrap: array of 3 elements, defines the [end, middle, center] voltages on the trap electrodes.
+        :param Ctrap: float, constant coefficient on trap potentials
+        :param fz:
+        :param B: float, defines strength of axial magnetic field.
+        :param frot: float, frequency of rotation
+        :param Vwall: float, strength of wall potential in volts
+        :param wall_order: integer, defines the order of the rotating wall potential
+        :param mult: float, mutliplicative factor for simplifying numerical calculations
+        :param quiet: will print some things if False
 
-        Initialization parameters:
-        shells:     integer, number of shells to instantiate the plasma with
-        Vrap:       array of 3 elements, defines the [end, middle, center] voltages on the trap electrodes.
-        Ctrap:      float, constant coefficient on trap potentials
-        B:          float, defines strength of axial magnetic field.
-        frot:       float, frequency of rotation
-        Vwall:      float, strength of wall potential in volts
-        wall_order: integer, defines the order of the rotating wall potential
-        mult:       float, mutliplicative factor for simplifying numerical calculations
         """
         self.Evects = []  # Fill list of eigenvectors
         self.Evals = []  # Fill list of eigenfrequencies
@@ -103,6 +114,10 @@ class ModeAnalysis:
         Will generate a 2d hexagonal lattice based on the shells intialiization parameter.
         Guesses initial minimum separation of mins and then increases spacing until a local minimum of
         potential energy is found.
+
+        :param mins: the minimum separation to begin with.
+        :param res: the resizing parameter added onto the minimum spacing.
+        :return: the lattice with roughly minimized potential energy (via spacing alone).
         """
 
         # Make a 2d lattice; u represents the position
@@ -135,6 +150,11 @@ class ModeAnalysis:
 
     # Make a 2d lattice
     def generate_2D_hex_lattice(self, scale=1):
+        """
+
+        :param scale: characterizes the initial spacing between ions.
+        :return: a flattened xy position vector defining the 2d hexagonal lattice.
+        """
         # Start out with the initial
         posvect = np.array([0.0, 0.0])  # always a point [0,0]
 
@@ -148,6 +168,13 @@ class ModeAnalysis:
 
     # A slave function used to append shells onto a position vector
     def add_hex_shell(self, s):
+        """
+        A method used by generate_2d_hex_lattice to add the s-th hex shell to the 2d lattice.
+
+        :param s: the sth shell to be added to the lattice.
+
+        :return: the position vector defining the ions in sth shell.
+        """
         a = list(range(s, -s - 1, -1))  # Change 1
         a.extend(-s * np.ones(s - 1))
         a.extend(range(-s, s + 1))
@@ -167,6 +194,16 @@ class ModeAnalysis:
 
     # Get the potential energy from a positional array
     def pot_energy(self, pos_array):
+        """
+        Computes the potential energy of the ion crystal, taking into consideration:
+        Coulomb repulsion
+        qv x B forces
+        Trapping potential
+        and some other things (#todo to be fully analyzed; june 10 2015)
+
+        :param pos_array: The position vector of the crystal to be analyzed.
+        :return: The scalar potential energy of the crystal configuration.
+        """
         # Frequency of rotation, mass and the number of ions in the array
         wr = self.wrot
         m = self.m[0]
@@ -206,6 +243,13 @@ class ModeAnalysis:
         return self.mult * V
 
     def force_penning(self, pos_array):
+        """
+        Computes the net forces acting on each ion in the crystal;
+        used as the jacobian by find_eq_pos to minimuze the potential energy of a crystal configuration.
+
+        :param pos_array: crystal to find forces of.
+        :return: a vector of size 2N describing the x forces and y forces.
+        """
         wr = self.wrot
         m = self.m[0]
         q = self.q
@@ -246,6 +290,13 @@ class ModeAnalysis:
         return np.array([Fx, Fy]).flatten()
 
     def find_eq_pos(self, u0):
+        """
+        Runs optimization code to tweak the position vector defining the crystal to a minimum potential energy
+        configuration.
+
+        :param u0: The position vector which defines the crystal.
+        :return: The equilibrium position vector.
+        """
         fun_tolerance = 1e-37
 
         out = optimize.minimize(self.pot_energy, u0, method='BFGS', jac=self.force_penning,
@@ -253,6 +304,13 @@ class ModeAnalysis:
         return out.x
 
     def calc_axial_modes(self, pos_array):
+        """
+        Calculate the modes of axial vibration for a crystal defined by pos_array.
+
+        :param pos_array: Position vector which defines the crystal to be analyzed.
+
+        :return: Array of eigenvalues, Array of eigenvectors
+        """
         m = self.m[0]
         N = int(pos_array.size / 2)
         A = np.empty((N, N))
@@ -280,6 +338,11 @@ class ModeAnalysis:
         return Eval, Evect
 
     def show_crystal(self, pos_vect):
+        """
+        Makes a pretty plot of the crystal with a given position vector.
+
+        :param pos_vect: The crystal position vector to be seen.
+        """
         plt.plot(1e6 * pos_vect[0:self.Nion], 1e6 * pos_vect[self.Nion:], '.')
         plt.xlabel('x position [um]')
         plt.ylabel('y position [um]')
@@ -289,6 +352,13 @@ class ModeAnalysis:
         plt.show()
 
     def show_crystal_modes(self, pos_vect, Evects, modes):
+        """
+        For a given crystal, plots the crystal with colors based on the eigenvectors.
+
+        :param pos_vect: the position vector of the current crystal
+        :param Evects: the eigenvectors to be shown
+        :param modes: the number of modes you wish to see
+        """
         plt.figure(1)
 
         for i in range(modes):
@@ -300,7 +370,12 @@ class ModeAnalysis:
             plt.axis([-200, 200, -200, 200])
         plt.tight_layout()
 
-    def get_low_freq_mode(self):
+    def show_low_freq_mode(self):
+        """
+        Gets the lowest frequency modes and eigenvectors,
+        then plots them, printing the lowest frequency mode.
+
+        """
         num_modes = np.size(self.Evals)
         low_mode_freq = self.Evals[-1]
         low_mode_vect = self.Evects[-1]
@@ -313,23 +388,44 @@ class ModeAnalysis:
         plt.axis([-300, 300, -300, 300])
         print(num_modes)
         print("Lowest frequency mode at {0:0.1f} kHz".format(float(np.real(low_mode_freq))))
-        return 0
 
     @staticmethod
     def nan_to_zero(my_array):
+        """
+        Converts all elements of an array which are np.inf or nan to 0.
+
+        :param my_array: array to be  filtered of infs and nans.
+        :return: the array.
+        """
         my_array[np.isinf(my_array) | np.isnan(my_array)] = 0
         return my_array
 
     @staticmethod
     def save_positions(u):
+        """
+        Takes a position vector and saves it as a text file.
+        :param u: position vector to store.
+        :return: nothing
+        """
         np.savetxt("py_u.csv", u, delimiter=",")
 
     @staticmethod
     def crystal_spacing_fit(r, offset, curvature):
+        """
+        """
         return np.sqrt(2 / (np.sqrt(3) * offset * np.sqrt(1 - (r * curvature) ** 2)))
 
     @staticmethod
     def find_radial_separation(pos_array):
+        """
+        When given the position array of a crystal,
+        returns 4 arrays:
+        N radii, N^2 x separations, N^2 y separations, and N^2 radial separations.
+
+        :param pos_array: position array of a crystal.
+
+        :return: radius, x separations, y separations, radial separations
+        """
         N = int(pos_array.size / 2)
         x = pos_array[0:N]
         y = pos_array[N:]
