@@ -1,0 +1,166 @@
+\documentclass[12pt]{article}
+\usepackage[left=2cm,top=2cm,bot=2cm,right=2cm,nohead,nofoot]{geometry}%bot=.2cm,
+
+\usepackage{amsmath}
+%\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+\begin{document}
+\title{Penning Trap Lagrangian}
+\author{Adam C. Keith}
+\maketitle
+Lagrangian in the lab frame for N ions:
+\begin{eqnarray}
+L &=& \sum^N_{i=1} \Bigg[\frac{1}{2} m_i \left(\dot{x}_i^2 + \dot{y}_i^2 + \dot{z}_i^2 \right) - \frac{1}{2} m_i \omega_z^2 \left(z_i^2 - \frac{x_i^2 + y_i^2}{2} \right) - \frac{1}{2}  m_i \omega_z^2  G V_w  \left[\left(x_i^2 - y_i^2 \right)\cos{2\omega t} - 2 x_i y_i sin{2\omega t}\right] - \nonumber \\
+&&  \frac{eB}{2} \left(\dot{x}_i y_i - \dot{y}_i x_i \right) - \frac{ke^2}{2} \sum^N_{j \neq i}\frac{1}{r_{ij}} \Bigg]
+\end{eqnarray}
+with $\frac{\omega_z}{2\pi}$ the axial trapping frequency, $\frac{\omega_z}{2\pi}$ the crystal rotation frequency, $G$ a geometrical factor relating trap electrodes, and $V_w$ relating to the strength of the rotating wall potential. Moving to a frame rotating at $\omega$ we have the new Lagrangian:
+
+\begin{eqnarray}
+L &=& \sum^N_{i=1} \Bigg[\frac{1}{2} m_i \left(\dot{x}_i^2 + \dot{y}_i^2 + \dot{z}_i^2 \right) +  \frac{1}{2} m_i \left(2\omega - \frac{eB}{m_i}\right) \left(\dot{x}_i y_i - \dot{y}_i x_i \right) - \frac{1}{2}m_i\omega_z^2 z_i^2 +
+ \nonumber \\
+&&  \frac{1}{2} m_i \left(\omega^2 + \frac{\omega_z^2}{2} - \frac{eB\omega}{m_i} \right) \left(x_i^2+y_i^2\right) - \frac{1}{2}  m_i \omega_z^2  G V_w  \left(x_i^2 - y_i^2 \right) - \frac{ke^2}{2} \sum^N_{j \neq i}\frac{1}{r_{ij}} \Bigg]
+\end{eqnarray}
+with all coordinates in rotating frame. Let's write the characteristic length and time scales as $l_0^3 = \frac{ke^2}{\frac{1}{2}m_{Be} \omega_z^2}$ and $t_0 = \frac{1}{\omega_z}$ where $m_{Be}$ is the Beryllium ion mass. We also write the cyclotron frequency $\frac{eB}{m_{Be}} = \omega_c \omega_z$ and the rotation frequency as $\omega = \omega_r \omega_z$. With these definitions and substitutions we divide the Lagrangian by $\frac{ke^2}{l_0}$:
+
+\begin{eqnarray}
+L &=& \sum^N_{i=1} \Bigg[m_i \left(\dot{x}_i^2 + \dot{y}_i^2 + \dot{z}_i^2 \right) +  m_i \left(2\omega_r - \frac{\omega_c}{m_i} \right) \left(\dot{x}_i y_i - \dot{y}_i x_i \right) - m_i z_i^2 + m_i \left(\omega_r^2  + \frac{1}{2} - \frac{\omega_c \omega_r}{m_i} \right) \left(x_i^2+y_i^2\right) - \nonumber \\
+&&  G V_w m_i \left(x_i^2 - y_i^2 \right) - \frac{1}{2} \sum^N_{j \neq i}\frac{1}{r_{ij}} \Bigg]
+\end{eqnarray}
+with all coordinates in dimensionless form and $m_i$ overloaded as fraction of Beryllium ion mass.
+
+Now we expand the Lagrangian about the equilibrium positions in all variables. We assume at equilibrium all velocities are zero and force a planar structure so that all $z_i = 0$. This causes the expanded Lagrangian to separate in to a Lagrangian for the axial direction and one in the plane.
+For the axial direction,
+\begin{equation}
+\frac{\partial L}{\partial z_{\alpha}} = -2 m_{\alpha}z_{\alpha}+  \sum^N_{j \neq \alpha}\frac{z_{\alpha}-z_j}{r^3_{\alpha j}}
+\end{equation}
+
+\begin{equation}
+\frac{\partial L}{\partial \dot{z}_{\alpha}} = 2 m_{\alpha}\dot{z}_{\alpha}
+\end{equation}
+which both vanish at equilibrium as do the partials involving x and z or y and z (or $\dot{z}$). The only partials that don't vanish at equilibrium are
+
+\begin{equation}
+\frac{\partial L}{\partial \dot{z}_{\beta}} \frac{\partial L}{\partial \dot{z}_{\alpha}} = 2 m_{\alpha} \delta_{\alpha \beta}
+\end{equation}
+
+\begin{equation}
+\frac{\partial L}{\partial z_{\beta}}\frac{\partial L}{\partial z_{\alpha}} = \delta_{\alpha \beta} \left[ -2 m_{\alpha}+\sum^N_{j \neq \alpha}\frac{r^2_{\alpha j} -3\left(z_{\alpha}-z_j \right)^2}{r^5_{\alpha j}}\right] - \left(1- \delta_{\alpha \beta} \right) \frac{r^2_{\alpha \beta} -3\left(z_{\alpha}-z_{\beta} \right)^2}{r^5_{\alpha \beta}}
+\end{equation}
+Thus, the expanded Lagrangian in the axial direction is
+
+\begin{equation}
+L = \frac{1}{2}\sum^N_{i=1} 2m_i \dot{z}_i^2 + \frac{1}{2}\sum^N_{i,j} z_i z_j \left( \delta_{i j} \left[ -2 m_{i}+\sum^N_{k \neq i}\frac{1}{\bar{r}^3_{i k}}\right]
+-  \left(1- \delta_{i j} \right) \frac{1}{\bar{r}^3_{i j}} \right)
+\end{equation}
+where $z_i$ is overloaded to be the distance away from equilibrium position and $\bar{r}_{ji}$ is the equilibrium distance between ions.
+
+% -----------------------------
+We now Taylor expand the Lagrangian in $x_i$, $y_i$, $\dot{x}_i$, and $\dot{y}_i$. I'll write out all the derivatives explicitly:
+
+\begin{equation}
+\frac{\partial L}{\partial x_{\alpha}} = - m_{\alpha}\left[2\omega_r-\omega_c\right]\dot{y}_{\alpha} + 2m_{\alpha} \left(\omega^2_r +\frac{1}{2} - \frac{\omega_r \omega_c}{m_{\alpha}} - G V_w \right) x_{\alpha} +  \sum^N_{j \neq \alpha}\frac{x_{\alpha}-x_j}{r^3_{\alpha j}}
+\end{equation}
+
+\begin{equation}
+\frac{\partial L}{\partial y_{\alpha}} = m_{\alpha}\left[2\omega_r-\omega_c\right]\dot{x}_{\alpha} + 2m_{\alpha} \left(\omega^2_r +\frac{1}{2} - \frac{\omega_r \omega_c}{m_{\alpha}} + G V_w \right) y_{\alpha} + \sum^N_{j \neq \alpha}\frac{y_{\alpha}-y_j}{r^3_{\alpha j}}
+\end{equation}
+The above derivatives vanish at equilibrium, by definition. The following two derivatives DO NOT vanish...
+\begin{equation}
+\frac{\partial L}{\partial \dot{x}_{\alpha}} = 2m_{\alpha}\dot{x}_{\alpha} + m_{\alpha}\left[2\omega_r - \omega_c\right]y_{\alpha}
+\end{equation}
+
+\begin{equation}
+\frac{\partial L}{\partial \dot{y}_{\alpha}} = 2m_{\alpha}\dot{y}_{\alpha} - m_{\alpha}\left[2\omega_r - \omega_c\right]x_{\alpha}
+\end{equation}
+
+
+\begin{eqnarray}
+\frac{\partial }{\partial x_{\beta}} \frac{\partial }{\partial x_{\alpha}} L &=& 
+\delta_{\alpha \beta} \left[  2m_{\alpha} \left(\omega^2_r +\frac{1}{2} - \frac{\omega_r \omega_c}{m_{\alpha}} - G V_w \right) +\sum^N_{j \neq \alpha}\frac{r^2_{\alpha j} -3\left(x_{\alpha}-x_j \right)^2}{r^5_{\alpha j}} \right] + \nonumber \\
+&& - \left(1- \delta_{\alpha \beta} \right) \frac{r^2_{\alpha \beta} -3\left(x_{\alpha}-x_{\beta} \right)^2}{r^5_{\alpha \beta}}
+\end{eqnarray}
+
+\begin{eqnarray}
+\frac{\partial }{\partial y_{\beta}} \frac{\partial }{\partial y_{\alpha}} L &=& 
+\delta_{\alpha \beta} \left[  2m_{\alpha} \left(\omega^2_r +\frac{1}{2} - \frac{\omega_r \omega_c}{m_{\alpha}} + G V_w \right) + \sum^N_{j \neq \alpha}\frac{r^2_{\alpha j} -3\left(y_{\alpha}-y_j \right)^2}{r^5_{\alpha j}} \right] + \nonumber \\
+&& - \left(1- \delta_{\alpha \beta} \right) \frac{r^2_{\alpha \beta} -3\left(y_{\alpha}-y_{\beta} \right)^2}{r^5_{\alpha \beta}}
+\end{eqnarray}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{x}_{\beta}} \frac{\partial }{\partial \dot{x}_{\alpha}} L = 2m_{\alpha}\delta_{\alpha \beta} 
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{y}_{\beta}} \frac{\partial }{\partial \dot{y}_{\alpha}} L = 2m_{\alpha}\delta_{\alpha \beta} 
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{x}_{\beta}} \frac{\partial }{\partial x_{\alpha}} L = 0
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{y}_{\beta}} \frac{\partial }{\partial y_{\alpha}} L = 0
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{y}_{\beta}} \frac{\partial }{\partial x_{\alpha}} L = - m_{\alpha}\delta_{\alpha \beta} \left[2\omega_r - \omega_c \right]
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial \dot{x}_{\beta}} \frac{\partial }{\partial y_{\alpha}} L =  m_{\alpha}\delta_{\alpha \beta} \left[2\omega_r - \omega_c \right]
+\end{equation}
+
+\begin{equation}
+\frac{\partial }{\partial y_{\beta}} \frac{\partial }{\partial x_{\alpha}} L =
+\delta_{\alpha \beta} \left[  -3\sum^N_{j \neq \alpha}\frac{\left(y_{\alpha}-y_j \right)\left(x_{\alpha}-x_j \right)}{r^5_{\alpha j}} \right] + \left(1- \delta_{\alpha \beta} \right) 3\frac{\left(y_{\alpha}-y_{\beta} \right)\left(x_{\alpha}-x_{\beta} \right)}{r^5_{\alpha \beta}}
+\end{equation}
+Thus the expanded Lagrangian is:
+\begin{equation}
+L = \frac{1}{2}\sum^N_{i=1} 2m_i \left(\dot{x}_i^2 + \dot{y}_i^2 \right) +  m_i \left(2\omega_r - \omega_c \right) \left(\dot{x}_i(2 \bar{y}_i + y_i) - \dot{y}_i (2\bar{x}_i + x_i) \right) + \frac{1}{2}\mathbf{q}^T V \mathbf{q}
+\end{equation}
+%with Hamiltonian:
+%\begin{equation}
+%H = \frac{1}{2}\sum^N_{i=1} 2m_i \left(\dot{x}_i^2 + \dot{y}_i^2 \right) - \frac{1}{2}\mathbf{q}^T V \mathbf{q}
+%\end{equation}
+where $x_i$, etc is overloaded to be distance away from equilibrium position $\bar{x_i}$. \textbf{q} is a column vector with $x$ then $y$ positions. $V$ is a block matrix of derivatives (Hessian) with the two diagonal blocks are $x$ and $y$ partials respectively and the off diagonals are the mixed derivatives all evaluated at the equilibrium positions. I do not quite understand the factor of two in front of $\bar{x}$ and $\bar{y}$ but doesn't seem to matter. Here are the planar equations of motion. 
+
+\begin{equation}
+\ddot{z}_i - \frac{1}{2} \sum^N_{j=1}  \frac{1}{m_i} z_j \left( \delta_{i j} \left[ -2 m_{i}+\sum^N_{k \neq i}\frac{1}{\bar{r}^3_{i k}}\right]
+-  \left(1- \delta_{i j} \right) \frac{1}{\bar{r}^3_{i j}} \right) = 0
+\end{equation}
+
+\begin{equation}
+\ddot{x}_i +\left(2\omega_r - \omega_c \right) \dot{y}_i - \frac{1}{2} \sum^N_{j=1} x_j \frac{V^{xx}_{ij}}{m_i} + x_j \frac{V^{xy}_{ij}}{m_i} = 0
+\end{equation}
+
+\begin{equation}
+\ddot{y}_i -\left(2\omega_r - \omega_c \right) \dot{x}_i - \frac{1}{2} \sum^N_{j=1} y_j \frac{V^{yy}_{ij}}{m_i} + y_j \frac{V^{xy}_{ij}}{m_i} = 0
+\end{equation}
+Calculating axial normal modes is left as an exercise to the reader. Let's write the planar equations of motion more compactly:
+\begin{equation}
+M\ddot{\bf{q}} = A\dot{\bf{q}} + \frac{1}{2}V\bf{q}
+\end{equation}
+Here, $M$ is matrix of mass ratios (usually the identity) and A is skew symmetric. This is a quadratic eigenvalue problem. We can solve it by turning it into a first order equation:
+\begin{equation}
+\frac{\partial}{\partial t} \begin{bmatrix} q \\ \dot{q} \end{bmatrix} = 
+\begin{bmatrix} 0 & I \\ M^{-1} V/2 & M^{-1} A \end{bmatrix}  \begin{bmatrix} q \\ \dot{q} \end{bmatrix} 
+\end{equation}
+%\[ \left[ {\begin{array{c}} q \\ \dot{q} \end{array} \right] \]
+with solution 
+\begin{equation}
+ \begin{bmatrix} q \\ \dot{q} \end{bmatrix} = e^{Lt} \begin{bmatrix} q \\ \dot{q} \end{bmatrix} 
+\end{equation}
+where $L$ is the above matrix. The eigenvectors of L come in conjugate pairs with pure imaginary eigenvalues. Now denoting 
+$\begin{bmatrix} q_i \\ \dot{q}_i \end{bmatrix} $ as an eigenvector, the coordinates of a state in mode pair $i$ has the complex evolution
+\begin{equation}
+\begin{bmatrix} q(t) \\ \dot{q(t)} \end{bmatrix} = Ae^{i(\lambda t + \theta)} \begin{bmatrix} q_i \\ \dot{q}_i \end{bmatrix} + c.c.
+\end{equation}
+where $A$ and $\theta$ are initial conditions and c.c. is complex conjugate. In words, each ``mode" in equally split in to two conjugate modes but the total energy 
+of the periodic motion with frequency $\lambda_i$ is (after some simplification)
+\begin{equation}
+E_i = q_i^{\dagger}(\lambda_i^2 M - \frac{1}{2} V) q_i
+\end{equation}
+where $q_i$ is the top 2N part of either of a conjugate pair. Possible factor of two. This is a very high level sketch and Manny probably can explain this better, but
+this all works in the code for extracting the normal coordinates of these modes.
+
+
+\end{document}
