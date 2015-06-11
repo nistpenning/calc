@@ -40,12 +40,12 @@ class TestCalculationConsistency(unittest.TestCase):
         # b.run_quiet()
         # self.assertTrue(b.wz/(2*pi)*.90<= 1.578E6 and 1.578E6 <= 1.10*b.wz/(2*pi))
 
-    def test_051415_plane_stability(self):
+    #def test_051415_plane_stability(self):
         # Checks to make sure that we start to see a 1-2 plane transistion at appropriate frequencies.
 
-        for w in np.linspace(187.5, 210, 20):
-            a = ModeAnalysis(shells=10, Vtrap=[0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=w, Vwall= 2.13, wall_order=2)
-            a.run()
+     #   for w in np.linspace(187.5, 210, 20):
+      #      a = ModeAnalysis(shells=10, Vtrap=[0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=w, Vwall= 2.13, wall_order=2)
+       #     a.run()
 
 
 if __name__ == '__main__':
