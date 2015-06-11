@@ -62,10 +62,10 @@ class ModeAnalysis():
             print("Warning: Rotation frequency below magnetron frequency of {0.1f}".format(self.wmag))
         self.u0[:] = self.find_scaled_lattice_guess(mins, res)
         #self.show_crystal(self.u0)
-        print "Calculating Equilibrium Positions"
+        #print "Calculating Equilibrium Positions"
         self.u = self.find_eq_pos(self.u0)
         #self.show_crystal(self.u)
-        print "Calculate transverse axial modes"
+        #print "Calculate transverse axial modes"
         self.Evals,self.Evects = self.calc_axial_modes(self.u)
         
         #sort arrays
