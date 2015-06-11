@@ -389,6 +389,9 @@ class ModeAnalysis:
         print(num_modes)
         print("Lowest frequency mode at {0:0.1f} kHz".format(float(np.real(low_mode_freq))))
 
+    def get_x_and_y(self,pos_vect):
+        return [pos_vect[:self.Nion],pos_vect[self.Nion:]]
+
     @staticmethod
     def nan_to_zero(my_array):
         """
@@ -452,7 +455,8 @@ if __name__ == "__main__":
     shellcounts = [4, 5]
     transistionfreq = []
     ions = []
-    for s in shellcounts:
+
+    """for s in shellcounts:
         for w in np.linspace(185, 220, 10):
             a = ModeAnalysis(shells=s, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=w, Vwall=2.13, wall_order=2)
             a.run()
@@ -472,9 +476,34 @@ if __name__ == "__main__":
                 break
             print("------------")
     print(transistionfreq)
-    a = plt.figure()
-    a = plt.plot(shellcounts, transistionfreq)
+    """
+    asprat=[]
+    for V in np.linspace(0,20,20):
+        a = ModeAnalysis(shells=6, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=V, wall_order=2)
+        a.run()
+        X=a.u[0:a.Nion]
+        Y=a.u[a.Nion:]
+
+        Xtent=X.max()-X.min()
+        Ytent=Y.max()-Y.min()
+        if Ytent>Xtent:
+            asprat.append(Ytent/Xtent)
+        else:
+            asprat.append(Xtent/Ytent)
+        #print(asprat)
+        #vectsvals=a.run()
+        #a.show_crystal(a.u)
+    #print(asprat,np)
+
+    asp=plt.plot(np.linspace(0,20,20),asprat)
+    asp=plt.scatter(np.linspace(0,20,20),asprat,"o")
+    asp=plt.xlabel('$f_{rot}$, kHz')
+    asp=plt.ylabel('Crystal Aspect Ratio (Major/Minor Axis)')
+    asp=plt.title('Crystal Aspect Ratio vs. $f_{rot}$')
     plt.show()
+
+    # a = plt.plot(shellcounts, transistionfreq)
+    # plt.show()
     # #"""
     # #print("Checkpoint Alpha")
     # #plt.close()
