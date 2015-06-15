@@ -32,54 +32,47 @@ class ModeAnalysis:
     m_Be = 9.012182 * amu
     k_e = 8.9875517873681764E9
 
-    def __init__(self, shells=4, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0,
-                 fz=1000, B=4.4588, frot=180., Vwall=1., wall_order=2, mult=1e14, quiet=True):
+    def __init__(self, N=19, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0,
+                 ionmass = None, B=4.4588, frot=180., Vwall=1., wall_order=2, 
+                 quiet=True):
         """
+        :param N:       integer, number of ions
         :param shells:  integer, number of shells to instantiate the plasma with
         :param Vtrap: array of 3 elements, defines the [end, middle, center] voltages on the trap electrodes.
         :param Ctrap: float, constant coefficient on trap potentials
-        :param fz:
         :param B: float, defines strength of axial magnetic field.
         :param frot: float, frequency of rotation
         :param Vwall: float, strength of wall potential in volts
         :param wall_order: integer, defines the order of the rotating wall potential
         :param mult: float, mutliplicative factor for simplifying numerical calculations
         :param quiet: will print some things if False
-
         """
-        self.Evects = []  # Fill list of eigenvectors
-        self.Evals = []  # Fill list of eigenfrequencies
-        self.dens = 0
-        self.avg = 0
+
         self.quiet = quiet
         # Initialize basic variables such as physical constants
-        self.shells = shells
-        self.Nion = 1 + 6 * np.sum(range(1, shells + 1))
+        self.Nion = N
+        #self.shells = shells
+        #self.Nion = 1 + 6 * np.sum(range(1, shells + 1))
+        
+        # if no input masses, assume all ions are beryllium
+        if ionmass is None:
+            self.m = self.m_Be*np.ones(self.Nion)
+            # mass order is irrelevant and don't assume it will be fixed
+            # FUTURE: heavier (than Be) ions will be added to outer shells
+
         # for array of ion positions first half is x, last is y
-        self.u0 = np.empty(2 * self.Nion)
-        self.u = np.empty(2 * self.Nion)
-        self.scale = 0
+        self.u0 = np.empty(2*self.Nion)  # initial lattice
+        self.u = np.empty(2*self.Nion)   # equilibrium positions
+
         # trap definitions
         self.B = B
-        self.wcyc = self.q * B / self.m_Be  # Cyclotron frequency
+        self.wcyc = self.q * B / self.m_Be  # Beryllium cyclotron frequency
+        
+        # axial trap coefficients; see Teale's final paper
         self.C = Ctrap * np.array([[0.0756, 0.5157, 0.4087],
                                    [-0.0001, -0.005, 0.005],
                                    [1.9197e3, 3.7467e3, -5.6663e3],
-                                   [0.6738e7, -5.3148e7, 4.641e7]])  # axial trap coefficients; see Teale's final paper
-        self.relec = 0.01  # rotating wall electrode distance in meters
-        self.Vtrap = np.array(Vtrap)  # [Vend, Vmid, Vcenter] for trap electrodes
-        self.Coeff = np.dot(self.C, self.Vtrap)  # Determine the 0th, first, second, and fourth order
-        #                                          potentials at trap center
-        self.wz = 4.9951e6
-        #self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
-        self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular frequency
-
-        #Not used vvv
-        self.wmag = 0.5 * (self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
-
-        self.V0 = (0.5 * self.m_Be * self.wz ** 2) / self.q  # Find quadratic voltage at trap center
-        self.Vw = self.V0 * 0.045 * Vwall / 1000  # V_T divides in MATLAB
-        self.mult = mult  # store multiplicative factor
+                                   [0.6738e7, -5.3148e7, 4.641e7]]) 
 
         # wall order
         if wall_order == 2:
@@ -88,24 +81,53 @@ class ModeAnalysis:
         if wall_order == 3:
             self.Cw2 = 0
             self.Cw3 = self.q * Vwall * 3e4
-        # Convert to dimensionless quantities
 
-        self.l0 = ((self.k_e * self.q ** 2) / (.5 * self.m_Be*self.wz**2)) ** (1 / 3)  # dimensionless length
-        self.t0 = 1 / self.wz  # dimensionless time
-        self.v0 = self.l0 / self.t0  # dimensionless velocity
-        self.wr = self.wrot / self.wz  # dimensionless rotation
-        self.wc = self.wcyc / self.wz  # dimensionless cyclotron
-        #self.md = self.m_Be  / ( 2 * self.k_e * self.q**2)  # dimensionless mass
-        self.md=1
+        self.relec = 0.01  # rotating wall electrode distance in meters
+        self.Vtrap = np.array(Vtrap)  # [Vend, Vmid, Vcenter] for trap electrodes
+        self.Coeff = np.dot(self.C, self.Vtrap)  # Determine the 0th, first, second, and fourth order
+                                                 #  potentials at trap center
+        #self.wz = 4.9951e6  # old trapping frequency
+        self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
+        self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular frequency
 
-        self.axialEvals = []
-        self.axialEvects = []
-        self.planarEvals = []
-        self.planarEvects = []
+        #Not used vvv
+        self.wmag = 0.5 * (self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
+
+        self.V0 = (0.5 * self.m_Be * self.wz ** 2) / self.q  # Find quadratic voltage at trap center
+        #self.Vw = self.V0 * 0.045 * Vwall / 1000  # old trap
+        self.Cw = Vwall*1612 / self.V0  # dimensionless coefficient in front
+                                        # of rotating wall terms in potential
+
+        self.dimensionless()  # Make system dimensionless
+
+        self.axialEvals = []     # Axial eigenvalues
+        self.axialEvects = []    # Axial eigenvectors
+        self.planarEvals = []    # Planar eigenvalues
+        self.planarEvects = []   # Planar Eigenvectors
         self.r = []
         self.rsep = []
         self.dx = []
         self.dy = []
+
+    def dimensionless(self):
+        """Calculate characteristic quantities and convert to a dimensionless
+        system
+        """
+        # characteristic length
+        self.l0 = ((self.k_e*self.q**2)/(.5*self.m_Be*self.wz**2))**(1/3)  
+        self.t0 = 1 / self.wz          # characteristic time
+        self.v0 = self.l0 / self.t0    # characteristic velocity
+        self.wr = self.wrot / self.wz  # dimensionless rotation
+        self.wc = self.wcyc / self.wz  # dimensionless cyclotron
+        self.md = self.m / self.m_Be   # dimensionless mass
+    
+    def expUnits(self):
+        """Convert dimensionless outputs to experimental units"""
+        self.u0E = self.l0*self.u0     # Seed lattice
+        self.uE = self.l0*self.u     # Equilibrium positions
+        self.axialEvalsE = self.wz*self.axialEvals
+        self.planarEvalsE = self.wz*self.planarEvals
+        # eigenvectors are dimensionless anyway
 
     def run(self):
         """
@@ -119,24 +141,75 @@ class ModeAnalysis:
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
             return 0
-        self.u0 = self.generate_2D_hex_lattice(self.shells)
-        self.u = self.find_eq_pos(self.u0)
+        self.u0 = self.generate_lattice()
+        #self.u0 = self.generate_2D_hex_lattice(2)
 
+        # if masses are not all beryllium, force heavier ions to be boundary
+        # ions, and lighter ions to be near center
+        # ADD self.addDefects()
+
+        self.u = self.find_eq_pos(self.u0)
+        self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
+        
         self.axialEvals, self.axialEvects = self.calc_axial_modes(self.u)
         self.planarEvals, self.planarEvects = self.calc_planar_modes(self.u)
+        self.expUnits()  # make variables of outputs in experimental units
 
-        # sort arrays
-        # self.axialEvals /= (2 * pi * 1e3)  # units of kHz
-        self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
+    def generate_lattice(self):
+        """Generate lattice for an arbitrary number of ions (self.Nion)
 
-    # Get the potential energy from a positional array
+        :return: a flattened xy position vector defining the 2d hexagonal
+                 lattice
+        """
+        # number of closed shells
+        S = int((np.sqrt(9-12*(1-self.Nion))-3)/6)
+        u0 = self.generate_2D_hex_lattice(S)
+        N0 = int(u0.size/2)
+        x0 = u0[0:N0]
+        y0 = u0[N0:]
+        Nadd = self.Nion - N0  # Number of ions left to add
+        self.Nion = N0
+
+        pair = self.add_hex_shell(S+1)  # generate next complete shell
+        xadd = pair[0::2]
+        yadd = pair[1::2]
+
+        for i in range(Nadd):
+            # reset number of ions to do this calculation
+            self.Nion += 1
+
+            # make masses all one (add defects later)
+            self.md = np.ones(self.Nion)
+
+            V = []  # list to store potential energies from calculation
+
+            # for each ion left to add, calculate potential energy if that
+            # ion is added
+            for j in range(len(xadd)):
+                V.append(self.pot_energy(np.hstack((x0, xadd[j], y0,
+                                                    yadd[j]))))
+            ind = np.argmin(V)  # ion added with lowest increase in potential
+
+            # permanently add to existing crystal
+            x0 = np.append(x0, xadd[ind])
+            y0 = np.append(y0, yadd[ind])
+
+            # remove ion from list to add
+            xadd = np.delete(xadd, ind)
+            yadd = np.delete(yadd, ind)
+
+        # Restore mass array
+        self.md = self.m / self.m_Be   # dimensionless mass
+        return np.hstack((x0, y0))
+
     def pot_energy(self, pos_array):
         """
-        Computes the potential energy of the ion crystal, taking into consideration:
-        Coulomb repulsion
-        qv x B forces
-        Trapping potential
-        and some other things (#todo to be fully analyzed; june 10 2015)
+        Computes the potential energy of the ion crystal, 
+        taking into consideration:
+            Coulomb repulsion
+            qv x B forces
+            Trapping potential
+            and some other things (#todo to be fully analyzed; june 10 2015)
 
         :param pos_array: The position vector of the crystal to be analyzed.
         :return: The scalar potential energy of the crystal configuration.
@@ -166,16 +239,16 @@ class ModeAnalysis:
             + np.sum(self.Cw3 * (x ** 3 - 3 * x * y ** 2)) \
             + 0.5 * k_e * q ** 2 * np.sum(Vc)
         """
-        V = -self.md *(self.wr ** 2 + 0.5 - self.wr * self.wc) * np.sum(x ** 2 + y ** 2) \
-            + self.md*(self.Vw / self.V0) * np.sum(x ** 2 - y ** 2) + 0.5 * np.sum(Vc)
+        V = -np.sum((self.md*self.wr**2 + 0.5*self.md - self.wr*self.wc)*(x**2 + y**2)) \
+            + np.sum(self.md*(self.Cw)*(x**2 - y**2)) + 0.5 * np.sum(Vc)
 
-        #return V*self.mult
         return V
 
     def force_penning(self, pos_array):
         """
         Computes the net forces acting on each ion in the crystal;
-        used as the jacobian by find_eq_pos to minimize the potential energy of a crystal configuration.
+        used as the jacobian by find_eq_pos to minimize the potential energy
+        of a crystal configuration.
 
         :param pos_array: crystal to find forces of.
         :return: a vector of size 2N describing the x forces and y forces.
@@ -207,15 +280,12 @@ class ModeAnalysis:
         # Ftrap =  (m*w**2 + q*self.V0 - 2*q*self.Vw - q*self.B* w) * pos_array
         """
         Ftrapx = -2 * self.md*(self.wr ** 2 - self.wr * self.wc + 0.5 -
-                        self.Vw / self.V0) * x
+                        self.Cw) * x
         Ftrapy = -2 * self.md*(self.wr ** 2 - self.wr * self.wc + 0.5 +
-                        self.Vw / self.V0) * y
+                        self.Cw) * y
 
         Fx = -np.sum(fx, axis=1) + Ftrapx
         Fy = -np.sum(fy, axis=1) + Ftrapy
-
-        #Fx *= self.mult
-        #Fy *= self.mult
 
         return np.array([Fx, Fy]).flatten()
 
@@ -239,10 +309,10 @@ class ModeAnalysis:
 
         # Above, for alpha == beta
         Hxx += np.mat(np.diag(-2 * self.md*(self.wr ** 2 - self.wr * self.wc + .5 -
-                                    self.Vw / self.V0) -
+                                    self.Cw) -
                               np.sum((rsep ** 2 - 3 * dxsq) * rsep5, axis=0)))
         Hyy += np.mat(np.diag(-2 * self.md * (self.wr ** 2 - self.wr * self.wc + .5 +
-                                    self.Vw / self.V0) -
+                                    self.Cw) -
                               np.sum((rsep ** 2 - 3 * dxsq) * rsep5, axis=0)))
 
         # Mixed derivatives
@@ -251,7 +321,7 @@ class ModeAnalysis:
 
         H = np.bmat([[Hxx, Hxy], [Hxy, Hyy]])
         H = np.asarray(H)
-        return self.mult * H
+        return H
 
     def find_eq_pos(self, u0, method="bfgs"):
         """
@@ -275,10 +345,11 @@ class ModeAnalysis:
 
     def calc_axial_modes(self, pos_array):
         """
-        Calculate the modes of axial vibration for a crystal defined by pos_array.
+        Calculate the modes of axial vibration for a crystal defined
+        by pos_array.
 
-        :param pos_array: Position vector which defines the crystal to be analyzed.
-
+        :param pos_array: Position vector which defines the crystal
+                          to be analyzed.
         :return: Array of eigenvalues, Array of eigenvectors
         """
 
@@ -315,7 +386,23 @@ class ModeAnalysis:
         # Eval, Evect = mp.eig(firstOrder)
 
         Eval, Evect = np.linalg.eig(firstOrder)
-        # Eval = np.lib.scimath.sqrt(Eval)
+        # currently giving too many zero modes (increase numerical precision?)
+        
+        # make eigenvalues real.
+        ind = np.argsort(np.absolute(Eval))
+        Eval = np.imag(Eval[ind])
+        Evect = Evect[:,ind]
+        #inds = np.argsort(Eval[Eval>=0])
+        # not sure how to guarantee sort doesn't mix up eigenvectors for zero 
+        # modes? Can't normalize properly without that knowledge
+        
+        # if there are extra zeros, chop them
+        Eval[(Eval.size - 2*self.Nion)-1:]
+        
+        # Normalize eigenvectors by energy instead of 1.
+        #for i = 1:4*N   
+        #E(:,i) = E(:,i)/sqrt(real((E(1:2*N,i))'*(D(i)*D(i))*(E(1:2*N,i))  -0.5*E(1:2*N,i)'*V*E(1:2*N,i)));
+
         return Eval, Evect
 
     def show_crystal(self, pos_vect):
@@ -431,7 +518,7 @@ class ModeAnalysis:
     def generate_2D_hex_lattice(shells=1, scale=1):
         """Generate closed shell hexagonal lattice with shells and scale spacing.
 
-        :param scale: characterizes the initial spacing between ions.
+        :param scale: scales lattice
         :return: a flattened xy position vector defining the 2d hexagonal lattice.
         """
         posvect = np.array([0.0, 0.0])  # center ion at [0,0]
@@ -439,7 +526,7 @@ class ModeAnalysis:
         for s in range(1, shells + 1):
             posvect = np.append(posvect, ModeAnalysis.add_hex_shell(s))
         posvect *= scale
-        return np.hstack((posvect[0:-1:2], posvect[1:-1:2], posvect[-1]))
+        return np.hstack((posvect[0::2], posvect[1::2]))
 
     @staticmethod
     # A slave function used to append shells onto a position vector
@@ -472,9 +559,20 @@ class ModeAnalysis:
 if __name__ == "__main__":
     # suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculationConsistency)
     # unittest.TextTestRunner(verbosity=1).run(suite)
+
+    # NOTE: class now takes number of ions instead of shells
+    # For reference the following ion number correspond the closed shells:
+    # 1  2  3  4  5   6   7   8   9  10  11  12  13  14
+    # 7 19 37 61 91 127 169 217 271 331 397 469 547 631...
+
     shellcounts = [4, 5]
     transistionfreq = []
     ions = []
+    
+    a = ModeAnalysis(N=26, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=10, wall_order=2)
+    a.run()
+
+
 
     """for s in shellcounts:
         for w in np.linspace(185, 220, 10):
@@ -497,33 +595,33 @@ if __name__ == "__main__":
             print("------------")
     print(transistionfreq)
     """
-    asprat = []
-    for V in np.linspace(30, 200, 20):
-        a = ModeAnalysis(shells=6, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=45, Vwall=V, wall_order=2)
-        a.run()
-        X = a.u[0:a.Nion]
-        Y = a.u[a.Nion:]
-
-        Xtent = X.max() - X.min()
-        Ytent = Y.max() - Y.min()
-        if Ytent > Xtent:
-            asprat.append(Ytent / Xtent)
-        else:
-            asprat.append(Xtent / Ytent)
-        print(asprat)
-        a.show_crystal(a.u)
-
-        # vectsvals=a.run()
-    # print(asprat,np)
-    print(a.l0)
-    asp = plt.plot(np.linspace(30, 200, 20), asprat)
-    #a.show_crystal(a.u)
-    #asp = plt.scatter(np.linspace(0, 20, 20), asprat, "o")
-    asp = plt.xlabel('$f_{rot}$, kHz')
-    asp = plt.ylabel('Crystal Aspect Ratio (Major/Minor Axis)')
-    asp = plt.title('Crystal Aspect Ratio vs. $f_{rot}$')
-    plt.show()
-    print('hih')
+#    asprat = []
+#    for V in np.linspace(0, 20, 20):
+#        a = ModeAnalysis(shells=6, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=V, wall_order=2)
+#        a.run()
+#        X = a.u[0:a.Nion]
+#        Y = a.u[a.Nion:]
+#
+#        Xtent = X.max() - X.min()
+#        Ytent = Y.max() - Y.min()
+#        if Ytent > Xtent:
+#            asprat.append(Ytent / Xtent)
+#        else:
+#            asprat.append(Xtent / Ytent)
+#        print(asprat)
+#        a.show_crystal(a.u)
+#
+#        # vectsvals=a.run()
+#    # print(asprat,np)
+#    print(a.l0)
+#    asp = plt.plot(np.linspace(30, 200, 20), asprat)
+#    #a.show_crystal(a.u)
+#    #asp = plt.scatter(np.linspace(0, 20, 20), asprat, "o")
+#    asp = plt.xlabel('$f_{rot}$, kHz')
+#    asp = plt.ylabel('Crystal Aspect Ratio (Major/Minor Axis)')
+#    asp = plt.title('Crystal Aspect Ratio vs. $f_{rot}$')
+#    plt.show()
+#    print('hih')
     # a = plt.plot(shellcounts, transistionfreq)
     # plt.show()
     # #"""
