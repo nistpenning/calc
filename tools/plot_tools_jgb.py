@@ -56,8 +56,9 @@ def auto_extent(x,y):
     full_y = abs(yx - ym)
     axis = [xm-0.05*full_x, xx + 0.1*full_x, ym-0.1*full_y, yx+0.1*full_y]
     return axis
-        
+
 def plot_fit(x,y,fitfunc,fitguess,
+            yerr=None,
             hold=[],
             labels=['X','Y','default'],
             axis='default',
@@ -76,10 +77,15 @@ def plot_fit(x,y,fitfunc,fitguess,
     fitguess : array
         must supply values for all the parameters in the model given by fitfunc
 
+
     Keyword arguments
     -----------------
+    yerr : array
+        1 std deviation for the y data to weight the fits
+        default is equal weight
     hold : list
         list of booleans, what model parameters to hold fixed (default none)
+        can also pass hold='all' to hold all params fixed
     labels : list
         list of strings, xlabel ylabel, plot title
     axis : list
@@ -99,6 +105,9 @@ def plot_fit(x,y,fitfunc,fitguess,
 
 
 #process hold parameter to make a fit model with specified number of free params
+    if hold=='all':
+        hold = np.ones(np.size(fitguess), dtype=bool)
+
     if np.size(hold) == 0:
         #default, fit it all
         hold = np.zeros(np.size(fitguess), dtype=bool)
@@ -131,7 +140,7 @@ def plot_fit(x,y,fitfunc,fitguess,
                     var_count+=1
             return fitfunc(x,*args)
         #actually do the fit, with the subset of params, varin
-        popt,pcov = opt.curve_fit(func, x, y, p0=varin)
+        popt,pcov = opt.curve_fit(func, x, y, p0=varin, sigma=yerr)
         try:
             perr = np.sqrt(np.diag(pcov))
         except ValueError:
@@ -148,49 +157,50 @@ def plot_fit(x,y,fitfunc,fitguess,
     fit_mess2 = '\n    uncertianties: ' +  perrf
 
     fit_message = fit_message + fit_mess2
-    
+
     if show is True:
         #build figure
         plt.close()
-    
+
         if axis == 'default':
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
         elif axis == 'auto':
             axis = auto_extent(x,y)
         plt.axis(axis)
-    
-        plt.plot(x,y,'o')
+
+        if yerr is None:
+            plt.plot(x,y,'o')
+        else:
+            plt.errorbar(x,y,yerr=yerr,fmt='o')
         plt.plot(x_curve,curve_fit,'-')
-    
+
         #labels
         plt.xlabel(labels[0])
         plt.ylabel(labels[1])
         ym = axis[-2]
         xm = axis[0]
         y_pos_msg = ym-(0.3*np.abs(axis[3]-ym))
-    
+
         if xm is 0.0: x_pos_msg = 0.0
         else: x_pos_msg = xm
-    
+
         plt.text(x_pos_msg, y_pos_msg, fit_message, fontsize=10)
-    
+
         name = fitfunc.__name__
         if save:
             name_out = name+'_fit.png'
             plt.savefig(name_out, format='png', bbox='tight')
-    
+
         if labels[2]=='default':
             plt.title(name)
         else:
             plt.title(labels[2])
-    
+
         plt.show()
     else:
         print(fit_message)
 
-    return popt, perr        
+    return popt, perr
 
-        
-        
-        
-    
+
+
