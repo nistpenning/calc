@@ -490,7 +490,7 @@ class ModeAnalysis:
             # print("Nudge failed!")
             return u
 
-    def show_axial_Evals(self, experimentalunits=False):
+    def show_axial_Evals(self, experimentalunits=False, flatlines=False):
         """
         Plots the axial eigenvalues vs mode number.
         :param experimentalunits:
@@ -500,13 +500,39 @@ class ModeAnalysis:
             print("Warning-- no axial eigenvalues found. Cannot show axial eigenvalues")
             return False
 
+        if flatlines is True:
+            fig = plt.figure(figsize=(8,5))
+            fig = plt.axes(frameon=True)
+            #fig= plt.axes.get_yaxis().set_visible(False)
+            fig.set_yticklabels([])
+
+            if experimentalunits is False:
+                fig=plt.xlabel("Eigenfrequency (Units of $\omega_z$)")
+                fig = plt.xlim(min(self.axialEvals)*.99,max(self.axialEvals*1.01))
+
+                for x in self.axialEvals:
+                    fig=plt.plot([x,x],[0,1],color='black',)
+            if experimentalunits is True:
+                fig= plt.xlabel("Eigenfrequency (Hz)")
+                fig = plt.xlim(min(self.axialEvalsE)*.99,max(self.axialEvalsE)*1.01)
+                for x in self.axialEvalsE:
+                    fig=plt.plot([x,x],[0,1],color='black')
+
+            fig = plt.ylim([0,1])
+            #fig= plt.axes.yaxis.set_visible(False)
+            fig = plt.title("Axial Eigenvalues for %d Ions, $f_{rot}=$%.1f kHz, and $V_{wall}$= %.1f V " %
+                            (self.Nion,self.wrot/(2*pi*1e3),self.Cw*self.V0/1612))
+            plt.show()
+            return True
+
+
         fig = plt.figure()
         xvals = np.array(range(self.Nion))
         xvals+=1
         if experimentalunits is False:
             fig = plt.plot(xvals, sorted(self.axialEvals),"o")
             fig = plt.ylim((.97*min(self.axialEvals), 1.01*max(self.axialEvals)))
-            fig = plt.ylabel("Eigenfrequency (Units of $\omega_z$")
+            fig = plt.ylabel("Eigenfrequency (Units of $\omega_z$)")
             fig = plt.plot([-1,self.Nion+1],[1,1],color="black",linestyle="--")
 
         else:
@@ -517,11 +543,12 @@ class ModeAnalysis:
 
         fig = plt.xlabel("Mode Number")
 
-        fig = plt.title("Axial Eigenvalues for %d Ions" % self.Nion)
+        fig = plt.title("Axial Eigenvalues for %d Ions, $f_{rot}=$%.1f kHz, and $V_{wall}$= %.1f V " %
+                        (self.Nion,self.wrot/(2*pi*1e3),self.Cw*self.V0/1612))
         fig = plt.xlim((0, self.Nion+1))
         fig = plt.grid(True)
         fig = plt.show()
-
+        return True
     def get_x_and_y(self, pos_vect):
         return [pos_vect[:self.Nion], pos_vect[self.Nion:]]
 
@@ -633,12 +660,12 @@ if __name__ == "__main__":
     shellcounts = [4, 5]
     transistionfreq = []
     ions = []
-    nions = 5
-    a = ModeAnalysis(N=nions, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=0, wall_order=2)
+    nions = 30
+    a = ModeAnalysis(N=nions, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=2, wall_order=2)
     a.run()
     print(len(a.axialEvals))
     print(a.Nion)
-    a.show_axial_Evals(experimentalunits=False)
+    a.show_axial_Evals(experimentalunits=True,flatlines=True)
     new = a.calc_axial_modes(a.u)
     print(a.axialEvals - new[0])
     print("------------")
