@@ -1,0 +1,1 @@
+Ion dynamics calculations including photon scattering. Dominic Meiser and Adam Keith. 2012

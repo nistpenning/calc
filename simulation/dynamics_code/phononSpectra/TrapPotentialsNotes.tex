@@ -1,0 +1,99 @@
+\documentclass[12pt]{article}
+\usepackage[left=2cm,top=2cm,bot=2cm,right=2cm,nohead,nofoot]{geometry}%bot=.2cm,
+
+\usepackage{amsmath}
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+\begin{document}
+\title{Comparing Trap Potentials}
+\author{Adam C. Keith}
+\maketitle
+
+I write my trap potential like this:
+\begin{equation}
+\phi_i = V_0 \left( z_i^2 - \frac{x_i^2 + y_i^2}{2} \right) +  V_{wall}[(x_i^2 - y_i^2) cos2\theta - 2x y sin2\theta] 
+\end{equation}
+where I parametrize $V_{wall} = GV_wV_0$ where $G= 4.5 \e{-5}$ * (some units, probably V$^{-1}$) is some kind of geometric factor and $V_w$ is the actual 
+potential applied the the rotating wall electrodes (the peak to peak potential, I think). I found an old conversation that John sent to me a long time ago
+but I slightly changed the language:
+
+"Following the notation used in the notes you sent me, one can write
+\begin{equation}
+qV_{o} = \frac{1}{2}m(w_z)^2 
+\end{equation}
+where $w_z=(2\pi)*(795 \text{kHz})$ and  following the notation in Hasegawa et al.,
+\begin{equation}
+qV_{wall} = [\frac{1}{2}m(w_z)^2]\delta
+\end{equation}
+where $\delta=(0.045)*(V_w/V_T)$.
+In the past few months we have used two different rotating wall strengths corresponding to ($V_w/V_T$)= 0.035 (weak wall) and 0.105 (strong wall).
+Multiplying these two ratios by the 0.045 geometric factor, the strength of the coefficient $qV_{wall}$ is 0.001575 (weak wall) and 0.004725 (strong wall) of the coefficient $qV_{o}$."
+
+
+Dominic writes his potential like this:
+\begin{equation}
+\varphi(\mathbf{r}) = \frac{1}{2}k_z z^2 - 
+\frac{1}{2} \left(k_x x_r^2 + k_y y_r^2\right)
+\end{equation}
+with
+\begin{equation}
+k_x=\left(\frac{1}{2}+\delta\right)k_z,\qquad 
+k_y=\left(\frac{1}{2}-\delta\right)k_z\;,
+\end{equation}
+and
+\begin{equation}
+\left[
+\begin{array}{c}
+x_r\\
+y_r
+\end{array}\right] =
+\left[
+\begin{array}{cc}
+\cos(\vartheta(t)) & -\sin(\vartheta(t))\\
+\sin(\vartheta(t)) & \cos(\vartheta(t))
+\end{array}\right]
+\left[\begin{array}{c}
+x\\
+y
+\end{array}\right]
+\end{equation}
+Lets expand this to compare to mine:
+\begin{equation}
+\varphi(\mathbf{r}) = \frac{1}{2}k_z z^2 - 
+\frac{1}{2} \left[\frac{1}{2}k_z(x_r^2 + y_r^2) + \delta k_z (x_r^2 - y_r^2) \right]
+\end{equation}
+
+\begin{equation}
+\varphi(\mathbf{r}) = \frac{1}{2}k_z z^2 - 
+\frac{1}{2} \left[\frac{1}{2}k_z(x^2 + y^2) + \delta k_z\left(\left(\cos^2(\vartheta(t)) - \sin^2(\vartheta(t))\right) (x^2 - y^2) - 4xy\sin(\vartheta(t))\cos(\vartheta(t)) \right) \right]
+\end{equation}
+
+using trig identities 
+\begin{equation}
+\varphi(\mathbf{r}) = \frac{1}{2}k_z z^2 - 
+\frac{1}{2} \left[\frac{1}{2}k_z(x^2 + y^2) + \delta k_z\left(\cos(2\vartheta(t))(x^2 - y^2) - 2xy\sin(2\vartheta(t)) \right) \right]
+\end{equation}
+
+Comparing, we have:
+\begin{equation}
+V_0 = \frac{1}{2}k_z
+\end{equation}
+and 
+\begin{equation}
+V_{wall} = -\frac{k_z}{2} \delta
+\end{equation}
+Thus, 
+\begin{equation}
+V_w = -\frac{\delta}{G}
+\end{equation}
+for Dominics value of $\delta = 0.0036$, I have $V_w = -80$ and the highest
+I ever used was $V_w = 105$ as John said in our conversation. So this is in agreement (I thought there a factor or 2
+issue but I was wrong) Also, note the sign causes his 
+crystal to have an equilbrium structure to be elongated along the x-axis (in the rotating frame) while mine
+is elongated along the y-axis. This caused a brief confusion for me because inputting my equilibrium structure
+in to the simulation gave particle rearrangment almost immediately. After the fix, my equilibrium positions
+have little motion in the rotating frame.
+
+
+
+
+\end{document}
