@@ -52,6 +52,44 @@ def get_ionProp_value(prop):
         return np.float(val_str[1:-1])
 
 
+def parse_raw_counts_data(file_name):
+    #Get data from the file
+    with open(file_name, 'rb') as f:
+        reader = csv.reader(f)
+        colnames = reader.next()
+        
+    colnames = filter(None, colnames)  # gets rid of column names that are empty strings
+    num_reg_columns = len(colnames) - 1
+    data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None, usecols=range(num_reg_columns+1))      
+    non_hist_cols = num_reg_columns  # defined by HFGUI expt type
+
+    counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None)
+    num_cols_total = len(counts_data[0])
+    counts_cols = range(num_reg_columns, num_cols_total)
+    counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None, usecols=counts_cols)       
+
+    def parse_raw_counts(array):
+        bad = 0
+        for x in np.nditer(array, op_flags=['readwrite']):
+            if x == -1:
+                print('Found bad data point')
+                bad += 1
+                x[...] = -1
+            else:    
+                x[...] = int(x) & 0x1fff
+        print("# of bad points: {}".format(bad))
+
+    def make_detect_array(array):
+        det_array = np.copy(array)
+        for x in np.nditer(det_array, op_flags=['readwrite']):
+            x[...] = ((int(x) & (0xf<<13))>>13)-1
+        return det_array
+        
+    parse_raw_counts(counts_data)
+    det_array = make_detect_array(counts_data)
+
+    return colnames, data, counts_data, det_array
+
 def get_raw_counts():
     file_name = False
     for file in os.listdir(os.getcwd()):
@@ -61,49 +99,16 @@ def get_raw_counts():
         print("Did not find file")
         return 0
     else:
-        #Get data from the file
-        with open(file_name, 'rb') as f:
-            reader = csv.reader(f)
-            colnames = reader.next()
-            
-        colnames = filter(None, colnames)  # gets rid of column names that are empty strings
-        num_reg_columns = len(colnames) - 1
-        data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None, usecols=range(num_reg_columns+1))      
-        non_hist_cols = num_reg_columns  # defined by HFGUI expt type
-        x = data[colnames[1]]
+        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)    
+
+        x= data[colnames[1]]
         scandata = data[colnames[2]]
-    
         
         num_scans = len(scandata[scandata == scandata[0]])
         points_in_scan = np.size(scandata)/num_scans
-    
-        # get the data for counts
-        counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None)
-        num_cols_total = len(counts_data[0])
-        counts_cols = range(num_reg_columns, num_cols_total)
-        counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None, usecols=counts_cols)       
+        
         trials = np.size(counts_data,axis=1)*1.0
         
-        def parse_raw_counts(array):
-            bad = 0
-            for x in np.nditer(array, op_flags=['readwrite']):
-                if x == -1:
-                    print('Found bad data point')
-                    bad += 1
-                    x[...] = -1
-                else:    
-                    x[...] = int(x) & 0x1fff
-            print("# of bad points: {}".format(bad))
-    
-        def make_detect_array(array):
-            det_array = np.copy(array)
-            for x in np.nditer(det_array, op_flags=['readwrite']):
-                x[...] = ((int(x) & (0xf<<13))>>13)-1
-            return det_array
-        
-        parse_raw_counts(counts_data)
-        det_array = make_detect_array(counts_data)
-
         # Make mask for bad points        
         #avg_pmt_counts = np.mean(counts_data[counts_data!=0], axis=1)
         avg_pmt_counts = np.array([np.mean(i[i!=-1]) for i in counts_data ])
