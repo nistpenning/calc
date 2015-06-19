@@ -11,6 +11,9 @@ import scipy.integrate as integ
 import matplotlib.pyplot as plt
 from scipy.constants import pi
 
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
+
 plt.rcParams['font.size'] = 16
 
 
@@ -29,10 +32,11 @@ class ItanoAnalysis:
     r_bar = (hbar * k) ** 2 / (2 * m)  # recoil energy
     rnorm = r_bar / (hbar * k)  # A reduced recoil energy
     vk = gamma0 / (2 * k)  # Reduced line width
+    pardiff=2*np.pi*9E6
 
     def __init__(self,
                  defaultoff=30.0E-6, defaultdet=-500E6, wr=2 * pi * 45.0E3, Tguess=1E-3, saturation=.5,
-                 dens=2.77E9, ywidth=2.0E-6, radius=225.0E-6, quiet=True):
+                 dens=2.77E9, ywidth=2.0E-6, radius=225.0E-6, quiet=True, spar=.2, wpar=2E6):
 
         """
         Define parameters which characterize the plasma and the incident doppler beam, such as the
@@ -59,6 +63,12 @@ class ItanoAnalysis:
         self.s0 = saturation  # saturation parameter for laser interaction (set to 0 to turn off saturation effects)
         self.sig0 = dens
         self.wy = ywidth
+
+
+        # if you choose to include a parallel laser
+
+        self.spar = spar
+        self.wpar = wpar
 
         self.counter = 0
 
@@ -103,7 +113,42 @@ class ItanoAnalysis:
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
                             * np.exp(-(y - offset) ** 2 / wy ** 2) *
-                            ((v) + 2 * self.rnorm / u) * np.exp(-v ** 2) /
+                            ((v) + 5 * self.rnorm / (6 * u)) * np.exp(-v ** 2) /
+                            ((1 + 2 * s0 * np.exp(-2 * (y - offset) ** 2 / wy ** 2)
+                              + (delta - (wr * y / vk) - (u * v / vk)) ** 2)),
+                            -np.inf, np.inf,
+                            lambda x: -1 * rp, lambda x: rp,
+                            lambda x, y: -1 * rp, lambda x, y: rp)
+
+    def dEavgAndParallel(self, u, detun=None, offset=None):
+        """
+
+        Returns the average rate of change of energy from the perpendicular doppler cooling laser.
+
+        :param u: float, which characterizes the Maxwell-Boltzmann distribution of velocity for the ions.
+                Temperature can be inferred by u^2 *m /(2kb).
+        :param detun: detuning frequency from the natural frequency of transistion. this should be negative.
+        :param offset: offset in meters of the cooling laser from the center of the plasma.
+        """
+        if detun is None:
+            detun = self.det
+        if offset is None:
+            offset = self.d
+
+        rp = self.rp
+        wy = self.wy
+        vk = self.vk
+        wr = self.wr
+        s0 = self.s0
+        delta = 2. * detun / self.gamma0
+
+        alpha = (2 / 9) * self.hbar * self.k * rp ** 2 * np.pi ** (3 / 2) * self.spar  \
+            /(s0*self.m*(1+2*self.spar+(2/self.gamma0)**2)*(self.pardiff)**2)
+
+        ret = integ.tplquad(lambda y, x, v:
+                            self.density(x, y)
+                            * np.exp(-(y - offset) ** 2 / wy ** 2) *
+                            ((v) + 5 * self.rnorm / (6 * u)) * np.exp(-v ** 2) /
                             ((1 + 2 * s0 * np.exp(-2 * (y - offset) ** 2 / wy ** 2)
                               + (delta - (wr * y / vk) - (u * v / vk)) ** 2)),
                             -np.inf, np.inf,
@@ -112,7 +157,7 @@ class ItanoAnalysis:
 
         # print("Integral Evaluated",ret[0],"with temperature",u**2*8.96*1.673E-27/(2*1.38E-23))
         self.counter += 1
-        return ret[0]
+        return u * ret[0] + alpha
 
     def totalscatter(self, ueq, detun=None, offset=None):
         """
@@ -126,7 +171,7 @@ class ItanoAnalysis:
         :param offset: offset in meters of the cooling laser from the center of the plasma.
         """
         if detun is None:
-            detun= self.det
+            detun = self.det
 
         if offset is None:
             offset = self.d
@@ -166,7 +211,7 @@ class ItanoAnalysis:
             offset = self.d
 
         if detun is None:
-            detun= self.det
+            detun = self.det
 
         rp = self.rp
         wy = self.wy
@@ -282,7 +327,7 @@ class ItanoAnalysis:
             Teq = 0
         return [Teq, Trq, Sct]
 
-    def getueq(self,detun=None, offset= None):
+    def getueq(self, detun=None, offset=None):
         if detun is None:
             detun = self.det
         if offset is None:
@@ -294,6 +339,7 @@ class ItanoAnalysis:
         umin = np.sqrt(Tmin * self.kB * 2 / self.m)
         ret = opt.brentq(self.dEavg, umin, umax, args=(detun, offset), xtol=1e-4, rtol=3.0e-7)
         return ret[0]
+
     """
     def getrootdetun(self,detun):
         global GAMMA, VK, RNORM, U0, RP, WR, WY, d,S0,SIG
@@ -302,14 +348,20 @@ class ItanoAnalysis:
     """
 
 
-
-
 if __name__ == '__main__':
     a = ItanoAnalysis(quiet=False)
 
-    A=a.scan_detuning_and_offset(detN=5, offN=5,get_torque=True,get_total_scatter=True)
-
-    print(A[0],A[1],A[2])
+    A = a.scan_detuning_and_offset(detN=3, offN=3, get_torque=True, get_total_scatter=True)
+    df = np.linspace(-150.0E6, -1E6, 3)
+    doff = np.linspace(0, 40.0E-6, 3)
+    print(A[0], A[1], A[2])
+    plt.rcParams['font.size'] = 16
+    plt.figure()
+    CS = plt.pcolor(df * 1.0E-6, 1.0E6 * doff, A[0] * 1000)
+    plt.show()
+    plt.figure()
+    CS2 = plt.pcolor(df * 1.0E-6, 1.0E6 * doff, A[1])
+    plt.show()
     """
     Tmax = 1.0E-1
     Tmin = 1.0E-5
