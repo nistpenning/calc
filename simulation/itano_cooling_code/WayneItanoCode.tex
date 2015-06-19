@@ -18,12 +18,11 @@
 \renewcommand{\bold}[1]{\textbf{#1}}
 \newcommand{\tperp}{$T_{\perp}$}
 
-\title{ Scattering Rate, Energy Balance, and Torque \\ June 9$^{th}$ 2015}
+\title{ Laser Cooling Energy Balance in a Penning Trap}
 \author{Steven Torrisi }
 
 \begin{document}
 \maketitle
-\emph{Described below is a derivation of expressions used in the Wayne Itano code for predicting the steady-state equilibrium temperature, net torque, and total scattering events of a doppler cooling laser incident on an ion plasma in a penning trap.}
 %
 %\emph{Note: We will indicate whenever constant coefficients unimportant to the integration are dropped or other substitutions are made.} \\
 %
@@ -42,44 +41,38 @@
 %$vk = \frac{\gamma_0}{2 k}$ 
 %
 %To be completed later...
+\section{Last updated June 18th, 2015.}
+\section{Total Scattering Rate \\ June 3rd, 2015}
 
-\section{Total Scattering Rate}
 
-In order to calculate the total scattering rate, we begin with the expression for the scattering rate from Itano 1988:
+In order to calculate the total scattering rate, we begin with the expression for the scattering rate from \textbf{Perpendicular Laser Cooling of a Rotating Ion Plasma in a Penning Trap}, Itano \emph{et al}, PRA 1988:
 \eqn{\gamma_L = \frac{I \sigma_0}{\hbar \omega_L} \frac{\gamma_0^2/4}{(\gamma/2)^2 + \Delta^2}}
 
-Where I is the laser intensity function, $\sigma_0$ is the cross-section/probability of interaction, $\omega_L$ is the laser frequency, $\gamma_0$ is the transition line width, and $\Delta$ is the laser detuning.
-
-This scattering rate thus depends on two \emph{functions}; intensity $I$, and $\gamma$ modified for saturation effects.
+This scattering rate thus depends on two functions; intensity, and $\gamma$ modified for saturation effects.
 
 The intensity is the beam profile, which we write here as 
 \eqn{ I= I_0 \exp[ -2(y-d)^2/\omega_y^2]}
-assuming a Gaussian beam profile with offset d and beam width $\omega_y$. If we are dealing with a 2-dimensional ion crystal, we neglect the z-dependence of the laser beam intensity.
+assuming a Gaussian beam profile with offset d and beam width $\omega_y$.
 
 The saturation-adjusted $\gamma$ is written more simply in the $\gamma^2$ form as  \eqn{ \gamma^2 = \gamma_0^2 (1+2S)}
 where S is a saturation parameter defined as
 \eqn{S= \frac{S_0}{I_0} I = \frac{I_0 \sigma_0}{\hbar \omega_0 \gamma_0}  \exp[ -2(y-d)^2/\omega_y^2]}
 noting \eqn{S_0 =  \frac{I_0 \sigma_0}{\hbar \omega_0 \gamma_0} }
-After some simplification we can write the scattering rate $\gamma_L$ as
+Which after some simplification we can simply write the scattering $\gamma_L$ as
 
-\eqn{ \frac{\gamma_0 S_0 \exp [ -2 (y-d)^2/\omega_y^2] }{\left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2 \Delta^2 \right]}}
+\eqn{ \gamma_0 S_0 \exp [ -2 (y-d)^2/\omega_y^2] \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2 \Delta^2 \right]^{-1}}
 
-Now, we can weight this total scattering rate $\gamma_L$ over the entire cloud by multiplying it by density,
- \eqn{ \text{ If $x^2+y^2 \leq R_p^2$, then } n(x,y) = \Sigma_0 \sqrt{1-\frac{x^2+y^2}{R_p^2}} }
-\eqn{ \text{else, } n(x,y)= 0}
-
-Defining the density function in this piecewise way is suggested for numerical studies, as it permits rectangular integration bounds ($[-R_p,R_p]$ for and $y$ as opposed to integrating y from $\pm \sqrt{R_p^2-x^2}$, for example).
-
-We additionally need to integrate over $v_x$ to account for Doppler shift effects in the laser detuning (a crucial physical effect in the math).
+Now, we can weight this total scattering rate $\gamma_L$ over the entire cloud by multiplying it by density, \eqn{n(x,y) = \Sigma_0 \sqrt{1-\frac{x^2+y^2}{R_p^2}}}
+We additionally need to integrate over $v_x$ to account for Doppler shift effects in the detuning (a crucial physical effect in the math).
 
 The total scatter rate can be written then as
-\eqn{ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x \gamma_L n(x,y) P(v_x| y, u,\omega)}
-where $P(v_x| y, u,\omega)$ represents a Maxwell-Boltzmann velocity distribution for the x component of the velocity, with mean parameter $u$ and dependence on $\omega y$ to account for weighting over the spinning cloud.  Recalling that  \eqn{\Delta= \omega_L - \omega_0 - \frac{R}{\hbar} - kv_x}
+\eqn{ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x \gamma_L n(x,y) P(v_x)}
+where $P(v_x)$ represents a Maxwell-Boltzmann probability distribution for the x component of the velocity, with mean parameter $u$ and weighted by $\omega y$ to account for weighting over the spinning cloud.  Recalling that  \eqn{\Delta= \omega_L - \omega_0 - \frac{R}{\hbar} - kv_x}
 continue on:
 \eqn{ \gamma_0 S_0 \Sigma_0
  \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv_x 
  \frac{
- \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} P(v_x| y, u,\omega)}
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} P(v_x)}
  { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2 \Delta^2 \right]}
  }
 or expanding $P(v_x)$ and $\Delta$,
@@ -101,7 +94,7 @@ or expanding $P(v_x)$ and $\Delta$,
  { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v'))^2 \right]\sqrt{\pi} u}
  } 
 
-and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\emph{ (Watch carefully; the u in the denominator is cancelled by $\frac{dv'}{u} = dv$)}
+and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\emph{ (Watch carefully; the u in the denominator is eliminated by $\frac{dv'}{u} = dv$)}
 
  \eqn{ \gamma_0 S_0 \Sigma_0
  \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
@@ -112,12 +105,12 @@ and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\em
  } 
  
  Which when integrated over the cloud will yield the total scattering rate, accounting for saturation effects.
-
+\newpage
  \section{Torque}
 
  We need only modify the most recent equation to add in a factor for the torque imparted per scattering event.
  
- Because the momentum transfer per scattering event is given as $\hbar k$, where k is the wave number of the photon, we can multiply in the momentum incurred per event times the y coordinate (through $\tau = \vec{r} \times \vec{F}$ to get the following expression for total torque:
+ Because the momentum transfer per scattering event is given as $\hbar k$, where k is the wave number of the photon, we can multiply in the momentum incurred per event times the y coordinate (through $\tau = \vec{r} \times \vec{F}$) to get the following expression for total torque:
  
  \eqn{ \gamma_0 S_0 \Sigma_0
  \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
@@ -142,19 +135,19 @@ and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\em
  Replacing the momentum per scattering event $\hbar k y$ with the energy per scattering event, given by laser vector $\vec{k}$ and ion velocity $\vec{v}$ to be
  \eqn{ \hbar \vec{k} \cdot \vec{v} + 2 R} where R is a recoil energy term defined by  \eqn{R= \frac{ (\hbar k )^2}{2m}}.
  
-  The laser is exclusively in the x direction, so we can rewrite this energy term as 
-  \eqn{\hbar k v_x + 2R}
+  The laser is exclusively in the x direction, and we neglect the isotropic scattering in the z direction (subtracting a factor of R/3 from the recoil effect; see Itano 1982 for more details) so we can rewrite this energy term as 
+  \eqn{\hbar k v_x + \frac{5}{3}R}
   
-  and adjust for the doppler effect by replacing $v_x$ with
+  and adjust for the rotating wall energy contribution by replacing $v_x$ with
   \eqn{ \hbar k (v_x-\omega y)}
   
   Recall earlier we made a substitution which eliminated $v_x$ and replaced it with $v$; we will do the same here in a truncated fashion:
  \eqn{ v_x - \omega y \rightarrow v' \rightarrow vu }
  leaving us with 
- \eqn{ \hbar k uv + 2R}
+ \eqn{ \hbar k uv + \frac{5}{3}R}
  since we will be eventually solving for a zero, we may factor out  $\hbar k u $ from both terms and throw away the constant coefficients when factored into the integrand.
  
- We finally have \eqn{ v + \frac{2R}{\hbar k u} = v+ \frac{\hbar k}{m u}}
+ We finally have \eqn{ v + \frac{5R}{3\hbar k u} = v+ \frac{5\hbar k}{6m u}}
  
  Which we now substitute into the total scattering rate integral to get our final expression:
 
@@ -162,12 +155,144 @@ and now if $v= \frac{v'}{u}, dv'=udv$ we will arrive at our final expression.\em
  <\frac{dE}{dt}> = 
  \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
  \frac{
- (v- \frac{\hbar k}{m u})
+ (v+ \frac{5\hbar k}{6m u})
  \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
  }
- { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]\sqrt{\pi}}
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]}
  \label{dedt}
   }
   which may be numerically solved for to find the steady-state temperature as a function of $u$ in the \textbf{Wayne/Itano code}.
+
+\newpage
+\section{Accounting for Recoil Effects of the Parallel Cooling Laser \\ June 18, 2015}
+Laser cooling in a Penning trap can involve two lasers, one which is perpendicular to the trap axis (and thus orienting the beam in the xy plane), and one parallel to it (in which the beam points in the $\hat{z}$ direction). The parallel laser primarily imparts momentum in the $\hat{z}$ direction, but due to isotropic photon scattering, increases the energy in all degrees of freedom.
+
+We borrow our analysis of this issue from \textbf{Laser Cooling of Ions Stored in Harmonic and Penning Traps} by Itano and Wineland, PRA 1982.  In section II.B.1, the rate of energy change in the x, y, and z directions originating from a laser oriented in the $\hat{x}$ direction is described (Eqns 15.a,b,c) Without loss of generality, we swap the x and z indicies, yielding the following three equations, where $\vec{k}= k \hat{x}$:
+
+\eqn{ \frac{dE_z}{dt} = \frac{I}{\hbar \omega} \left< \sigma (\omega, \vec{v}) [\hbar k v_z + R(1+f_{sz}) ]\right>_v \label{eqn:zheat}}
+\eqn{\frac{dE_i}{dt} = \frac{I}{\hbar \omega} \left< \sigma (\omega, \vec{v}) \right>_v R f_{si} \label{eqn:xyheat}}
+where i =x,y,.
+
+We are not interested in the energy change in the z direction described by equation \ref{eqn:zheat}. We are chiefly interested in how the parallel cooling laser affects the temperature of atoms in the xy plane. 
+
+Re-examining terms in  equation \ref{eqn:xyheat}, we may take $I$ to be a constant independent of spatial coordinates. The beam waist of the parallel cooling laser is often large compared to the radius of the crystal, and thus the intensity is roughly constant across the crystal.  Thus $I = I_z$, for intensity of the z-laser. We take $\omega$ to be the frequency of the laser light, $\sigma$ to be the probability of interaction of a photon with an atom, $R$ the energy per recoil event, and finally $f_{si}$ is a measure of the overall probability of a photon scattering in the $ith$ direction. For example, if photons only scattered in the $\pm\hat{z}$ direction, then $f_{sz}$ would equal 1 and $f_{sx},f_{sy} =0$ since no energy is added to their degree of freedom. For isotropic scattering, the probability of a photon scattering in each of the 3 degrees of freedom is equal to $1/3$.
+
+We will thus account for the recoil by summing the two terms of heating rate,
+
+\eqn{ \frac{dE_x}{dt}+\frac{dE_y}{dt}= \frac{I_z}{\hbar\omega} \left< \sigma (\omega,\vec{v}) \right> R (f_{sx}+f_{sy})}
+
+Make the substitution that (coming from eqn 17 of the paper),
+
+ \eqn{  \left< \sigma (\omega,\vec{v}) \right>  = \sigma_0 \frac{ (\gamma_0/2)^2}{ \left[ (\gamma/2)^2 + (\omega_0 -\omega)^2 \right]} }
+
+to get a term which must be added to the energy balance equal to
+
+\eqn { \frac{I_z \sigma_0 R (f_{sx}+f_{sy})} {\hbar \omega}   \frac{ (\gamma_0/2)^2}{ \left[ (\gamma/2)^2 + (\omega_0 -\omega)^2 \right]}}
+
+ Next, recall $\gamma$= $\gamma_0 \sqrt{ 1+ S^2}$, so we can use a new saturation parameter for the z cooling beam as $S_z$, assume isotropic scattering $(f_{sx}=f_{sy}=\frac{1}{3})$, and distinguish the z-beam as the frequency $\omega_z$ of the z-beam.
+
+\eqn { \frac{2}{3} \frac{I_z \sigma_0 R} {\hbar \omega_z}   \frac{1}{ \left[ 1 + 2S_z+ \left(\frac{2}{\gamma_0}\right)^2(\omega_0 -\omega_z)^2 \right]}}
+
+We may make the further step of noticing that 
+
+\eqn{ S_z = \frac{I_z \sigma_0}{\hbar \omega_z \gamma_0}}
+
+and hence the numerator can be simplified dramatically as
+
+\eqn{ \frac{I_z \sigma_0}{\hbar \omega_z} = S_z \gamma_0}
+
+so once more we find
+
+\eqn{ \frac{2}{3} \frac{S_z R \gamma_0}{\left[ 1 + 2S_z+ \left(\frac{2}{\gamma_0}\right)^2(\omega_0 -\omega_z)^2 \right]}}
+
+Recall that when we derived the energy balance equation for the xy plane, we factored out several constant coefficients which do not affect the root. Now that we are adding a new term with parameters defined by a different laser, we must be careful in introducing this term into the energy balance. Notice that the recoil heating is a constant rate. Consider that our equation will take the qualitative form 
+
+\begin{multline}
+ \left< \frac{dE}{dt} \right> = (\text{Parallel Cooling Interaction Rate per Ion}) \times (\text{Number of Ions}) +\\ (\text{Perpendicular Scattering Rate}) \times (\text{Perpendicular Energy per Scatter Event})
+\end{multline}
+
+where the number of ions is given by \eqn{N= \Sigma_0 \frac{2}{3} \pi R_p^2}
+
+and quantitatively, this mess (Notice the 5/3 factor in the R, an addition to this version of the formula which handles a mistaken approximation made earlier):
+
+\begin{multline}
+ \left< \frac{dE}{dt} \right> =
+\frac{2}{3} \frac{\Sigma_0 2 \pi R_p^2}{3} \frac{S_z R \gamma_0}{\left[ 1 + 2S_z+ \left(\frac{2}{\gamma_0}\right)^2(\omega_0 -\omega_z)^2 \right]}+ \\
+\gamma_0 S_0 \Sigma_0
+ \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ (\hbar kv u+\frac{5R}{3 })
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]\sqrt{\pi}}
+\end{multline}
+
+In solving for the root we are free to factor constants; so divide everything by $ \gamma_0 \ \hbar k \ S_0  \ \Sigma_0 / \sqrt{\pi}$ to get
+
+\begin{multline}
+ \left< \frac{dE}{dt} \right> =
+\frac{2 \pi ^{3/2}}{3 S_0 \hbar k } \frac{2R_p^2}{3} \frac{S_z   R}{\left[ 1 + 2S_z+ \left(\frac{2}{\gamma_0}\right)^2(\omega_0 -\omega_z)^2 \right]}+ \\
+  \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ (u v+\frac{5R}{3 \hbar k })
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]}
+\end{multline}
+ 
+ 
+ In a final attempt to clean things up, recall that \eqn{ R = \frac{(\hbar k)^2}{2m}} (where $k_z \approx k_{perp}$) which lets us slightly simplify the above equation as 
+\begin{multline}
+ \left< \frac{dE}{dt} \right> =
+\frac{2}{9}
+\frac{\hbar k \pi^{3/2}R_p^2 }{S_0 m } \frac{S_z }{\left[ 1 + 2S_z+ \left(\frac{2}{\gamma_0}\right)^2(\omega_0 -\omega_z)^2 \right]}+ \\
+  u \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+ ( v+\frac{5 \hbar k}{6u})
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]}
+\end{multline}
+
+In order to speed up computation time, it is suggested that the quantity on the left side be calculated at the beginning of the program execution;
+if 
+\eqn{ \alpha = \frac{2}{9} \frac{ \hbar k  R_p^2 \pi^{3/2} S_z}{ S_0  m \left[ 1+ 2 S_z + \left( \frac{2}{\gamma_0} \right)^2 (w_0 -\omega_z )^2 \right]}}
+
+we can rewrite the energy balance as 
+\eqn{  \left< \frac{dE}{dt} \right> = \alpha +  u \int_{-R}^{R} dx \int_{-R}^R  dy \int_{-\infty}^{\infty} dv 
+ \frac{
+  ( v+\frac{5 \hbar k}{6 u })
+ \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+ }
+ { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]}}
+ Which is much more efficient for numerical computation. \flushright $\square$
+%Thus finding the root of $ \left< \frac{dE}{dt} \right> $ now becomes, with the addition of this term, 
+
+%
+%
+%
+%  \begin{multline}
+% <\frac{dE}{dt}> = 
+% \int \int \int 
+% \frac{
+% (v- \frac{\hbar k}{m u})
+% \exp [ -2 (y-d)^2/\omega_y^2] \sqrt{1-\frac{x^2+y^2}{R_p^2}} \exp [-v^2]
+% }
+% { \left[ 1+2S_0 \exp [ -2 (y-d)^2/\omega_y^2] +\left( \frac{2}{\gamma_0} \right)^2  (\omega_0' - k(\omega_r y +v u))^2 \right]} \\ + \frac{2I_z \sigma_0 R_z} {3\hbar \omega_z}   \frac{\gamma_0^2(1+2S_z)}{ \left[ \gamma_0^2(1+2S_z) + 4(\omega_0 -\omega_z)^2 \right]}
+% \label{dedtrecoil}
+%\end{multline}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \end{document}

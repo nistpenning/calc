@@ -1,18 +1,19 @@
 __author__ = 'sbt'
 
-# Began life as MATLAB code written by Charles Xu.
-# Written for Python by Steven B. Torrisi, Summer 2015.
+""" Began life as MATLAB code written by Charles Xu.
+    Written for Python by Steven B. Torrisi, Summer 2015.
+    Contains a class called ItanoAnalysis, based primarily on the PRA Paper by W. Itano from 1988
+    "Perpendicular laser cooling of a rotating ion plasma in a Penning trap"
+    with modifications which take into account a rotating wall potential, as well as
+    some recoil heating from a parallel laser beam frmo the PRA paper by W. Itano from 1982
+    "Laser Cooling of Atoms Stored in Harmonic and Penning Traps".
 
-import time
+"""
 import numpy as np
-import scipy as sp
 import scipy.optimize as opt
 import scipy.integrate as integ
 import matplotlib.pyplot as plt
 from scipy.constants import pi
-
-from matplotlib.colors import BoundaryNorm
-from matplotlib.ticker import MaxNLocator
 
 plt.rcParams['font.size'] = 16
 
@@ -21,6 +22,10 @@ class ItanoAnalysis:
     """
     Contains the tools to conduct calculations of total energy balance, torque, scattering events
     from a perpendicular doppler cooling beam acting incident on a Berylium ion plasma.
+
+    Methods inside the function allow one to find, for a plasma of a given radius and density,
+    the thermal equilibrium which results from a perpendicular doppler cooling laser acting on the
+    plasma.
     """
     hbar = 1.054E-34
     c = 2.9979E8
@@ -33,7 +38,6 @@ class ItanoAnalysis:
     rnorm = r_bar / (hbar * k)  # A reduced recoil energy
     vk = gamma0 / (2 * k)  # Reduced line width
     pardiff=2*np.pi*9E6
-
 
     def __init__(self,
                  defaultoff=30.0E-6, defaultdet=-500E6, wr=2 * pi * 45.0E3, Tguess=1E-3, saturation=.5,
@@ -73,20 +77,26 @@ class ItanoAnalysis:
 
         self.counter = 0
 
-    def density(self, x, y):
+    def density(self, x, y,radius=None):
         """
-        Defines a density scaling which returns 0 outside of the circular bounds of the crystal.
+        Defines a density scaling which returns 0 outside of the circular bounds of the plasma.
         Useful because it allows for rectangular integration bounds (i.e. [-r,r])
-        instead of complicated functional bounds which are difficult to work with.
+        instead of complicated functional bounds which are difficult to work with
+        (such as [-\sqrt{1+x^2}, \sqrt{1+x*2}] for example).
+
+        uses the plasma radius
 
 
-        :rtype : float, either the height of the plasma in the z direction or 0 if out of bounds.
+        :rtype : float: either the height of the plasma in the z direction or 0 if out of bounds.
         :param x: x coordinate
         :param y: y coordinate
         """
         rad = x ** 2 + y ** 2
-        if rad <= (self.rp ** 2):
-            return np.sqrt(1 - (rad) / self.rp ** 2)
+
+        if radius is None:
+            radius = self.rp
+        if rad <= (radius ** 2):
+            return np.sqrt(1 - rad / radius ** 2)
         else:
             return 0.0
 
@@ -124,7 +134,9 @@ class ItanoAnalysis:
     def dEavgAndParallel(self, u, detun=None, offset=None):
         """
 
-        Returns the average rate of change of energy from the perpendicular doppler cooling laser.
+        Returns the average rate of change of energy from the perpendicular doppler cooling laser,
+        including the effects of a laser in the z-direction (thus including a parallel cooling laser
+        too. This contribution comes in the form of a constant recoil heating in the x and y degrees of freedom).
 
         :param u: float, which characterizes the Maxwell-Boltzmann distribution of velocity for the ions.
                 Temperature can be inferred by u^2 *m /(2kb).
@@ -160,7 +172,7 @@ class ItanoAnalysis:
         self.counter += 1
         return u * ret[0] + alpha
 
-    def totalscatter(self, ueq, detun=None, offset=None):
+    def totalscatterperp(self, ueq, detun=None, offset=None):
         """
         Returns the number of total scattering events per second from the perpendicular doppler cooling laser.
 
@@ -255,7 +267,9 @@ class ItanoAnalysis:
                                  get_temp=True, get_torque=False, get_total_scatter=False, plot=False) -> list:
         """
             Conducts a two-dimensional scan across the detuning/offset parameter space.
-            Returns an array of output elements. if plot is true, will generate plots for you of the temperature.
+            Returns an array of output elements.
+
+            if plot is true, though this feature is not in yet, it can produce a nice plot for you.
 
 
             :rtype : list which contains 3 elements:
@@ -315,7 +329,7 @@ class ItanoAnalysis:
                     Trq[D][W] = self.totaltorque(U[D][W], dw[W], doff[D])
 
                 if get_total_scatter:
-                    Sct[D][W] = self.totalscatter(U[D][W], dw[W], doff[D])
+                    Sct[D][W] = self.totalscatterperp(U[D][W], dw[W], doff[D])
 
                 if self.quiet is False:
                     print("u/T recorded:", U[D][W], ((U[D][W]) * U[D][W] * 8.96 * 1.673E-27 / (2 * 1.38E-23)), "after",
@@ -328,9 +342,10 @@ class ItanoAnalysis:
             Teq = 0
         return [Teq, Trq, Sct]
 
-    def getueq(self, detun=None, offset=None):
+    def getueq(self, detun=None, offset=None,returntemperature=False):
         """
-
+        Returns the equilibrium Maxwell-Boltzmann parameter for the planar velocity.
+        or, if you set returntemperature to True, it will return the temperature isntead.
 
         :type detun: float: The detuning to use for the perpendicular cooling laser.
         :type offset: float: The offset from the center of the plasma to use for the perpendicular cooling laser.
@@ -345,7 +360,10 @@ class ItanoAnalysis:
         umax = np.sqrt(Tmax * self.kB * 2 / self.m)
         umin = np.sqrt(Tmin * self.kB * 2 / self.m)
         ret = opt.brentq(self.dEavg, umin, umax, args=(detun, offset), xtol=1e-4, rtol=3.0e-7)
-        return ret[0]
+        if returntemperature is False:
+            return ret[0]
+        else:
+            return ret[0]**2*self.m/(2*self.kB)
 
     def plot_2d_scan_result(self,df, doff, var, showminimum=True, temperature= True):
         """
