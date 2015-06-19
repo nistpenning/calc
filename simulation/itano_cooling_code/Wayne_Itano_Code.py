@@ -34,6 +34,7 @@ class ItanoAnalysis:
     vk = gamma0 / (2 * k)  # Reduced line width
     pardiff=2*np.pi*9E6
 
+
     def __init__(self,
                  defaultoff=30.0E-6, defaultdet=-500E6, wr=2 * pi * 45.0E3, Tguess=1E-3, saturation=.5,
                  dens=2.77E9, ywidth=2.0E-6, radius=225.0E-6, quiet=True, spar=.2, wpar=2E6):
@@ -143,7 +144,7 @@ class ItanoAnalysis:
         delta = 2. * detun / self.gamma0
 
         alpha = (2 / 9) * self.hbar * self.k * rp ** 2 * np.pi ** (3 / 2) * self.spar  \
-            /(s0*self.m*(1+2*self.spar+(2/self.gamma0)**2)*(self.pardiff)**2)
+            / (s0*self.m*(1+2*self.spar+(2/self.gamma0)**2)*self.pardiff**2)
 
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
@@ -328,6 +329,12 @@ class ItanoAnalysis:
         return [Teq, Trq, Sct]
 
     def getueq(self, detun=None, offset=None):
+        """
+
+
+        :type detun: float: The detuning to use for the perpendicular cooling laser.
+        :type offset: float: The offset from the center of the plasma to use for the perpendicular cooling laser.
+        """
         if detun is None:
             detun = self.det
         if offset is None:
@@ -340,12 +347,13 @@ class ItanoAnalysis:
         ret = opt.brentq(self.dEavg, umin, umax, args=(detun, offset), xtol=1e-4, rtol=3.0e-7)
         return ret[0]
 
-    """
-    def getrootdetun(self,detun):
-        global GAMMA, VK, RNORM, U0, RP, WR, WY, d,S0,SIG
-        print("Trying detuning",detun)
-        return (opt.brentq(dEver3,umin,umax,args=(detun,3.98794261e-05),xtol=1e-6, rtol=3.0e-8))**2*m/(2*kB)
-    """
+    def plot_2d_scan_result(self,df, doff, var, showminimum=True, temperature= True):
+        """
+        UNDER CONSTRUCTION.
+
+        Input a 2d variable and a
+        """
+
 
 
 if __name__ == '__main__':
