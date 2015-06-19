@@ -106,14 +106,14 @@ class ModeAnalysis:
         self.planarEvects = []  # Planar Eigenvectors
 
         self.axialEvalsE = []  # Axial eigenvalues in experimental units
-        self.axialEvectsE = []  # Axial eigenvectors in experimental units
         self.planarEvalsE = []  # Planar eigenvalues in experimental units
-        self.planarEvectsE = []  # Planar eigenvectors in experimental units
 
         self.r = []
         self.rsep = []
         self.dx = []
         self.dy = []
+
+        self.hasrun=False
 
     def dimensionless(self):
         """Calculate characteristic quantities and convert to a dimensionless
@@ -147,7 +147,7 @@ class ModeAnalysis:
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
             return 0
-        self.u0 = self.generate_lattice()
+        self.u0 = self.find_scaled_lattice_guess(1E-4,1E-2)
         # self.u0 = self.generate_2D_hex_lattice(2)
 
         # if masses are not all beryllium, force heavier ions to be boundary
@@ -158,14 +158,15 @@ class ModeAnalysis:
 
         # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
         # Only changes the positions if the potential energy was reduced.
-        # for attempt in np.linspace(.05, .25, 5):
-        #    self.u = self.perturb_position(self.u, attempt)
+        for attempt in np.linspace(.05, .25, 3):
+            self.u = self.perturb_position(self.u, attempt)
 
         self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
 
         self.axialEvals, self.axialEvects = self.calc_axial_modes(self.u)
         self.planarEvals, self.planarEvects = self.calc_planar_modes(self.u)
         self.expUnits()  # make variables of outputs in experimental units
+        self.hasrun=True
 
     def generate_lattice(self):
         """Generate lattice for an arbitrary number of ions (self.Nion)
@@ -334,6 +335,47 @@ class ModeAnalysis:
         H = np.bmat([[Hxx, Hxy], [Hxy, Hyy]])
         H = np.asarray(H)
         return H
+
+    def find_scaled_lattice_guess(self, mins, res):
+        """
+        Will generate a 2d hexagonal lattice based on the shells intialiization parameter.
+        Guesses initial minimum separation of mins and then increases spacing until a local minimum of
+        potential energy is found.
+
+        :param mins: the minimum separation to begin with.
+        :param res: the resizing parameter added onto the minimum spacing.
+        :return: the lattice with roughly minimized potential energy (via spacing alone).
+        """
+
+        # Make a 2d lattice; u represents the position
+        uthen = self.generate_lattice()
+        uthen = uthen*mins
+        # Figure out the lattice's initial potential energy
+        pthen = self.pot_energy(uthen)
+
+        # Iterate through the range of minimum spacing in steps of res/resolution
+        for scale in np.linspace(mins,100,res):
+            # Quickly make a 2d hex lattice; perhaps with some stochastic procedure?
+            uguess = self.generate_2D_hex_lattice(scale)
+            # Figure out the potential energy of that newly generated lattice
+            pnow = self.pot_energy(uguess)
+
+            # And if the program got a lattice that was less favorably distributed, conclude
+            # that we had a pretty good guess and return the lattice.
+            if pnow >= pthen:
+                # print "find_scaled_lattice: Minimum found"
+                # print "initial scale guess: " + str(scale)
+                # self.scale = scale
+                #print(scale)
+                return uthen
+            # If not, then we got a better guess, so store the energy score and current arrangement
+            # and try again for as long as we have mins and resolution to iterate through.
+            uthen = uguess
+            pthen = pnow
+        # If you're this far it means we've given up
+        # self.scale = scale
+        # print "find_scaled_lattice: no minimum found, returning last guess"
+        return uthen
 
     def find_eq_pos(self, u0, method="bfgs"):
         """
@@ -549,8 +591,27 @@ class ModeAnalysis:
         fig = plt.grid(True)
         fig = plt.show()
         return True
+
     def get_x_and_y(self, pos_vect):
         return [pos_vect[:self.Nion], pos_vect[self.Nion:]]
+
+    def is_plane_stable(self):
+        """
+        Checks to see if any of the axial eigenvalues in the current configuration of the crystal
+        are imaginary. If so, this indicates that the one-plane configuration is unstable
+        and a 1-2 plane transistion is possible. T
+
+        :return: Boolean: True if no 1-2 plane transistion mode exists, false if it does
+        (Answers: "is the plane stable?")
+        """
+        if self.hasrun is False:
+            self.run()
+
+        for x in self.axialEvals:
+            if x.imag() != 0:
+                return False
+
+        return True
 
     @staticmethod
     def nan_to_zero(my_array):
@@ -657,6 +718,24 @@ if __name__ == "__main__":
     # 1  2  3  4  5   6   7   8   9  10  11  12  13  14
     # 7 19 37 61 91 127 169 217 271 331 397 469 547 631...
 
+    nions=169
+    a = ModeAnalysis(N=nions, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=200, Vwall=15, wall_order=2)
+    a.run()
+    print(a.pot_energy(a.u))
+    #print(a.pot_energy(a.U))
+    plt.plot(a.u[0:nions], a.u[nions:], 'o', color="blue", alpha=.5)
+    #plt.plot(a.U[0:nions], a.U[nions:], 'o', color="orange")
+    plt.show()
+    for s in [.1,.25]:
+        a.u=a.perturb_position(a.u,s)
+        #a.U=a.perturb_position(a.U,s)
+
+    print(a.pot_energy(a.u))
+    #print(a.pot_energy(a.U))
+    plt.plot(a.u[0:nions], a.u[nions:], 'o', color="blue", alpha=.5)
+    #plt.plot(a.U[0:nions], a.U[nions:], 'o', color="orange")
+    plt.show()
+    """
     shellcounts = [4, 5]
     transistionfreq = []
     ions = []
@@ -705,6 +784,7 @@ if __name__ == "__main__":
     print("stats")
     print("New:", np.array(new[0]).mean(), np.array(new[0]).var)
     print("Old", np.array(a.axialEvals).mean(), np.array(a.axialEvals).var)
+    """
 
     """
     for n in [7,19,37,61,91,127,169]:

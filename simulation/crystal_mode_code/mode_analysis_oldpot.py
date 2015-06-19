@@ -18,7 +18,6 @@ import scipy.constants as cons
 
 import scipy.optimize as optimize
 import matplotlib.pyplot as plt
-from mpmath import mp
 
 class ModeAnalysis():
     """Zero temperature normal mode calculator"""
@@ -350,10 +349,11 @@ def add_hex_shell(s):
 
                 
 if __name__ == "__main__":
-    a = ModeAnalysis(shells=2 ,Vtrap=[-0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=45.0, Vwall= 35, wall_order=2)
+    a = ModeAnalysis(shells=8 ,Vtrap=[-0.0,-1750.0,-2000.0], Ctrap = 1.0, frot=180.0, Vwall= 200, wall_order=2)
     a.run()
     Evals = a.axialEvals
     Evect = a.axialEvects
+    a.show_crystal(a.u)
 #    plt.close()
 #    plt.plot((Evals,Evals),(np.ones(np.size(Evals)),np.zeros(np.size(Evals))),linestyle="-",color='black')
 #    plt.axis([800,1.550,0,1.1])
