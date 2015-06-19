@@ -101,7 +101,7 @@ def get_raw_counts():
     else:
         colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)    
 
-        x= data[colnames[1]]
+        x = data[colnames[1]]
         scandata = data[colnames[2]]
         
         num_scans = len(scandata[scandata == scandata[0]])
@@ -116,6 +116,33 @@ def get_raw_counts():
         pmterr = np.array([np.std(i[i!=-1]) for i in counts_data ])
         
         return file_name, scandata, avg_pmt_counts, pmterr, trials, data
+
+def get_raw_counts_hist():
+    file_name = False
+    for file in os.listdir(os.getcwd()):
+        if file.startswith("rawData.") and file.endswith(".csv"):
+            file_name = file
+    if file_name is False:
+        print("Did not find file")
+        return 0
+    else:
+        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)    
+
+        x = data[colnames[1]]
+        scandata = data[colnames[2]]
+        
+        num_scans = len(scandata[scandata == scandata[0]])
+        points_in_scan = np.size(scandata)/num_scans
+        
+        trials = np.size(counts_data,axis=1)*1.0
+        
+        # Make mask for bad points        
+        #avg_pmt_counts = np.mean(counts_data[counts_data!=0], axis=1)
+        avg_pmt_counts = np.array([np.mean(i[i!=-1]) for i in counts_data ])
+        #pmterr = np.std(counts_data[counts_data!=0], axis=1)
+        pmterr = np.array([np.std(i[i!=-1]) for i in counts_data ])
+        
+        return file_name, scandata, counts_data, data
 
 
 def get_histData(max_count=100, min_count=0):
