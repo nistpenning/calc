@@ -13,7 +13,7 @@ def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir)
             if os.path.isdir(os.path.join(a_dir, name))]
 
-def get_gen_csv(first_name, skip_header=False, names=True):
+def get_gen_csv(first_name, skip_header=False):
     #Get the data file name
     file_name = False
     for file in os.listdir(os.getcwd()):
@@ -28,7 +28,7 @@ def get_gen_csv(first_name, skip_header=False, names=True):
             data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None)
         else: data = np.genfromtxt(file_name, delimiter=",", 
                                    skip_header=skip_header, 
-                                   names=names, 
+                                   names=None, 
                                    dtype=None,
                                    comments="#")
         return data
