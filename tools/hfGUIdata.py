@@ -31,7 +31,7 @@ def get_gen_csv(first_name, skip_header=False):
                                    names=None, 
                                    dtype=None,
                                    comments="#")
-        return data
+        return file_name, data
 
 def get_ionProp_value(prop):
     os.chdir('props')
