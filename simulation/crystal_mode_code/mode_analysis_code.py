@@ -33,7 +33,7 @@ class ModeAnalysis:
     k_e = 8.9875517873681764E9
 
     def __init__(self, N=19, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0,
-                 ionmass=None, B=4.4588, frot=180., Vwall=0., wall_order=2,
+                 ionmass=None, B=4.4588, frot=180., Vwall=5., wall_order=2,
                  quiet=True):
         """
         :param N:       integer, number of ions
@@ -113,7 +113,7 @@ class ModeAnalysis:
         self.dx = []
         self.dy = []
 
-        self.hasrun=False
+        self.hasrun = False
 
     def dimensionless(self):
         """Calculate characteristic quantities and convert to a dimensionless
@@ -147,7 +147,7 @@ class ModeAnalysis:
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
             return 0
-        self.u0 = self.find_scaled_lattice_guess(1E-4,1E-2)
+        self.u0 = self.find_scaled_lattice_guess(1E-4, 1E-2)
         # self.u0 = self.generate_2D_hex_lattice(2)
 
         # if masses are not all beryllium, force heavier ions to be boundary
@@ -166,7 +166,7 @@ class ModeAnalysis:
         self.axialEvals, self.axialEvects = self.calc_axial_modes(self.u)
         self.planarEvals, self.planarEvects = self.calc_planar_modes(self.u)
         self.expUnits()  # make variables of outputs in experimental units
-        self.hasrun=True
+        self.hasrun = True
 
     def just_generate_crystal(self, theta=0):
         """
@@ -177,45 +177,46 @@ class ModeAnalysis:
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
             return 0
-        self.u0 = self.find_scaled_lattice_guess(1E-4,1E-2)
+        self.u0 = self.find_scaled_lattice_guess(mins=1, res=50)
         # self.u0 = self.generate_2D_hex_lattice(2)
 
         # if masses are not all beryllium, force heavier ions to be boundary
         # ions, and lighter ions to be near center
         # ADD self.addDefects()
 
-        def rotate(x,y, phase):
-            #print("yup",[x * np.cos(phase) - y * np.sin(phase)])
-            #print(x)
-            hm= x * np.cos(phase) - y * np.sin(phase)
-            #print(hm)
-            hum= x* np.sin(phase) + y * np.cos(phase)
-            ho=np.concatenate((hm,hum))
-            #print("ho:",ho)
+        def rotate(x, y, phase):
+            # print("yup",[x * np.cos(phase) - y * np.sin(phase)])
+            # print(x)
+            hm = x * np.cos(phase) - y * np.sin(phase)
+            # print(hm)
+            hum = x * np.sin(phase) + y * np.cos(phase)
+            ho = np.concatenate((hm, hum))
+            # print("ho:",ho)
             return ho
 
-        x=self.u0[:self.Nion]
-        y=self.u0[self.Nion:]
-        #print(self.u0)
-        crysold=self.u0
-        self.u0=rotate(x,y,theta)
+        x = self.u0[:self.Nion]
+        y = self.u0[self.Nion:]
+        # print(self.u0)
+        crysold = self.u0
 
-        xold=crysold[:self.Nion]
-        yold=crysold[self.Nion:]
-        xnew=self.u0[:self.Nion]
-        ynew=self.u0[self.Nion:]
+        xold = crysold[:self.Nion]
+        yold = crysold[self.Nion:]
 
-        plt.plot(xold, yold, 'o', color="blue", alpha=.5)
-        plt.plot(xnew, ynew, 'o', color="orange")
-        plt.show()
-
-        #print(self.u0)
-        self.u = self.find_eq_pos(self.u0)
+        self.u = rotate(x, y, theta)
+        # print(self.u0)
+        self.u = self.find_eq_pos(self.u)
 
         # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
         # Only changes the positions if the potential energy was reduced.
-        for attempt in np.linspace(.05, .25, 3):
+        for attempt in np.linspace(.05, .5, 100):
             self.u = self.perturb_position(self.u, attempt)
+
+        xnew = self.u[:self.Nion]
+        ynew = self.u[self.Nion:]
+
+        # plt.plot(xold, yold, 'o', color="blue", alpha=.5)
+        # plt.plot(xnew, ynew, 'o', color="orange")
+        # plt.show()
 
         self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
 
@@ -304,7 +305,7 @@ class ModeAnalysis:
             + 0.5 * k_e * q ** 2 * np.sum(Vc)
         """
         V = -np.sum((self.md * self.wr ** 2 + 0.5 * self.md - self.wr * self.wc) * (x ** 2 + y ** 2)) \
-            + np.sum(self.md * (self.Cw) * (x ** 2 - y ** 2)) + 0.5 * np.sum(Vc)
+            + np.sum(self.md * self.Cw * (x ** 2 - y ** 2)) + 0.5 * np.sum(Vc)
 
         return V
 
@@ -400,24 +401,25 @@ class ModeAnalysis:
 
         # Make a 2d lattice; u represents the position
         uthen = self.generate_lattice()
-        uthen = uthen*mins
+        uthen = uthen * mins
         # Figure out the lattice's initial potential energy
         pthen = self.pot_energy(uthen)
 
         # Iterate through the range of minimum spacing in steps of res/resolution
         for scale in np.linspace(mins, 100, res):
             # Quickly make a 2d hex lattice; perhaps with some stochastic procedure?
-            uguess = self.generate_2D_hex_lattice(scale)
+            uguess = uthen * scale
             # Figure out the potential energy of that newly generated lattice
+            # print(uguess)
             pnow = self.pot_energy(uguess)
 
             # And if the program got a lattice that was less favorably distributed, conclude
             # that we had a pretty good guess and return the lattice.
             if pnow >= pthen:
-                # print "find_scaled_lattice: Minimum found"
+                # print("find_scaled_lattice: Minimum found")
                 # print "initial scale guess: " + str(scale)
                 # self.scale = scale
-                #print(scale)
+                # print(scale)
                 return uthen
             # If not, then we got a better guess, so store the energy score and current arrangement
             # and try again for as long as we have mins and resolution to iterate through.
@@ -594,51 +596,51 @@ class ModeAnalysis:
             return False
 
         if flatlines is True:
-            fig = plt.figure(figsize=(8,5))
+            fig = plt.figure(figsize=(8, 5))
             fig = plt.axes(frameon=True)
-            #fig= plt.axes.get_yaxis().set_visible(False)
+            # fig= plt.axes.get_yaxis().set_visible(False)
             fig.set_yticklabels([])
 
             if experimentalunits is False:
-                fig=plt.xlabel("Eigenfrequency (Units of $\omega_z$)")
-                fig = plt.xlim(min(self.axialEvals)*.99,max(self.axialEvals*1.01))
+                fig = plt.xlabel("Eigenfrequency (Units of $\omega_z$)")
+                fig = plt.xlim(min(self.axialEvals) * .99, max(self.axialEvals * 1.01))
 
                 for x in self.axialEvals:
-                    fig=plt.plot([x,x],[0,1],color='black',)
+                    fig = plt.plot([x, x], [0, 1], color='black', )
             if experimentalunits is True:
-                fig= plt.xlabel("Eigenfrequency (2 \pi* Hz)")
-                fig = plt.xlim(min(self.axialEvalsE)*.99,max(self.axialEvalsE)*1.01)
+                fig = plt.xlabel("Eigenfrequency (2 \pi* Hz)")
+                fig = plt.xlim(min(self.axialEvalsE) * .99, max(self.axialEvalsE) * 1.01)
                 for x in self.axialEvalsE:
-                    fig=plt.plot([x,x],[0,1],color='black')
+                    fig = plt.plot([x, x], [0, 1], color='black')
 
-            fig = plt.ylim([0,1])
-            #fig= plt.axes.yaxis.set_visible(False)
+            fig = plt.ylim([0, 1])
+            # fig= plt.axes.yaxis.set_visible(False)
             fig = plt.title("Axial Eigenvalues for %d Ions, $f_{rot}=$%.1f kHz, and $V_{wall}$= %.1f V " %
-                            (self.Nion,self.wrot/(2*pi*1e3),self.Cw*self.V0/1612))
+                            (self.Nion, self.wrot / (2 * pi * 1e3), self.Cw * self.V0 / 1612))
             plt.show()
             return True
 
-
         fig = plt.figure()
         xvals = np.array(range(self.Nion))
-        xvals+=1
+        xvals += 1
         if experimentalunits is False:
-            fig = plt.plot(xvals, sorted(self.axialEvals),"o")
-            fig = plt.ylim((.97*min(self.axialEvals), 1.01*max(self.axialEvals)))
+            fig = plt.plot(xvals, sorted(self.axialEvals), "o")
+            fig = plt.ylim((.97 * min(self.axialEvals), 1.01 * max(self.axialEvals)))
             fig = plt.ylabel("Eigenfrequency (Units of $\omega_z$)")
-            fig = plt.plot([-1,self.Nion+1],[1,1],color="black",linestyle="--")
+            fig = plt.plot([-1, self.Nion + 1], [1, 1], color="black", linestyle="--")
 
         else:
-            fig = plt.plot(xvals, sorted(self.axialEvalsE),"o")
-            fig = plt.ylim(.95*min(self.axialEvalsE), 1.05*max(self.axialEvalsE))
+            fig = plt.plot(xvals, sorted(self.axialEvalsE), "o")
+            fig = plt.ylim(.95 * min(self.axialEvalsE), 1.05 * max(self.axialEvalsE))
             fig = plt.ylabel("Eigenfrequency (Hz)")
-            fig = plt.plot([-1,self.Nion+1],[max(self.axialEvalsE),max(self.axialEvalsE)],color="black",linestyle="--")
+            fig = plt.plot([-1, self.Nion + 1], [max(self.axialEvalsE), max(self.axialEvalsE)], color="black",
+                           linestyle="--")
 
         fig = plt.xlabel("Mode Number")
 
         fig = plt.title("Axial Eigenvalues for %d Ions, $f_{rot}=$%.1f kHz, and $V_{wall}$= %.1f V " %
-                        (self.Nion,self.wrot/(2*pi*1e3),self.Cw*self.V0/1612))
-        fig = plt.xlim((0, self.Nion+1))
+                        (self.Nion, self.wrot / (2 * pi * 1e3), self.Cw * self.V0 / 1612))
+        fig = plt.xlim((0, self.Nion + 1))
         fig = plt.grid(True)
         fig = plt.show()
         return True
@@ -769,26 +771,45 @@ if __name__ == "__main__":
     # 1  2  3  4  5   6   7   8   9  10  11  12  13  14
     # 7 19 37 61 91 127 169 217 271 331 397 469 547 631...
 
+    def rotate(x, y, phase):
+        # print("yup",[x * np.cos(phase) - y * np.sin(phase)])
+        # print(x)
+        hm = x * np.cos(phase) - y * np.sin(phase)
+        # print(hm)
+        hum = x * np.sin(phase) + y * np.cos(phase)
+        ho = np.concatenate((hm, hum))
+        # print("ho:",ho)
+        return ho
 
-
-    def rotate(xy, phase):
-        return np.array([
-                xy[0] * np.cos(phase) - xy[1] * np.sin(phase),
-                xy[0] * np.sin(phase) + xy[1] * np.cos(phase)
-                ])
     phaseInitial = 0.331 * np.pi
+    pots =  [[], [], [], [], [], [], [], [], [], [], [], [], []]
+    #print(pots)
+    thetas = np.linspace(0, 2 * np.pi, 100)
+    counter = 1
+    for N in [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]:
+        nion = N
+        a = ModeAnalysis(N=nion, Vwall=20)
+        a.just_generate_crystal(0)
+        counter=0
+        for x in thetas:
+            x = a.u[:a.Nion]
+            y = a.u[a.Nion:]
+            a.u = rotate(x, y, thetas[1])
+            print("For", thetas[1] * counter, "pot energy is", a.pot_energy(a.u))
+            pots[N - 7].append(a.pot_energy(a.u))
+            counter += 1
+            # a.show_crystal(a.u0)
 
-
-    thetas=np.linspace(0,np.pi,20)
-    for x in thetas:
-
-        a=ModeAnalysis(N=19)
-        a.just_generate_crystal(x)
-        print("For",x,"pot energy is",a.pot_energy(a.u0))
-        #a.show_crystal(a.u0)
-        a.u0=[]
-        a=0
-
+        #print("Minimum potential energy occured for rotation", thetas[np.argmin(pots)], ":", min(pots))
+        #print("Minimum potential energy occured for rotation", thetas[np.argmax(pots)], ":", max(pots))
+    plt.figure()
+    for x in range(20-7):
+        label=str(x+7)+" Ions"
+        plt.plot(thetas,pots[x],label=label)
+    plt.title("Potential energy vs rotation angle (radians) for N ions, Vwall=20")
+    # plt.plot(thetas, pots)
+    plt.legend()
+    plt.show()
 
     """
     nions=169
