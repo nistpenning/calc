@@ -28,10 +28,10 @@ def get_gen_csv(first_name, skip_header=False):
             data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None)
         else: data = np.genfromtxt(file_name, delimiter=",", 
                                    skip_header=skip_header, 
-                                   names=True, 
+                                   names=None, 
                                    dtype=None,
                                    comments="#")
-        return data
+        return file_name, data
 
 def get_ionProp_value(prop):
     os.chdir('props')
