@@ -137,8 +137,8 @@ class ModeAnalysis:
 
     def run(self):
         """
-        Generates a crystal by the find_scalled_lattice_guess method,
-        adjusts it into an eqilibirium position by find_eq_pos method,
+        Generates a crystal from the generate_crystal method (by the find_scalled_lattice_guess method,
+        adjusts it into an eqilibirium position by find_eq_pos method)
         and then computes the eigenvalues and eigenvectors of the axial modes by calc_axial_modes.
 
         Sorts the eigenvalues and eigenvectors and stores them in self.Evals, self.Evects.
@@ -147,32 +147,19 @@ class ModeAnalysis:
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
             return 0
-        self.u0 = self.find_scaled_lattice_guess(1E-4, 1E-2)
-        # self.u0 = self.generate_2D_hex_lattice(2)
 
-        # if masses are not all beryllium, force heavier ions to be boundary
-        # ions, and lighter ions to be near center
-        # ADD self.addDefects()
-
-        self.u = self.find_eq_pos(self.u0)
-
-        # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
-        # Only changes the positions if the potential energy was reduced.
-        for attempt in np.linspace(.05, .25, 3):
-            self.u = self.perturb_position(self.u, attempt)
-
-        self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
+        self.generate_crystal()
 
         self.axialEvals, self.axialEvects = self.calc_axial_modes(self.u)
         self.planarEvals, self.planarEvects = self.calc_planar_modes(self.u)
         self.expUnits()  # make variables of outputs in experimental units
         self.hasrun = True
 
-    def just_generate_crystal(self, theta=0):
+    def generate_crystal(self):
         """
         The run method already is a "start-to-finish" implementation of crystal generation and
         eigenmode determination, so this simply contains the comopnents which generate a crystal.
-        :return:
+        :return: Returns a crystal's position vector while also saving it to the class.
         """
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
@@ -184,41 +171,22 @@ class ModeAnalysis:
         # ions, and lighter ions to be near center
         # ADD self.addDefects()
 
-        def rotate(x, y, phase):
-            # print("yup",[x * np.cos(phase) - y * np.sin(phase)])
-            # print(x)
-            hm = x * np.cos(phase) - y * np.sin(phase)
-            # print(hm)
-            hum = x * np.sin(phase) + y * np.cos(phase)
-            ho = np.concatenate((hm, hum))
-            # print("ho:",ho)
-            return ho
-
-        x = self.u0[:self.Nion]
-        y = self.u0[self.Nion:]
-        # print(self.u0)
-        crysold = self.u0
-
-        xold = crysold[:self.Nion]
-        yold = crysold[self.Nion:]
-
-        self.u = rotate(x, y, theta)
-        # print(self.u0)
-        self.u = self.find_eq_pos(self.u)
+        self.u = self.find_eq_pos(self.u0)
 
         # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
         # Only changes the positions if the potential energy was reduced.
-        for attempt in np.linspace(.05, .5, 100):
-            self.u = self.perturb_position(self.u, attempt)
-
-        xnew = self.u[:self.Nion]
-        ynew = self.u[self.Nion:]
-
-        # plt.plot(xold, yold, 'o', color="blue", alpha=.5)
-        # plt.plot(xnew, ynew, 'o', color="orange")
-        # plt.show()
+        if self.Nion <= 62:
+            for attempt in np.linspace(.05, .5, 100):
+                self.u = self.perturb_position(self.u, attempt)
+        if 62 < self.Nion <= 126:
+            for attempt in np.linspace(.05, .5, 50):
+                self.u = self.perturb_position(self.u, attempt)
+        if 127 <= self.Nion:
+            for attempt in np.linspace(.05, .5, 10):
+                self.u = self.perturb_position(self.u, attempt)
 
         self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
+        return self.u
 
     def generate_lattice(self):
         """Generate lattice for an arbitrary number of ions (self.Nion)
@@ -406,7 +374,7 @@ class ModeAnalysis:
         pthen = self.pot_energy(uthen)
 
         # Iterate through the range of minimum spacing in steps of res/resolution
-        for scale in np.linspace(mins, 100, res):
+        for scale in np.linspace(mins, 10, res):
             # Quickly make a 2d hex lattice; perhaps with some stochastic procedure?
             uguess = uthen * scale
             # Figure out the potential energy of that newly generated lattice
@@ -564,7 +532,7 @@ class ModeAnalysis:
         print("Lowest frequency mode at {0:0.1f} kHz".format(float(np.real(low_mode_freq))))
         return 0
 
-    def perturb_position(self, u, strength=.1):
+    def perturb_position(self, pos_vect, strength=.1):
         """
         Slightly displaces each ion by a random proportion (determined by 'strength' parameter)
         and then solves for a new equilibrium position.
@@ -576,14 +544,14 @@ class ModeAnalysis:
         :return: Either the previous position vector, or a new position vector.
         """
         # print("U before:", self.pot_energy(u))
-        unudge = self.find_eq_pos([x * abs(np.random.normal(1, strength)) for x in u])
-        if self.pot_energy(unudge) < self.pot_energy(u):
+        unudge = self.find_eq_pos([coord * abs(np.random.normal(1, strength)) for coord in pos_vect])
+        if self.pot_energy(unudge) < self.pot_energy(pos_vect):
             # print("Nudge successful")
             # print("U After:", self.pot_energy(unudge))
             return unudge
         else:
             # print("Nudge failed!")
-            return u
+            return pos_vect
 
     def show_axial_Evals(self, experimentalunits=False, flatlines=False):
         """
@@ -665,6 +633,28 @@ class ModeAnalysis:
                 return False
 
         return True
+
+    def rotate_crystal(self, pos_vect, theta, Nion=None):
+        """
+        Given a position vector defining a crystal, rotates it by the angle theta
+        counter-clockwise.
+
+        :param pos_vect: Array of length 2*Nion defining the crystal to be rotated.
+        :param theta: Theta defining the angle to rotate the crystal around.
+        :param Nion: Number of ions in the crystal (can be optionally defined,
+            but will default to the number of ions in the class)
+        :return: The returned position vector of the new crystal
+        """
+        if Nion is None:
+            Nion = self.Nion
+
+        x = pos_vect[:Nion]
+        y = pos_vect[Nion:]
+
+        xmod = x * np.cos(theta) - y * np.sin(theta)
+        ymod = x * np.sin(theta) + y * np.cos(theta)
+        newcrys = np.concatenate((xmod, ymod))
+        return newcrys
 
     @staticmethod
     def nan_to_zero(my_array):
@@ -782,15 +772,15 @@ if __name__ == "__main__":
         return ho
 
     phaseInitial = 0.331 * np.pi
-    pots =  [[], [], [], [], [], [], [], [], [], [], [], [], []]
-    #print(pots)
+    pots = [[], [], [], [], [], [], [], [], [], [], [], [], []]
+    # print(pots)
     thetas = np.linspace(0, 2 * np.pi, 100)
     counter = 1
     for N in [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]:
         nion = N
         a = ModeAnalysis(N=nion, Vwall=20)
-        a.just_generate_crystal(0)
-        counter=0
+        a.generate_crystal()
+        counter = 0
         for x in thetas:
             x = a.u[:a.Nion]
             y = a.u[a.Nion:]
@@ -800,12 +790,12 @@ if __name__ == "__main__":
             counter += 1
             # a.show_crystal(a.u0)
 
-        #print("Minimum potential energy occured for rotation", thetas[np.argmin(pots)], ":", min(pots))
-        #print("Minimum potential energy occured for rotation", thetas[np.argmax(pots)], ":", max(pots))
+            # print("Minimum potential energy occured for rotation", thetas[np.argmin(pots)], ":", min(pots))
+            # print("Minimum potential energy occured for rotation", thetas[np.argmax(pots)], ":", max(pots))
     plt.figure()
-    for x in range(20-7):
-        label=str(x+7)+" Ions"
-        plt.plot(thetas,pots[x],label=label)
+    for x in range(20 - 7):
+        label = str(x + 7) + " Ions"
+        plt.plot(thetas, pots[x], label=label)
     plt.title("Potential energy vs rotation angle (radians) for N ions, Vwall=20")
     # plt.plot(thetas, pots)
     plt.legend()

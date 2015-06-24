@@ -130,6 +130,8 @@ class ItanoAnalysis:
                             -np.inf, np.inf,
                             lambda x: -1 * rp, lambda x: rp,
                             lambda x, y: -1 * rp, lambda x, y: rp)
+        self.counter+=1
+        return ret[0]
 
     def dEavgAndParallel(self, u, detun=None, offset=None):
         """
@@ -264,7 +266,8 @@ class ItanoAnalysis:
 
     def scan_detuning_and_offset(self, detmin=-150.E6, detmax=-1.E6, detN=30,
                                  offmin=0, offmax=40.0E-6, offN=30,
-                                 get_temp=True, get_torque=False, get_total_scatter=False, plot=False) -> list:
+                                 get_temp=True, get_torque=False, get_total_scatter=False, plot=False,
+                                 detuninglist = None, offsetlist = None) -> list:
         """
             Conducts a two-dimensional scan across the detuning/offset parameter space.
             Returns an array of output elements.
@@ -286,6 +289,8 @@ class ItanoAnalysis:
             :param get_temp: If true, will return temperature in the final array of results.
             :param get_torque: If true, will return the torques in the final array of results.
             :param get_total_scatter: If true, will return the scattering rates in the final array of results.
+            :param detuninglist: Allows for the use of a custom list of detunings instead of a linear interpolation.
+            :param offsetlist: Allows for the use of a custom list of offsets instead of a linear interpolation.
             :param plot:
             """
         Tmax = 1.0E-1
@@ -294,15 +299,21 @@ class ItanoAnalysis:
         umin = np.sqrt(Tmin * self.kB * 2 / self.m)
         Trq = 0
         Sct = 0
-        df = np.linspace(detmin, detmax, detN)
-        doff = np.linspace(offmin, offmax, offN)
+        if detuninglist is None:
+            df = np.linspace(detmin, detmax, detN)
+        else:
+            df = detuninglist
+        if offsetlist is None:
+            doff = np.linspace(offmin, offmax, offN)
+        else:
+            doff=offsetlist
         dw = 2 * pi * df
-        U = np.zeros([len(df), len(doff)])
+        U = np.zeros([len(doff), len(df)])
         if get_torque is True:
-            Trq = np.zeros([len(df), len(doff)])
+            Trq = np.zeros([len(doff), len(df)])
         if get_total_scatter is True:
-            Sct = np.zeros([len(df), len(doff)])
-        for W in range(len(dw)):
+            Sct = np.zeros([len(doff), len(df)])
+        for W in range(len(df)):
             for D in range(len(doff)):
                 if self.quiet is False:
                     print("-------------")
@@ -323,7 +334,14 @@ class ItanoAnalysis:
                             U[D][W] = opt.brentq(self.dEavg, umin * .01, umax * 100, args=(dw[W], doff[D]), xtol=1e-4,
                                                  rtol=3.0e-7)
                         except:
-                            U[D][W] = 313.0  # Obviously an error occured
+                            try:
+                                U[D][W] = opt.brentq(self.dEavg, umin * .001, umax * 1000, args=(dw[W], doff[D]), xtol=1e-5,
+                                                 rtol=3.0e-7)
+
+                            except:
+                                U[D][W] = 313.0  # Obviously an error occured
+                                print("Warning! The integral was not able to evaluate for some reason. "
+                                      "Storing u as 313 and moving on...")
 
                 if get_torque:
                     Trq[D][W] = self.totaltorque(U[D][W], dw[W], doff[D])
