@@ -124,7 +124,7 @@ class ItanoAnalysis:
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
                             * np.exp(-(y - offset) ** 2 / wy ** 2) *
-                            ((v) + 5 * self.rnorm / (6 * u)) * np.exp(-v ** 2) /
+                            ((v) + 5 * self.rnorm / (3 * u)) * np.exp(-v ** 2) /
                             ((1 + 2 * s0 * np.exp(-2 * (y - offset) ** 2 / wy ** 2)
                               + (delta - (wr * y / vk) - (u * v / vk)) ** 2)),
                             -np.inf, np.inf,
@@ -163,7 +163,7 @@ class ItanoAnalysis:
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
                             * np.exp(-(y - offset) ** 2 / wy ** 2) *
-                            ((v) + 5 * self.rnorm / (6 * u)) * np.exp(-v ** 2) /
+                            ((v) + 5 * self.rnorm / (3 * u)) * np.exp(-v ** 2) /
                             ((1 + 2 * s0 * np.exp(-2 * (y - offset) ** 2 / wy ** 2)
                               + (delta - (wr * y / vk) - (u * v / vk)) ** 2)),
                             -np.inf, np.inf,
@@ -269,28 +269,36 @@ class ItanoAnalysis:
                                  get_temp=True, get_torque=False, get_total_scatter=False, plot=False,
                                  detuninglist = None, offsetlist = None) -> list:
         """
-            Conducts a two-dimensional scan across the detuning/offset parameter space.
+            Conducts a two-dimensional scan across the detuning/offset
+            parameter space.
             Returns an array of output elements.
 
-            if plot is true, though this feature is not in yet, it can produce a nice plot for you.
+            if plot is true, though this feature is not in yet, it can
+            produce a nice plot for you.
 
 
             :rtype : list which contains 3 elements:
-                1) Teq element, a 2d array of the equilibrium temperatures, or the integer 0 if get_temp is false.
-                2) Trq element, a 2d array of the net torques, or the integer 0 if get_torque is false.
-                3) Sct element, a 2d array of the net scattering rate, or the integer 0 if get_total_scatter is false.
+                1) Teq element, a 2d array of the equilibrium temperatures,
+                    or the integer 0 if get_temp is false.
+                2) Trq element, a 2d array of the net torques, or the integer
+                    0 if get_torque is false.
+                3) Sct element, a 2d array of the net scattering rate, or the
+                    integer 0 if get_total_scatter is false.
 
             :param detmin: Minimum detuning. Make negative, units of Hz.
             :param detmax: Maximum detuning. Make negative, units of Hz.
-            :param detN:  Number of detunings to evaluate (interpolates linearly)
+            :param detN:  Number of detunings to evaluate
+                            (interpolates linearly)
             :param offmin: Minimum offset. Make nonnegative, units of meters.
             :param offmax: Maximum offset. Make nonnegative, units of meters.
             :param offN:  Number of offsets to evaluate (interpolates linearly)
-            :param get_temp: If true, will return temperature in the final array of results.
-            :param get_torque: If true, will return the torques in the final array of results.
-            :param get_total_scatter: If true, will return the scattering rates in the final array of results.
-            :param detuninglist: Allows for the use of a custom list of detunings instead of a linear interpolation.
-            :param offsetlist: Allows for the use of a custom list of offsets instead of a linear interpolation.
+            :param get_temp: If true, returns temperature in the result array.
+            :param get_torque: If true, returns the torques in the result array.
+            :param get_total_scatter: If true, returns the scattering rates.
+            :param detuninglist: Allows for the use of a custom list of
+                            detunings instead of a linear interpolation.
+            :param offsetlist: Allows for the use of a custom list of offsets instead
+                                        of a linear interpolation.
             :param plot:
             """
         Tmax = 1.0E-1
@@ -317,31 +325,36 @@ class ItanoAnalysis:
             for D in range(len(doff)):
                 if self.quiet is False:
                     print("-------------")
-                    print("Feeding in detuning/offset", dw[W] / (2 * 3.14159), doff[D], W * (len(doff)) + D + 1, "of",
+                    print("Feeding in detuning/offset", dw[W] / (2 * 3.14159),
+                          doff[D], W * (len(doff)) + D + 1, "of",
                           len(df) * len(doff), "Evaluations",
                           100 * (W * (len(doff)) + D + 1) / (len(df) * len(doff)), "%")
 
                 # The difference between each of these three tries is that
                 try:
-                    U[D][W] = opt.brentq(self.dEavg, umin, umax, args=(dw[W], doff[D]), xtol=1e-4, rtol=3.0e-7)
+                    U[D][W] = opt.brentq(self.dEavg, umin, umax,
+                                         args=(dw[W], doff[D]), xtol=1e-4, rtol=3.0e-7)
                 except:
                     try:
-                        U[D][W] = opt.brentq(self.dEavg, umin * .1, umax * 10, args=(dw[W], doff[D]), xtol=1e-4,
+                        U[D][W] = opt.brentq(self.dEavg, umin * .1, umax * 10,
+                                             args=(dw[W], doff[D]), xtol=1e-4,
                                              rtol=3.0e-7)
                     except:
 
                         try:
-                            U[D][W] = opt.brentq(self.dEavg, umin * .01, umax * 100, args=(dw[W], doff[D]), xtol=1e-4,
+                            U[D][W] = opt.brentq(self.dEavg, umin * .01, umax * 100,
+                                                 args=(dw[W], doff[D]), xtol=1e-4,
                                                  rtol=3.0e-7)
                         except:
                             try:
-                                U[D][W] = opt.brentq(self.dEavg, umin * .001, umax * 1000, args=(dw[W], doff[D]), xtol=1e-5,
+                                U[D][W] = opt.brentq(self.dEavg, umin * .001, umax * 1000,
+                                                    args=(dw[W], doff[D]), xtol=1e-5,
                                                  rtol=3.0e-7)
 
                             except:
-                                U[D][W] = 313.0  # Obviously an error occured
+                                U[D][W] = np.nan  # Obviously an error occured
                                 print("Warning! The integral was not able to evaluate for some reason. "
-                                      "Storing u as 313 and moving on...")
+                                      "Storing u as nan and moving on...")
 
                 if get_torque:
                     Trq[D][W] = self.totaltorque(U[D][W], dw[W], doff[D])
