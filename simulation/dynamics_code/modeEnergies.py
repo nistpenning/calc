@@ -4,23 +4,38 @@ Created on Wed Jun 17 19:36:34 2015
 
 @author: ACKWinDesk
 
-This is a sketch on how to mode extract energies from
-simulation. Completely untested in python
+These are methods that should be in a total 
+analysis package for the simulation code. Extracts mode energies
+and does a fourier analysis. Still untested as having trouble installing
+new simulation files
 """
 
 import mode_analysis_code as MC
 import numpy as np
 
-def rotate(u, theta):
-    """Rotates coordinates by theta"""
-    N = int(u.size/2)
-    x = u[0:N]
-    y = u[N:]
+def readFromFile():
+    """Convert file to pctl list"""
+    pass
 
-    xnew = x*np.cos(theta) - y*np.sin(theta)
-    ynew = x*np.sin(theta) + y*np.cos(theta)
+def loadData(self):
+    """Read all data from filename"""
+    self.readFromFile()
+    pass    
+
+def fourierAnalysis():
+    """Load all data and compute power spectral densities"""
+    self.loadData()
     
-    return np.hstack((x0, y0))
+def kineticEnergy():
+    """Calculate kinetic energy of all particles"""
+    pass
+
+def potentialEnergy():
+    """Calculate potential energy of all particles"""
+    pass
+    
+def exciteMode():
+    pass
 
 
 def spin_down(u, v, w):
@@ -45,7 +60,16 @@ def axialModeBasis(z, Evect):
 for m = modes
     norm_coords(m) = dot(z',E(:,m));
 
+def rotate(u, theta):
+    """Rotates coordinates by theta"""
+    N = int(u.size/2)
+    x = u[0:N]
+    y = u[N:]
 
+    xnew = x*np.cos(theta) - y*np.sin(theta)
+    ynew = x*np.sin(theta) + y*np.cos(theta)
+    
+    return np.hstack((x0, y0))
 
 
 
@@ -96,7 +120,12 @@ for j in range(aTrapNion):
 
 
 # MATLAB PSD CODE
+InSteps = 1e2   # Inner steps in simulation
+OutSteps = 1e6  # Outer number of steps in simulation
+dt = 5e-10      # time step
 
+freq = np.arange(0, 0.5/(InSteps*dt), 1/(InSteps*dt*OutSteps))
+freq = (0:0.5/(InSteps*dt)/(params(5)/2):0.5/(InSteps*dt))
 freq = 1.0e-6*freq(1:end-1); % chop of last one, because of Matlab ranges...
 
 # Calculate PSD for Axial Motion

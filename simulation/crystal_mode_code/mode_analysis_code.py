@@ -4,6 +4,8 @@ import scipy.constants as cons
 import numpy as np
 import scipy.optimize as optimize
 import matplotlib.pyplot as plt
+import scipy.linalg
+from mpmath import mp
 
 __author__ = 'sbt'
 
@@ -16,6 +18,10 @@ by methods derived by Wang, Keith, and Freericks in 2013.
 
 Translated from MATLAB code written by Adam Keith by Justin Bohnet.
 Standardized and slightly revised by Steven Torrisi.
+
+Be careful. Sometimes when using the exact same parameters this 
+code will make different crystals with the same potential energy. That is,
+crystal are degenerate when reflecting over the axes.
 """
 
 
@@ -27,7 +33,7 @@ class ModeAnalysis:
 
     run(): Instantiates a crystal and
     """
-    q = 1.602E-19
+    q = 1.602176565E-19
     amu = 1.66057e-27
     m_Be = 9.012182 * amu
     k_e = 8.9875517873681764E9
@@ -86,16 +92,16 @@ class ModeAnalysis:
         self.Vtrap = np.array(Vtrap)  # [Vend, Vmid, Vcenter] for trap electrodes
         self.Coeff = np.dot(self.C, self.Vtrap)  # Determine the 0th, first, second, and fourth order
         #  potentials at trap center
-        # self.wz = 4.9951e6  # old trapping frequency
-        self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
+        self.wz = 4.9951e6  # old trapping frequency
+        #self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
         self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular frequency
 
         # Not used vvv
         self.wmag = 0.5 * (self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
 
         self.V0 = (0.5 * self.m_Be * self.wz ** 2) / self.q  # Find quadratic voltage at trap center
-        # self.Vw = self.V0 * 0.045 * Vwall / 1000  # old trap
-        self.Cw = Vwall * 1612 / self.V0  # dimensionless coefficient in front
+        self.Cw = 0.045 * Vwall / 1000  # old trap
+        #self.Cw = Vwall * 1612 / self.V0  # dimensionless coefficient in front
         # of rotating wall terms in potential
 
         self.dimensionless()  # Make system dimensionless
@@ -123,9 +129,11 @@ class ModeAnalysis:
         self.l0 = ((self.k_e * self.q ** 2) / (.5 * self.m_Be * self.wz ** 2)) ** (1 / 3)
         self.t0 = 1 / self.wz  # characteristic time
         self.v0 = self.l0 / self.t0  # characteristic velocity
+        self.E0 = 0.5*self.m_Be*(self.wz**2)*self.l0**2 # characteristic energy
         self.wr = self.wrot / self.wz  # dimensionless rotation
         self.wc = self.wcyc / self.wz  # dimensionless cyclotron
         self.md = self.m / self.m_Be  # dimensionless mass
+        
 
     def expUnits(self):
         """Convert dimensionless outputs to experimental units"""
@@ -362,6 +370,8 @@ class ModeAnalysis:
         Guesses initial minimum separation of mins and then increases spacing until a local minimum of
         potential energy is found.
 
+        This doesn't seem to do anything. Needs a fixin' - AK
+
         :param mins: the minimum separation to begin with.
         :param res: the resizing parameter added onto the minimum spacing.
         :return: the lattice with roughly minimized potential energy (via spacing alone).
@@ -421,7 +431,9 @@ class ModeAnalysis:
     def calc_axial_modes(self, pos_array):
         """
         Calculate the modes of axial vibration for a crystal defined
-        by pos_array.
+        by pos_array. 
+        
+        THIS MAY NEED TO BE EDITED FOR NONHOMOGENOUS MASSES
 
         :param pos_array: Position vector which defines the crystal
                           to be analyzed.
@@ -438,17 +450,41 @@ class ModeAnalysis:
         with np.errstate(divide='ignore'):
             rsep3 = np.where(rsep != 0., rsep ** (-3), 0)
 
-        A = np.diag((1 - 0.5 * np.sum(rsep3, axis=0)))
-        A += 0.5 * rsep3
+        K = np.diag((-1 + 0.5 * np.sum(rsep3, axis=0)))
+        K -= 0.5 * rsep3
+        # Make first order system by making space twice as large
+        Zn = np.zeros((self.Nion, self.Nion))
+        eyeN = np.identity(self.Nion)
+        Mmat = np.diag(self.md)
+        Minv = np.linalg.inv(Mmat)
+        firstOrder = np.bmat([[Zn, eyeN], [np.dot(Minv,K), Zn]])
+        Eval, Evect = np.linalg.eig(firstOrder)
+        
+        # Convert 2N imaginary eigenvalues to N real eigenfrequencies
+        ind = np.argsort(np.absolute(np.imag(Eval)))
+        Eval = np.imag(Eval[ind])
+        Eval = Eval[Eval>=0]      # toss the negative eigenvalues
+        Evect = Evect[:, ind]     # sort eigenvectors accordingly
 
-        Eval, Evect = np.linalg.eig(A)
-        Eval = np.lib.scimath.sqrt(Eval)
+        # Normalize by energy of mode
+        for i in range(2*self.Nion):
+            pos_part = Evect[:self.Nion, i]
+            vel_part = Evect[self.Nion:, i]
+            norm = vel_part.H*Mmat*vel_part - pos_part.H*K*pos_part
+            Evect[:, i] = Evect[:, i]/np.sqrt(norm)
+
+        Evect = np.asarray(Evect)
         return Eval, Evect
 
     def calc_planar_modes(self, pos_array):
         """Calculate Planar Mode Eigenvalues and Eigenvectors
 
-        Assumes all ions same mass"""
+        THIS MAY NEED TO BE EDITED FOR NONHOMOGENOUS MASSES  
+        
+        :param pos_array: Position vector which defines the crystal
+                          to be analyzed.
+        :return: Array of eigenvalues, Array of eigenvectors
+        """
 
         V = -self.hessian_penning(pos_array)  # -Hessian
         Zn = np.zeros((self.Nion, self.Nion))
@@ -456,28 +492,31 @@ class ModeAnalysis:
         offdiag = (2 * self.wr - self.wc) * np.identity(self.Nion)
         A = np.bmat([[Zn, offdiag], [-offdiag, Zn]])
 
-        firstOrder = np.bmat([[Z2n, np.identity(2 * self.Nion)], [V / 2, A]])
-        # firstOrder = mp.matrix(firstOrder)
-        # Eval, Evect = mp.eig(firstOrder)
-
+        Mmat = np.diag(np.concatenate((self.md,self.md)))
+        Minv = np.linalg.inv(Mmat)
+        
+        firstOrder = np.bmat([[Z2n, np.identity(2 * self.Nion)], [np.dot(Minv,V/2), A]])
+        #mp.dps = 25
+        #firstOrder = mp.matrix(firstOrder)
+        #Eval, Evect = mp.eig(firstOrder)
         Eval, Evect = np.linalg.eig(firstOrder)
         # currently giving too many zero modes (increase numerical precision?)
 
         # make eigenvalues real.
-        ind = np.argsort(np.absolute(Eval))
+        ind = np.argsort(np.absolute(np.imag(Eval)))
         Eval = np.imag(Eval[ind])
-        Evect = Evect[:, ind]
-        # inds = np.argsort(Eval[Eval>=0])
-        # not sure how to guarantee sort doesn't mix up eigenvectors for zero 
-        # modes? Can't normalize properly without that knowledge
+        Eval = Eval[Eval >= 0]      # toss the negative eigenvalues
+        Evect = Evect[:, ind]    # sort eigenvectors accordingly
+
+        # Normalize by energy of mode
+        for i in range(4*self.Nion):
+            pos_part = Evect[:2*self.Nion, i]
+            vel_part = Evect[2*self.Nion:, i]
+            norm = vel_part.H*Mmat*vel_part - pos_part.H*(V/2)*pos_part
+            Evect[:, i] = Evect[:, i]/np.sqrt(norm)
 
         # if there are extra zeros, chop them
-        Eval[(Eval.size - 2 * self.Nion) - 1:]
-
-        # Normalize eigenvectors by energy instead of 1.
-        # for i = 1:4*N
-        # E(:,i) = E(:,i)/sqrt(real((E(1:2*N,i))'*(D(i)*D(i))*(E(1:2*N,i))  -0.5*E(1:2*N,i)'*V*E(1:2*N,i)));
-
+        Eval = Eval[(Eval.size - 2 * self.Nion):]
         return Eval, Evect
 
     def show_crystal(self, pos_vect):
@@ -624,6 +663,8 @@ class ModeAnalysis:
 
         :return: Boolean: True if no 1-2 plane transistion mode exists, false if it does
         (Answers: "is the plane stable?")
+        
+        AFTER CHANGING calc_axial_modes, THIS DOESN'T QUITE MAKE SENSE ANYMORE -AK
         """
         if self.hasrun is False:
             self.run()
@@ -761,211 +802,8 @@ if __name__ == "__main__":
     # 1  2  3  4  5   6   7   8   9  10  11  12  13  14
     # 7 19 37 61 91 127 169 217 271 331 397 469 547 631...
 
-    def rotate(x, y, phase):
-        # print("yup",[x * np.cos(phase) - y * np.sin(phase)])
-        # print(x)
-        hm = x * np.cos(phase) - y * np.sin(phase)
-        # print(hm)
-        hum = x * np.sin(phase) + y * np.cos(phase)
-        ho = np.concatenate((hm, hum))
-        # print("ho:",ho)
-        return ho
-
-    phaseInitial = 0.331 * np.pi
-    pots = [[], [], [], [], [], [], [], [], [], [], [], [], []]
-    # print(pots)
-    thetas = np.linspace(0, 2 * np.pi, 100)
-    counter = 1
-    for N in [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]:
-        nion = N
-        a = ModeAnalysis(N=nion, Vwall=20)
-        a.generate_crystal()
-        counter = 0
-        for x in thetas:
-            x = a.u[:a.Nion]
-            y = a.u[a.Nion:]
-            a.u = rotate(x, y, thetas[1])
-            print("For", thetas[1] * counter, "pot energy is", a.pot_energy(a.u))
-            pots[N - 7].append(a.pot_energy(a.u))
-            counter += 1
-            # a.show_crystal(a.u0)
-
-            # print("Minimum potential energy occured for rotation", thetas[np.argmin(pots)], ":", min(pots))
-            # print("Minimum potential energy occured for rotation", thetas[np.argmax(pots)], ":", max(pots))
-    plt.figure()
-    for x in range(20 - 7):
-        label = str(x + 7) + " Ions"
-        plt.plot(thetas, pots[x], label=label)
-    plt.title("Potential energy vs rotation angle (radians) for N ions, Vwall=20")
-    # plt.plot(thetas, pots)
-    plt.legend()
-    plt.show()
-
-    """
-    nions=169
-    a = ModeAnalysis(N=nions, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=200, Vwall=15, wall_order=2)
+    a = ModeAnalysis(N=19, Vwall=35, frot=45)  # oldtrap
+    #a = ModeAnalysis(N=19, Vwall=20, frot=180)
     a.run()
-    print(a.pot_energy(a.u))
-    #print(a.pot_energy(a.U))
-    plt.plot(a.u[0:nions], a.u[nions:], 'o', color="blue", alpha=.5)
-    #plt.plot(a.U[0:nions], a.U[nions:], 'o', color="orange")
-    plt.show()
-    for s in [.1,.25]:
-        a.u=a.perturb_position(a.u,s)
-        #a.U=a.perturb_position(a.U,s)
+    #D,E = a.calc_planar_modes(a.u)
 
-    print(a.pot_energy(a.u))
-    #print(a.pot_energy(a.U))
-    plt.plot(a.u[0:nions], a.u[nions:], 'o', color="blue", alpha=.5)
-    #plt.plot(a.U[0:nions], a.U[nions:], 'o', color="orange")
-    plt.show()
-    """
-    """
-    shellcounts = [4, 5]
-    transistionfreq = []
-    ions = []
-    nions = 30
-    a = ModeAnalysis(N=nions, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=2, wall_order=2)
-    a.run()
-    print(len(a.axialEvals))
-    print(a.Nion)
-    a.show_axial_Evals(experimentalunits=True,flatlines=True)
-    new = a.calc_axial_modes(a.u)
-    print(a.axialEvals - new[0])
-    print("------------")
-    # plt.title("Unperturbed")
-    # a.show_crystal(a.u)f
-    abefore = a.u
-    for x in np.linspace(.05, .25, 5):
-        a.u = a.perturb_position(a.u, x)
-    # plt.title("Perturbed")
-    # a.show_crystal(a.u)
-
-    plt.plot(abefore[0:nions], abefore[nions:], 'o', color="blue", alpha=.5)
-    # plt.show()
-    plt.plot(a.u[0:nions], a.u[nions:], 'o', color="orange")
-
-    plt.xlabel('x position [um]')
-    plt.ylabel('y position [um]')
-    plt.axes().set_aspect('equal')
-
-    new = a.calc_axial_modes(a.u)
-    # plt.show()
-    print(a.wz)
-    print(a.axialEvals - new[0])
-
-    print("Total differences:", sum(abs((a.axialEvals - new[0]))) / len(new[0]))
-    print("Net differences;", sum(a.axialEvals - new[0]))
-    counter = 0
-    newevals = sorted(new[0])
-    sortedevals = sorted(a.axialEvals)
-
-    for x in range(len(a.axialEvals)):
-        if newevals[x] < sortedevals[x]:
-            counter += 1
-    print(counter, "/", nions, "lower in eigenvalue")
-    # print(a.axialEvalsE-new[0]*a.wz)
-
-    print("stats")
-    print("New:", np.array(new[0]).mean(), np.array(new[0]).var)
-    print("Old", np.array(a.axialEvals).mean(), np.array(a.axialEvals).var)
-    """
-
-    """
-    for n in [7,19,37,61,91,127,169]:
-        for w in np.linspace(185, 220, 10):
-            a = ModeAnalysis[N=n, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=2.13, wall_order=2)
-            a.run()
-            print(a.Nion)
-            Evals = a.Evals
-            # print(Evals)
-            print("Trying w=", w)
-            # print("Calculated axial freq:",a.wz/(2*pi))
-            if type(Evals) is type(1):
-                print("Integer eval obtained:", Evals)
-                # else:
-                # print(Evals[0])
-            if [x for x in Evals if np.imag(x) != 0] != []:
-                ions.append(a.Nion)
-                transistionfreq.append(w)
-                # print([x for x in Evals if np.imag(x) != 0])
-                break
-            print("------------")
-    print(transistionfreq)
-    """
-    """
-    asprat = []
-    for V in np.linspace(0, 20, 20):
-        a = ModeAnalysis(N=127, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=180, Vwall=V, wall_order=2)
-        a.run()
-        X = a.u[0:a.Nion]
-        Y = a.u[a.Nion:]
-
-        Xtent = X.max() - X.min()
-        Ytent = Y.max() - Y.min()
-        if Ytent > Xtent:
-            asprat.append(Ytent / Xtent)
-        else:
-            asprat.append(Xtent / Ytent)
-        print(asprat)
-        #a.show_crystal(a.u)
-
-        # vectsvals=a.run()
-    # print(asprat,np)
-    print(a.l0)
-    asp = plt.plot(np.linspace(0, 20, 20), asprat)
-    #a.show_crystal(a.u)
-    asp = plt.scatter(np.linspace(0, 20, 20), asprat)
-    asp = plt.xlabel('$V Wall$, V')
-    asp = plt.ylabel('Crystal Aspect Ratio (Major/Minor Axis)')
-    asp = plt.title('Crystal Aspect Ratio vs. $f_{rot}$')
-    plt.show()
-    print('hih')
-    # a = plt.plot(shellcounts, transistionfreq)
-    # plt.show()
-    # #
-    """
-
-    # #print("Checkpoint Alpha")
-    # #plt.close()
-    # #plt.plot((Evals,Evals),(np.ones(np.size(Evals)),np.zeros(np.size(Evals))),linestyle="-",color='black')
-    # #plt.axis([800,1.550,0,1.1])
-    # #plt.ylabel('arb')
-    # #plt.xlabel('Mode Frequency [kHz]')
-    # #a.show_crystal_modes(a.u, a.Evects, 3)
-    # #print(np.max(Evals))
-    # #print(np.min(Evals))
-    # #plt.close()
-    # a.show_crystal(a.u)
-    # # print(a.Nion)
-    #
-    # #   get the data
-    # r = np.zeros(np.shape(a.r))
-    # rsep = np.zeros(np.shape(a.rsep))
-    # r[:] = a.r
-    # rsep[:] = np.transpose(a.rsep) / a.scale
-    # #    print("Checkpoint Charlie")
-    # a.get_low_freq_mode()
-    # #   process into a single 1D array -- use braodcasting to make a r into repeating
-    # #   2D array (faster than a loop)
-    # r_full = r + np.zeros(np.shape(rsep))
-    # rsep_flat = rsep.flatten()
-    # r_flat = r_full.flatten()
-    #
-    # #   create mask for points
-    # rsep_flat[rsep_flat > 1.4] = np.nan
-    # rsep_flat[rsep_flat < 0.1] = np.nan
-    # mask = np.isnan(rsep_flat)
-    # r_fit = r_flat[~mask]
-    # rsep_fit = rsep_flat[~mask]
-    #
-    # popt, pcov = optimize.curve_fit(a.crystal_spacing_fit, r_fit, rsep_fit,
-    #                                 p0=[1.25, 2000])
-    #
-    # pred = a.crystal_spacing_fit(r, *popt)
-    # plt.figure()
-    # plt.plot(r_flat / a.scale, rsep_flat, 'o')
-    # plt.plot(r / a.scale, pred, 'r')
-    # plt.ylim(0, 2)
-    # plt.show()
-    # print(popt)
