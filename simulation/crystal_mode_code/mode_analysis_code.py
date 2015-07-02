@@ -5,7 +5,6 @@ import numpy as np
 import scipy.optimize as optimize
 import matplotlib.pyplot as plt
 import scipy.linalg
-from mpmath import mp
 
 __author__ = 'sbt'
 
@@ -38,7 +37,7 @@ class ModeAnalysis:
     m_Be = 9.012182 * amu
     k_e = 8.9875517873681764E9
 
-    def __init__(self, N=19, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0,
+    def __init__(self, N=19, Vtrap=(0.0, -1750.0, -2000.0), Ctrap=1.0,
                  ionmass=None, B=4.4588, frot=180., Vwall=5., wall_order=2,
                  quiet=True):
         """
@@ -92,16 +91,18 @@ class ModeAnalysis:
         self.Vtrap = np.array(Vtrap)  # [Vend, Vmid, Vcenter] for trap electrodes
         self.Coeff = np.dot(self.C, self.Vtrap)  # Determine the 0th, first, second, and fourth order
         #  potentials at trap center
-        self.wz = 4.9951e6  # old trapping frequency
-        #self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
-        self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular frequency
+        #self.wz = 4.9951e6  # old trapping frequency
+        self.wz = np.sqrt(2 * self.q * self.Coeff[2] / self.m_Be)  # Compute axial frequency
+        self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular fre   quency
 
         # Not used vvv
-        self.wmag = 0.5 * (self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
+        self.wmag = 0.5 * (
+            self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
+        self.wmag=0 # a hack for now
 
         self.V0 = (0.5 * self.m_Be * self.wz ** 2) / self.q  # Find quadratic voltage at trap center
-        self.Cw = 0.045 * Vwall / 1000  # old trap
-        #self.Cw = Vwall * 1612 / self.V0  # dimensionless coefficient in front
+        #self.Cw = 0.045 * Vwall / 1000  # old trap
+        self.Cw = Vwall * 1612 / self.V0  # dimensionless coefficient in front
         # of rotating wall terms in potential
 
         self.dimensionless()  # Make system dimensionless
@@ -133,7 +134,6 @@ class ModeAnalysis:
         self.wr = self.wrot / self.wz  # dimensionless rotation
         self.wc = self.wcyc / self.wz  # dimensionless cyclotron
         self.md = self.m / self.m_Be  # dimensionless mass
-        
 
     def expUnits(self):
         """Convert dimensionless outputs to experimental units"""
@@ -153,7 +153,8 @@ class ModeAnalysis:
         Stores the radial separations as well.
         """
         if self.wmag > self.wrot:
-            print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
+            print("Warning: Rotation frequency", self.wrot/(2*pi),
+                  " is below magnetron frequency of", float(self.wrot/(2*pi)))
             return 0
 
         self.generate_crystal()
@@ -170,7 +171,8 @@ class ModeAnalysis:
         :return: Returns a crystal's position vector while also saving it to the class.
         """
         if self.wmag > self.wrot:
-            print("Warning: Rotation frequency below magnetron frequency of {0:.1f}".format(float(self.wmag / 2 * pi)))
+            print("Warning: Rotation frequency", self.wrot/(2*pi),
+                  " is below magnetron frequency of", float(self.wrot/(2*pi)))
             return 0
         self.u0 = self.find_scaled_lattice_guess(mins=1, res=50)
         # self.u0 = self.generate_2D_hex_lattice(2)
@@ -184,10 +186,10 @@ class ModeAnalysis:
         # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
         # Only changes the positions if the potential energy was reduced.
         if self.Nion <= 62:
-            for attempt in np.linspace(.05, .5, 100):
+            for attempt in np.linspace(.05, .5, 50):
                 self.u = self.perturb_position(self.u, attempt)
         if 62 < self.Nion <= 126:
-            for attempt in np.linspace(.05, .5, 50):
+            for attempt in np.linspace(.05, .5, 25):
                 self.u = self.perturb_position(self.u, attempt)
         if 127 <= self.Nion:
             for attempt in np.linspace(.05, .5, 10):
@@ -463,7 +465,7 @@ class ModeAnalysis:
         # Convert 2N imaginary eigenvalues to N real eigenfrequencies
         ind = np.argsort(np.absolute(np.imag(Eval)))
         Eval = np.imag(Eval[ind])
-        Eval = Eval[Eval>=0]      # toss the negative eigenvalues
+        Eval = Eval[Eval >= 0]      # toss the negative eigenvalues
         Evect = Evect[:, ind]     # sort eigenvectors accordingly
 
         # Normalize by energy of mode
@@ -471,7 +473,9 @@ class ModeAnalysis:
             pos_part = Evect[:self.Nion, i]
             vel_part = Evect[self.Nion:, i]
             norm = vel_part.H*Mmat*vel_part - pos_part.H*K*pos_part
-            Evect[:, i] = Evect[:, i]/np.sqrt(norm)
+            with np.errstate(divide='ignore'):
+                Evect[:, i] = np.where(np.sqrt(norm) != 0., Evect[:, i]/np.sqrt(norm), 0)
+            #Evect[:, i] = Evect[:, i]/np.sqrt(norm)
 
         Evect = np.asarray(Evect)
         return Eval, Evect
@@ -513,7 +517,10 @@ class ModeAnalysis:
             pos_part = Evect[:2*self.Nion, i]
             vel_part = Evect[2*self.Nion:, i]
             norm = vel_part.H*Mmat*vel_part - pos_part.H*(V/2)*pos_part
-            Evect[:, i] = Evect[:, i]/np.sqrt(norm)
+
+            with np.errstate(divide='ignore'):
+                Evect[:, i] = np.where(np.sqrt(norm) != 0., Evect[:, i]/np.sqrt(norm), 0)
+            #Evect[:, i] = Evect[:, i]/np.sqrt(norm)
 
         # if there are extra zeros, chop them
         Eval = Eval[(Eval.size - 2 * self.Nion):]

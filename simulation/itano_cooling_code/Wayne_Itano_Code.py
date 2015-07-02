@@ -37,11 +37,12 @@ class ItanoAnalysis:
     r_bar = (hbar * k) ** 2 / (2 * m)  # recoil energy
     rnorm = r_bar / (hbar * k)  # A reduced recoil energy
     vk = gamma0 / (2 * k)  # Reduced line width
-    pardiff=2*np.pi*9E6
+    pardiff = 2 * np.pi * 9E6
 
     def __init__(self,
-                 defaultoff=30.0E-6, defaultdet=-500E6, wr=2 * pi * 45.0E3, Tguess=1E-3, saturation=.5,
-                 dens=2.77E9, ywidth=2.0E-6, radius=225.0E-6, quiet=True, spar=.2, wpar=2E6):
+                 defaultoff=30.0E-6, defaultdet=-500E6, wr=2 * pi * 45.0E3, Tguess=1E-3,
+                 saturation=.5,
+                 dens=2.77E9, ywidth=2.0E-6, radius=225.0E-6, quiet=True, spar=.2, wpar=9E6):
 
         """
         Define parameters which characterize the plasma and the incident doppler beam, such as the
@@ -64,7 +65,8 @@ class ItanoAnalysis:
         self.det = defaultdet  # default detuning of cooling laser
         self.wr = wr  # angular rotation frequency in s^{-1}
         self.rp = radius  # radius of ion array in meters
-        self.u0 = np.sqrt(2 * self.kB * Tguess / self.m)  # initial thermal velocity used in Boltzmann factor
+        self.u0 = np.sqrt(
+            2 * self.kB * Tguess / self.m)  # initial thermal velocity used in Boltzmann factor
         self.s0 = saturation  # saturation parameter for laser interaction (set to 0 to turn off saturation effects)
         self.sig0 = dens
         self.wy = ywidth
@@ -77,7 +79,7 @@ class ItanoAnalysis:
 
         self.counter = 0
 
-    def density(self, x, y,radius=None):
+    def density(self, x, y, radius=None):
         """
         Defines a density scaling which returns 0 outside of the circular bounds of the plasma.
         Useful because it allows for rectangular integration bounds (i.e. [-r,r])
@@ -130,7 +132,7 @@ class ItanoAnalysis:
                             -np.inf, np.inf,
                             lambda x: -1 * rp, lambda x: rp,
                             lambda x, y: -1 * rp, lambda x, y: rp)
-        self.counter+=1
+        self.counter += 1
         return ret[0]
 
     def dEavgAndParallel(self, u, detun=None, offset=None):
@@ -157,8 +159,8 @@ class ItanoAnalysis:
         s0 = self.s0
         delta = 2. * detun / self.gamma0
 
-        alpha = (2 / 9) * self.hbar * self.k * rp ** 2 * np.pi ** (3 / 2) * self.spar  \
-            / (s0*self.m*(1+2*self.spar+(2/self.gamma0)**2)*self.pardiff**2)
+        alpha = (2 / 9) * self.hbar * self.k * rp ** 2 * np.pi ** (3 / 2) * self.spar \
+                / (s0 * self.m * (1 + 2 * self.spar + (2 / self.gamma0) ** 2) * self.pardiff ** 2)
 
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
@@ -197,7 +199,7 @@ class ItanoAnalysis:
         wr = self.wr
 
         delta = 2. * detun / self.gamma0
-        constants = self.gamma0 * self.s0 * self.sig0 * ueq / np.sqrt(np.pi)
+        constants = self.gamma0 * self.s0 * self.sig0 / np.sqrt(np.pi)
         ret = integ.tplquad(lambda y, x, v:
                             self.density(x, y)
                             * np.exp(-2 * (y - offset) ** 2 / wy ** 2) *
@@ -266,8 +268,9 @@ class ItanoAnalysis:
 
     def scan_detuning_and_offset(self, detmin=-150.E6, detmax=-1.E6, detN=30,
                                  offmin=0, offmax=40.0E-6, offN=30,
-                                 get_temp=True, get_torque=False, get_total_scatter=False, plot=False,
-                                 detuninglist = None, offsetlist = None) -> list:
+                                 get_temp=True, get_torque=False, get_total_scatter=False,
+                                 plot=False,
+                                 detuninglist=None, offsetlist=None) -> list:
         """
             Conducts a two-dimensional scan across the detuning/offset
             parameter space.
@@ -314,7 +317,7 @@ class ItanoAnalysis:
         if offsetlist is None:
             doff = np.linspace(offmin, offmax, offN)
         else:
-            doff=offsetlist
+            doff = offsetlist
         dw = 2 * pi * df
         U = np.zeros([len(doff), len(df)])
         if get_torque is True:
@@ -348,13 +351,14 @@ class ItanoAnalysis:
                         except:
                             try:
                                 U[D][W] = opt.brentq(self.dEavg, umin * .001, umax * 1000,
-                                                    args=(dw[W], doff[D]), xtol=1e-5,
-                                                 rtol=3.0e-7)
+                                                     args=(dw[W], doff[D]), xtol=1e-5,
+                                                     rtol=3.0e-7)
 
                             except:
                                 U[D][W] = np.nan  # Obviously an error occured
-                                print("Warning! The integral was not able to evaluate for some reason. "
-                                      "Storing u as nan and moving on...")
+                                print(
+                                    "Warning! The integral was not able to evaluate for some reason. "
+                                    "Storing u as nan and moving on...")
 
                 if get_torque:
                     Trq[D][W] = self.totaltorque(U[D][W], dw[W], doff[D])
@@ -363,7 +367,8 @@ class ItanoAnalysis:
                     Sct[D][W] = self.totalscatterperp(U[D][W], dw[W], doff[D])
 
                 if self.quiet is False:
-                    print("u/T recorded:", U[D][W], ((U[D][W]) * U[D][W] * 8.96 * 1.673E-27 / (2 * 1.38E-23)), "after",
+                    print("u/T recorded:", U[D][W],
+                          ((U[D][W]) * U[D][W] * 8.96 * 1.673E-27 / (2 * 1.38E-23)), "after",
                           self.counter, "integral calls.")
 
                 self.counter = 0
@@ -373,7 +378,7 @@ class ItanoAnalysis:
             Teq = 0
         return [Teq, Trq, Sct]
 
-    def getueq(self, detun=None, offset=None,returntemperature=False):
+    def getueq(self, detun=None, offset=None, returntemperature=False):
         """
         Returns the equilibrium Maxwell-Boltzmann parameter for the planar velocity.
         or, if you set returntemperature to True, it will return the temperature isntead.
@@ -394,14 +399,60 @@ class ItanoAnalysis:
         if returntemperature is False:
             return ret[0]
         else:
-            return ret[0]**2*self.m/(2*self.kB)
+            return ret[0] ** 2 * self.m / (2 * self.kB)
 
-    def plot_2d_scan_result(self,df, doff, var, showminimum=True, temperature= True):
+    def plot_temperature_result(self, temp, df, doff, showminimum=True,
+                                title="Equilibrium Temperature",contourlevels=None,
+                                maxtemp=None):
         """
-        UNDER CONSTRUCTION.
+        Input the 0th array which returns from scan detuning and offset to
+        make a plot of the temperature.
 
-        Input a 2d variable and a
+        Assumptions about input parameters are as follows:
+
+
         """
+
+        plt.rcParams['font.size'] = 16
+        Teq = temp[0] * 1000
+
+        Teqmask = np.ma.array(Teq, mask=np.isnan(Teq))
+        if maxtemp is not None:
+            Teqmask = np.ma.array(Teqmask, mask=Teq >= maxtemp)
+
+        offsetmin, freqmin = np.unravel_index(Teqmask.argmin(), Teqmask.shape)
+
+        dfn = df * 1.0E-6
+        doffn = doff * 1.0E6
+
+        # print("Minimum temperature %.3f" % np.amin(Teqmask),
+        #      "mK occurs at detuning %2.f" % dfn[freqmin], "MHz and offset %.f" % doffn[offsetmin],
+        #      "micron")
+
+        CS = plt.figure(figsize=(12, 10))
+        cmap = plt.cm.Blues_r
+        CS = plt.pcolor(dfn, doffn, Teqmask, cmap=cmap, vmin=np.nanmin(Teqmask),
+                        vmax=np.nanmax(Teqmask))
+        CS = plt.ylim(doffn[0], doffn[-1])
+        CS = plt.xlim(dfn[0], dfn[-1])
+        CS = plt.xlabel('Laser Detuning (MHz)')
+        CS = plt.ylabel('Laser Offset $(\mu m)$ ')
+        CS = plt.title(title,
+                       y=1.03)
+        CS = plt.colorbar()
+
+        if contourlevels is not None:
+            CS = plt.contour(dfn, doffn, Teqmask, colors='white', levels=contourlevels)
+            CS = plt.clabel(CS, inline=1, fontsize=10, fmt='%1.2f')
+
+        if showminimum is True:
+            CS = plt.plot(dfn[freqmin], doffn[offsetmin], "*", color="white", markersize=20.0,
+                          label="Min. Temp. = %.3f at (%2.f,%2.f)" % (
+                              np.amin(Teqmask), dfn[freqmin], doffn[offsetmin]))
+            leg = plt.legend(loc=2, fontsize=13, numpoints=1, fancybox=False)
+            leg.get_frame().set_alpha(1)
+        CS=plt.show()
+        return CS
 
 
 
@@ -467,4 +518,5 @@ if __name__ == '__main__':
     d=plt.title('Detuning vs Net Torque by Laser')
 
     print(U)
-    """
+
+"""
