@@ -144,6 +144,12 @@ def get_raw_counts_hist():
         
         return file_name, scandata, counts_data, data
 
+def bright_fraction(counts):
+    #Convert counts into fraction of ions bright, from IonProp Brightmean
+    max_count = get_ionProp_value("detection%det_brightMean")
+    min_count = get_ionProp_value("sf%fitParams%sf_fitParam_darkMean")
+    b_prob = (counts - min_count)/(float(max_count - min_count))
+    return b_prob
 
 def get_histData(max_count=100, min_count=0):
     #Get the data file name
