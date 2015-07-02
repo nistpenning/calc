@@ -224,8 +224,8 @@ def IsingCalc(ACSS_l, ACSS_u, wz):
     I_fit_avg = (I_fit_u+I_fit_L)/2.
 
     #  calc angles from exp offset
-    phip_u = 57.0*2  # degress, the offset is found from the best linear polarization
-    phip_L = 32.0*2  # degrees
+    phip_u = 60.0*2  # degress, the offset is found from the best linear polarization
+    phip_L = 36.0*2  # degrees
 
     #  spont emission
     G_u = spe.spont_emission(I=I_fit_u, omegaL=wL, phip=phip_u*pi/180.)
