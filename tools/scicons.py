@@ -27,3 +27,6 @@ m_Be = amu*9.012182
 mI=-3/2
 
 ge = cons.physical_constants['electron g factor'][0]  # electron g-factor
+gIp = -0.784955 #Be nuclear g-factor
+AhfS = -625.008837e6 * 2*pi #Hyperfine coefficient
+AhfP = -118.6e6 * 2*pi #Hyperfine coefficient for P state
