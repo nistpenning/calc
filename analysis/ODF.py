@@ -4,9 +4,9 @@
 from __future__ import division
 
 import numpy as np
-from numpy import cos, sin, arctan2
+from numpy import cos, sin, arctan2, pi
 import sys
-from scicons import m_Be
+from scicons import c, m_Be, ge, epsilon0, hbar, mu_b, mu_n
 import scipy.constants
 import spont_emission as spe
 
@@ -14,13 +14,6 @@ sys.path.append("c:\\Users\\bsawyer\\Documents\\Python Scripts\\subroutines")
 import wigner
 reload(wigner)
 
-pi = np.pi
-c = scipy.constants.c
-mu_b = scipy.constants.physical_constants['Bohr magneton'][0]
-mu_n = mu_b/scipy.constants.physical_constants['proton-electron mass ratio'][0]
-hbar = scipy.constants.hbar
-epsilon0 = scipy.constants.epsilon_0
-ge = scipy.constants.physical_constants['electron g factor'][0] #electron g-factor
 gIp = -0.784955 #Be nuclear g-factor
 AhfS = -625.008837e6 * 2*pi #Hyperfine coefficient
 AhfP = -118.6e6 * 2*pi #Hyperfine coefficient for P state
@@ -210,6 +203,16 @@ def OATjgb(N, Jbar_at_1kHz, psi, int_time):
     return varJz, delt
 
 def IsingCalc(ACSS_l, ACSS_u, wz):
+    '''
+    gives parameters needed for Ising model calcuations from measured ACSS
+    Units:
+        ACSS_l -- per sec
+        
+        ACSS_u -- per sec
+        
+        wz -- per sec
+        
+    '''
 
     Lcooling = 626.2252e-9  # wavemeter reading of red lasers
     LODF = 626.2670e-9

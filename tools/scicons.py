@@ -25,3 +25,5 @@ amu = cons.physical_constants['atomic mass constant'][0]
 h = cons.h
 m_Be = amu*9.012182
 mI=-3/2
+
+ge = cons.physical_constants['electron g factor'][0]  # electron g-factor
