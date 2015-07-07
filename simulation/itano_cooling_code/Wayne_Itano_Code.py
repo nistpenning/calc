@@ -8,6 +8,8 @@ __author__ = 'sbt'
     some recoil heating from a parallel laser beam frmo the PRA paper by W. Itano from 1982
     "Laser Cooling of Atoms Stored in Harmonic and Penning Traps".
 
+    July 6 Revision
+
 """
 import numpy as np
 import scipy.optimize as opt
@@ -236,7 +238,7 @@ class ItanoAnalysis:
         wr = self.wr
 
         delta = 2. * detun / self.gamma0
-        constants = (self.hbar * self.k) * self.gamma0 * self.s0 * self.sig0 * ueq / np.sqrt(np.pi)
+        constants = (self.hbar * self.k) * self.gamma0 * self.s0 * self.sig0 / np.sqrt(np.pi)
         ret = integ.tplquad(lambda v, x, y:
                             self.density(x, y)
                             * np.exp(-2 * (y - offset) ** 2 / wy ** 2) * y *
@@ -270,7 +272,7 @@ class ItanoAnalysis:
                                  offmin=0, offmax=40.0E-6, offN=30,
                                  get_temp=True, get_torque=False, get_total_scatter=False,
                                  plot=False,
-                                 detuninglist=None, offsetlist=None) -> list:
+                                 detuninglist=None, offsetlist=None, parheating=False) -> list:
         """
             Conducts a two-dimensional scan across the detuning/offset
             parameter space.
@@ -310,14 +312,22 @@ class ItanoAnalysis:
         umin = np.sqrt(Tmin * self.kB * 2 / self.m)
         Trq = 0
         Sct = 0
+
+        if parheating is False:
+            dEfunction =self.dEavg
+        else:
+            dEfunction = self.dEavgAndParallel
+
         if detuninglist is None:
             df = np.linspace(detmin, detmax, detN)
         else:
             df = detuninglist
+
         if offsetlist is None:
             doff = np.linspace(offmin, offmax, offN)
         else:
             doff = offsetlist
+
         dw = 2 * pi * df
         U = np.zeros([len(doff), len(df)])
         if get_torque is True:
@@ -335,22 +345,22 @@ class ItanoAnalysis:
 
                 # The difference between each of these three tries is that
                 try:
-                    U[D][W] = opt.brentq(self.dEavg, umin, umax,
+                    U[D][W] = opt.brentq(dEfunction, umin, umax,
                                          args=(dw[W], doff[D]), xtol=1e-4, rtol=3.0e-7)
                 except:
                     try:
-                        U[D][W] = opt.brentq(self.dEavg, umin * .1, umax * 10,
+                        U[D][W] = opt.brentq(dEfunction, umin * .1, umax * 10,
                                              args=(dw[W], doff[D]), xtol=1e-4,
                                              rtol=3.0e-7)
                     except:
 
                         try:
-                            U[D][W] = opt.brentq(self.dEavg, umin * .01, umax * 100,
+                            U[D][W] = opt.brentq(dEfunction, umin * .01, umax * 100,
                                                  args=(dw[W], doff[D]), xtol=1e-4,
                                                  rtol=3.0e-7)
                         except:
                             try:
-                                U[D][W] = opt.brentq(self.dEavg, umin * .001, umax * 1000,
+                                U[D][W] = opt.brentq(dEfunction, umin * .001, umax * 1000,
                                                      args=(dw[W], doff[D]), xtol=1e-5,
                                                      rtol=3.0e-7)
 
@@ -457,9 +467,10 @@ class ItanoAnalysis:
 
 
 if __name__ == '__main__':
-    a = ItanoAnalysis(quiet=False)
+    a = ItanoAnalysis(quiet=False, spar=1.0E30)
 
-    A = a.scan_detuning_and_offset(detN=3, offN=3, get_torque=True, get_total_scatter=True)
+    A = a.scan_detuning_and_offset(detN=2, offN=2, get_torque=True, get_total_scatter=True,
+                                   parheating=False)
     df = np.linspace(-150.0E6, -1E6, 3)
     doff = np.linspace(0, 40.0E-6, 3)
     print(A[0], A[1], A[2])

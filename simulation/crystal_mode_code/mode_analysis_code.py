@@ -39,7 +39,7 @@ class ModeAnalysis:
 
     def __init__(self, N=19, Vtrap=(0.0, -1750.0, -2000.0), Ctrap=1.0,
                  ionmass=None, B=4.4588, frot=180., Vwall=5., wall_order=2,
-                 quiet=True):
+                 quiet=True, precision_solving=True):
         """
         :param N:       integer, number of ions
         :param shells:  integer, number of shells to instantiate the plasma with
@@ -51,9 +51,14 @@ class ModeAnalysis:
         :param wall_order: integer, defines the order of the rotating wall potential
         :param mult: float, mutliplicative factor for simplifying numerical calculations
         :param quiet: will print some things if False
+        :param precision_solving: Determines if perturbations will be made to the crystal to find
+                                    a low energy state with a number of attempts based on the
+                                    number of ions.
+                                    Disable for speed, but recommended.
         """
 
         self.quiet = quiet
+        self.precision_solving = precision_solving
         # Initialize basic variables such as physical constants
         self.Nion = N
         # self.shells = shells
@@ -183,17 +188,31 @@ class ModeAnalysis:
 
         self.u = self.find_eq_pos(self.u0)
 
+
+
         # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
         # Only changes the positions if the potential energy was reduced.
-        if self.Nion <= 62:
-            for attempt in np.linspace(.05, .5, 50):
-                self.u = self.perturb_position(self.u, attempt)
-        if 62 < self.Nion <= 126:
-            for attempt in np.linspace(.05, .5, 25):
-                self.u = self.perturb_position(self.u, attempt)
-        if 127 <= self.Nion:
-            for attempt in np.linspace(.05, .5, 10):
-                self.u = self.perturb_position(self.u, attempt)
+        if self.precision_solving is True:
+            if self.quiet is False:
+                pass
+                #print("Perturbing crystal...")
+
+            if self.Nion <= 62:
+                for attempt in np.linspace(.05, .5, 50):
+                    self.u = self.perturb_position(self.u, attempt)
+            if 62 < self.Nion <= 126:
+                for attempt in np.linspace(.05, .5, 25):
+                    self.u = self.perturb_position(self.u, attempt)
+            if 127 <= self.Nion <= 200:
+                for attempt in np.linspace(.05, .5, 10):
+                    self.u = self.perturb_position(self.u, attempt)
+            if 201 <= self.Nion:
+                for attempt in np.linspace(.05, .3, 5):
+                    self.u = self.perturb_position(self.u, attempt)
+
+            if self.quiet is False:
+                pass
+                #print("Perturbing complete")
 
         self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
         return self.u
@@ -473,7 +492,8 @@ class ModeAnalysis:
             pos_part = Evect[:self.Nion, i]
             vel_part = Evect[self.Nion:, i]
             norm = vel_part.H*Mmat*vel_part - pos_part.H*K*pos_part
-            with np.errstate(divide='ignore'):
+
+            with np.errstate(divide='ignore',invalid='ignore'):
                 Evect[:, i] = np.where(np.sqrt(norm) != 0., Evect[:, i]/np.sqrt(norm), 0)
             #Evect[:, i] = Evect[:, i]/np.sqrt(norm)
 
@@ -665,19 +685,18 @@ class ModeAnalysis:
     def is_plane_stable(self):
         """
         Checks to see if any of the axial eigenvalues in the current configuration of the crystal
-        are imaginary. If so, this indicates that the one-plane configuration is unstable
-        and a 1-2 plane transistion is possible. T
+        are equal to zero. If so, this indicates that the one-plane configuration is unstable
+        and a 1-2 plane transistion is possible.
 
         :return: Boolean: True if no 1-2 plane transistion mode exists, false if it does
         (Answers: "is the plane stable?")
         
-        AFTER CHANGING calc_axial_modes, THIS DOESN'T QUITE MAKE SENSE ANYMORE -AK
         """
         if self.hasrun is False:
             self.run()
 
         for x in self.axialEvals:
-            if x.imag() != 0:
+            if x == 0.0:
                 return False
 
         return True
