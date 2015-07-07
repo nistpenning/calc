@@ -77,7 +77,8 @@ def parse_raw_counts_data(file_name):
                 x[...] = -1
             else:    
                 x[...] = int(x) & 0x1fff
-        print("# of bad points: {}".format(bad))
+        if bad > 0:
+            print("# of bad points: {}".format(bad))
 
     def make_detect_array(array):
         det_array = np.copy(array)
