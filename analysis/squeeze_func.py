@@ -374,7 +374,9 @@ def data_point_histogram(pn, max_c, min_c, save=False):
     z_data = (counts_data-min_c)/(max_c - min_c)
     
     plt.close()
-    plt.hist(z_data[pn],bins=20)
+    bin_width = 0.025
+    bin_range = np.arange(min(z_data[pn]), max(z_data[pn]) + bin_width, bin_width)
+    plt.hist(z_data[pn],bins=bin_range)
     #  param = norm.fit(counts_data[pn])
     #  pdf_fitted = dist.pdf(np.arange(1000), *param[:-2], loc=param[-2], scale=param[-1]) * 1000
     x_data = np.array([i*np.ones(np.size(z_data[0])) for i in phi])
@@ -386,7 +388,7 @@ def data_point_histogram(pn, max_c, min_c, save=False):
     plt.ylabel('Number of Instances')
     title = 'Angle:{0:.1f} deg, t_a: {1} us'.format(phi[pn],arm_time)
     plt.title(title)
-    plt.axis([0,1.0,0,60])
+    plt.axis([0,1.0,0,70])
     
     if save is not False:
         name_out = save+'/phi_'+str(phi[pn])+'.png'
