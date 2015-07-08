@@ -120,6 +120,7 @@ class ModeAnalysis:
         self.axialEvalsE = []  # Axial eigenvalues in experimental units
         self.planarEvalsE = []  # Planar eigenvalues in experimental units
 
+        self.p0 = 0    # dimensionless potential energy of equilibrium crystal
         self.r = []
         self.rsep = []
         self.dx = []
@@ -215,6 +216,7 @@ class ModeAnalysis:
                 #print("Perturbing complete")
 
         self.r, self.dx, self.dy, self.rsep = self.find_radial_separation(self.u)
+        self.p0 = self.pot_energy(self.u)
         return self.u
 
     def generate_lattice(self):
