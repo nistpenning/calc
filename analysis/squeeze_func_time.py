@@ -360,7 +360,6 @@ def sq_figures(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz, save=False, extent='
 
 def data_point_histogram(pn, max_c, min_c, binwidth=0.025, save=False):
     # Get data
-    file_name, scandata, m, pmterr, trials, data = hfGUIdata.get_raw_counts()
     file_name, scandata, counts_data, data = hfGUIdata.get_raw_counts_hist()
 
     #data = np.genfromtxt(file_name,delimiter=",",names=True,dtype=None)
@@ -378,7 +377,7 @@ def data_point_histogram(pn, max_c, min_c, binwidth=0.025, save=False):
     plt.close()
     bin_width = binwidth
     bin_range = np.arange(min(z_data[pn]), max(z_data[pn]) + bin_width, bin_width)
-    plt.hist(z_data[pn],bins=bin_range)
+    out = plt.hist(z_data[pn],bins=bin_range)
     #  param = norm.fit(counts_data[pn])
     #  pdf_fitted = dist.pdf(np.arange(1000), *param[:-2], loc=param[-2], scale=param[-1]) * 1000
     x_data = np.array([i*np.ones(np.size(z_data[0])) for i in phi])
@@ -390,7 +389,7 @@ def data_point_histogram(pn, max_c, min_c, binwidth=0.025, save=False):
     plt.ylabel('Number of Instances')
     title = 'Angle:{0:.1f} deg, t_a: {1} us, #{2}'.format(phi[pn],arm_time,pn)
     plt.title(title)
-    plt.axis([0,1.0,0,60])
+    plt.axis([0,1.0,0,np.max(out[0])])
 
     if save is not False:
         name_out = save+'/phi_'+'{:.0f}'.format(phi[pn])+'_{}'.format(pn)+'.png'
