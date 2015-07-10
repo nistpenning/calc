@@ -16,6 +16,20 @@ import hfGUIdata
 import plot_tools_jgb as pt
 reload(pt)
 
+def OAT(psi, chi, N, t):
+    """
+    psi: quadrature angle [radians] -- could be array
+    params:
+    chi:  2* (Jbar) / N
+    N: atom number
+    t: total interaction time
+    """
+    Acoef = 1-cos(2*chi*t)**(N-2)
+    Bcoef = 4*sin(chi*t)*cos(chi*t)**(N-2)
+    delt = 0.5*np.arctan2(Bcoef,Acoef)
+    varJz = N/4.*(1+(N/4.-0.25)*(Acoef - sqrt(Acoef**2+Bcoef**2)*cos(2*(psi+delt))))
+    return varJz
+
 def sq_analysis(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz):
     # Get data
     file_name, scandata, m, pmterr, trials, data = hfGUIdata.get_raw_counts()
@@ -28,7 +42,7 @@ def sq_analysis(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz):
     # Calculate derived quantities
     detune = det_n*1e3/(arm_time)  # kHz
     phi = (scandata/pi_time*180.0) #degrees
-    J = 2*Jbar_1kHz/detune/N  # interaction strength, scaled for detuning
+    chi = 2*Jbar_1kHz/detune/N  # interaction strength, scaled for detuning
 
     pmterr_uncert = pmterr/sqrt(2*trials)
     m_avg = np.mean(m)
@@ -63,11 +77,13 @@ def sq_analysis(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz):
     # try to calculated the squeezed state from OAT
     psi = np.linspace(0,-720,num=400)*pi/180.
     t = 2*arm_time*1e-6
-
+    """
     Acoef = 1-cos(2*J*t)**(N-2)
     Bcoef = 4*sin(J*t)*cos(J*t)**(N-2)
     delt = 0.5*np.arctan2(Bcoef,Acoef)
     varJz = N/4.0*(1+(N/4.0-0.25)*(Acoef - sqrt(Acoef**2+Bcoef**2)*cos(2*(psi+delt))))
+    """
+    varJz = OAT(psi, chi, N, t)
 
     sig_squeeze = sqrt(varJz/N**2 * K**2)
     sig_squeeze = sqrt(sig_squeeze**2 + 0.0**2 + np.mean(m) + (k0*np.mean(m))**2)
