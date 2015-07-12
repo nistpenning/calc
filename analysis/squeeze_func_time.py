@@ -7,7 +7,7 @@ Created on Wed May 27 10:40:23 2015
 
 import os
 import numpy as np
-from numpy import sin, cos, pi, sqrt
+from numpy import sin, cos, pi, sqrt, exp
 import matplotlib.pyplot as plt
 #import scipy.stats.norm as norm
 
@@ -422,4 +422,83 @@ def hist_data_browser(max_c, min_c, num):
         os.makedirs(directory)
     for i in range(num):
         data_point_histogram(i, max_c, min_c, save=directory)
+
+def OAT_decoh(psi, tsq, J, N, G_el, G_ud, G_du):
+    """
+    Model for OAT accounting for decohrence based on paper by MFF
+    psi: angle of final rotation about x, radians
+    tsq: total interaction tim, seconds
+    J: interaction strength from mean field rotation
+    N: ion number
+    G_el: elastic scattering rate (1/sec)
+    G_ud: up down rate (1/sec)
+    G_du: down up rate (1/sec)
+
+    Returns:
+    Jz_std: normalize to sqrt(N)/2
+    C: fringe contrast
+    opt_squ_angle: angle of minimum in Jz_std, in radians
+    """
+
+    G_r = G_ud + G_du
+    G = (G_el + G_r)/2.
+
+    # Key functions
+    def Phi(t, J, G_ud, G_du):
+        theta = pi/2.
+        g = (G_ud-G_du)/4.
+        G_r = G_ud + G_du
+        s = 2*J/N + 2j*g  # this is the param in the paper where N should go
+        r= G_ud*G_du
+
+        a = t*sqrt(s**2-r)
+
+        out = exp(-G_r*t/2.)*( cos(a) + 0.5*(G_r+4j*J*cos(theta))*t*np.sinc(a) )
+        return out
+
+    def Psi(t, J, G_ud, G_du):
+        theta = pi/2.
+        g = (G_ud-G_du)/4.
+        G_r = G_ud + G_du
+        s = 2*J/N + 2j*g
+        r= G_ud*G_du
+
+        a = t*sqrt(s**2-r)
+
+        out = exp(-G_r*t/2.)*( cos(theta)*cos(a) + 0.5*(2j*s - 4*g - G_r*cos(theta))*t*np.sinc(a) )
+        return out
+
+    # collective spin length
+    Sx = 0.5*exp(-G*tsq) * (Phi(tsq,J,G_ud, G_du))**(N-1)
+    Sx = np.real(Sx)
+
+    # pm correlations
+    Cmz = 0.5*exp(-G*tsq) * Psi(tsq, -J ,G_ud, G_du) * (Phi(tsq, -J, G_ud, G_du))**(N-2)
+    Cpz = 0.5*exp(-G*tsq) * Psi(tsq, J, G_ud, G_du) * (Phi(tsq, J, G_ud, G_du))**(N-2)
+
+    Cpp = 0.25*exp(-2*G*tsq) * (Phi(tsq, 2*J, G_ud, G_du))**(N-2)
+    Cmm = 0.25*exp(-2*G*tsq) * (Phi(tsq, -2*J, G_ud, G_du))**(N-2)
+    Cpm = 0.25*exp(-2*G*tsq) * (Phi(tsq, 0.0, G_ud, G_du))**(N-2)
+    Cmp = Cpm
+
+    # coorediate correlations
+    CyyA = -0.25*(Cpp+Cmm-Cpm-Cmp)
+    CyzA = -(0.25j)*(Cpz-Cmz)
+    CzyA = CyzA
+
+    SyyA = N*(N-1)*CyyA + N/4.
+    SyzA = N*(N-1)*CyzA + 0.5j*N*Sx
+    SzyA = N*(N-1)*CzyA - 0.5j*N*Sx
+    SzzA = N/4.
+
+    # calc squeezing
+    z = (SzyA+SyzA)/(SzzA-SyyA)
+    opt_squ_angle = np.real(0.5*np.arctan(z))
+    Jz_std = sqrt(cos(-psi)**2*SzzA + sin(-psi)**2*SyyA + sin(-psi)*cos(-psi)*(SyzA+SzyA))
+    R = (Jz_std/(sqrt(N)/(2.0)))**2  # reduction in spin noise variance
+    C = 2*Sx  # fringe contrast
+
+    Xi2 = R * (C)**(-2)  # Ramsey squeezing parameter squared
+
+    return np.array([Jz_std, C, opt_squ_angle])
 
