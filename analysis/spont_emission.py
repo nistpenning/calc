@@ -114,4 +114,4 @@ def spont_emission(I=1e4, #laser intensity [W/m^2]
     Gammaud = coeff*np.abs(Ramud)
     Gammadu = coeff*np.abs(Ramdu)
     
-    return GammaEl, GammaRam, Gamma, phip, Gammaud, Gammadu
+    return [GammaEl, GammaRam, Gamma, phip, Gammaud, Gammadu]
