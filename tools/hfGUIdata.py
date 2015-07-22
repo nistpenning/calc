@@ -26,9 +26,9 @@ def get_gen_csv(first_name, skip_header=False):
         #Get data from the file
         if skip_header is False:
             data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None)
-        else: data = np.genfromtxt(file_name, delimiter=",", 
-                                   skip_header=skip_header, 
-                                   names=None, 
+        else: data = np.genfromtxt(file_name, delimiter=",",
+                                   skip_header=skip_header,
+                                   names=None,
                                    dtype=None,
                                    comments="#")
         return file_name, data
@@ -57,16 +57,16 @@ def parse_raw_counts_data(file_name):
     with open(file_name, 'rb') as f:
         reader = csv.reader(f)
         colnames = reader.next()
-        
+
     colnames = filter(None, colnames)  # gets rid of column names that are empty strings
     num_reg_columns = len(colnames) - 1
-    data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None, usecols=range(num_reg_columns+1))      
+    data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None, usecols=range(num_reg_columns+1))
     non_hist_cols = num_reg_columns  # defined by HFGUI expt type
 
     counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None)
     num_cols_total = len(counts_data[0])
     counts_cols = range(num_reg_columns, num_cols_total)
-    counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None, usecols=counts_cols)       
+    counts_data = np.genfromtxt(file_name, delimiter=",", skip_header=1, dtype=None, usecols=counts_cols)
 
     def parse_raw_counts(array):
         bad = 0
@@ -75,7 +75,7 @@ def parse_raw_counts_data(file_name):
                 print('Found bad data point')
                 bad += 1
                 x[...] = -1
-            else:    
+            else:
                 x[...] = int(x) & 0x1fff
         if bad > 0:
             print("# of bad points: {}".format(bad))
@@ -85,7 +85,7 @@ def parse_raw_counts_data(file_name):
         for x in np.nditer(det_array, op_flags=['readwrite']):
             x[...] = ((int(x) & (0xf<<13))>>13)-1
         return det_array
-        
+
     parse_raw_counts(counts_data)
     det_array = make_detect_array(counts_data)
 
@@ -100,22 +100,22 @@ def get_raw_counts():
         print("Did not find file")
         return 0
     else:
-        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)    
+        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)
 
         x = data[colnames[1]]
         scandata = data[colnames[2]]
-        
+
         num_scans = len(scandata[scandata == scandata[0]])
         points_in_scan = np.size(scandata)/num_scans
-        
+
         trials = np.size(counts_data,axis=1)*1.0
-        
-        # Make mask for bad points        
+
+        # Make mask for bad points
         #avg_pmt_counts = np.mean(counts_data[counts_data!=0], axis=1)
         avg_pmt_counts = np.array([np.mean(i[i!=-1]) for i in counts_data ])
         #pmterr = np.std(counts_data[counts_data!=0], axis=1)
         pmterr = np.array([np.std(i[i!=-1]) for i in counts_data ])
-        
+
         return file_name, scandata, avg_pmt_counts, pmterr, trials, data
 
 def get_raw_counts_hist():
@@ -127,22 +127,22 @@ def get_raw_counts_hist():
         print("Did not find file")
         return 0
     else:
-        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)    
+        colnames, data, counts_data, det_array = parse_raw_counts_data(file_name)
 
         x = data[colnames[1]]
         scandata = data[colnames[2]]
-        
+
         num_scans = len(scandata[scandata == scandata[0]])
         points_in_scan = np.size(scandata)/num_scans
-        
+
         trials = np.size(counts_data,axis=1)*1.0
-        
-        # Make mask for bad points        
+
+        # Make mask for bad points
         #avg_pmt_counts = np.mean(counts_data[counts_data!=0], axis=1)
         avg_pmt_counts = np.array([np.mean(i[i!=-1]) for i in counts_data ])
         #pmterr = np.std(counts_data[counts_data!=0], axis=1)
         pmterr = np.array([np.std(i[i!=-1]) for i in counts_data ])
-        
+
         return file_name, scandata, counts_data, data
 
 def bright_fraction(counts, err=False):
@@ -227,7 +227,7 @@ def get_histData(max_count=100, min_count=0):
 def get_scanData(max_count=100, min_count=0):
     file_name, scandata, b_prob, pmterr, histdata, histextent, xname = get_histData(max_count=max_count, min_count=min_count)
     return file_name, scandata, b_prob, pmterr
-    
+
 def get_squeezeData(max_count=100, min_count=0):
     #Get the data file name
     file_name = False
@@ -296,7 +296,7 @@ def get_squeezeData(max_count=100, min_count=0):
         pmterr = (pmterr)/(float(max_count - min_count))
         return file_name, scandata, b_prob, pmterr, avg_pmt_counts, trials
 
-# do a new defintion so I can just work on counts, not jz        
+# do a new defintion so I can just work on counts, not jz
 def get_countsData():
     #Get the data file name
     file_name = False
