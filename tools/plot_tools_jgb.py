@@ -202,5 +202,17 @@ def plot_fit(x,y,fitfunc,fitguess,
 
     return popt, perr
 
-
-
+def save_data_txt(filename, out_list):
+    """
+    filename: string with filename, including extenstion
+    out_array: list with different data to be output
+    """
+    s=''
+    fh = open(filename, 'w+')
+    out = map(list, zip(*out_list))
+    for row in out:
+        for i in row:
+            s = s+'%f,'% (i)
+        s = s+" \n"
+    fh.write(s)
+    fh.close()
