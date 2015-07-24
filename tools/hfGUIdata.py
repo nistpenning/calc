@@ -14,7 +14,11 @@ Here I save a few long names from the ion properities for easy access later
 """
 brightMean = "detection%det_brightMean"
 darkMean = "detection%det_darkMean"
+det_t = "detection%det_t"
 
+def n_slice(name):  
+    #function for getting a short relevant part of filename, since I can't remember the numbers
+    return name[-20:-8]
 
 def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir)
