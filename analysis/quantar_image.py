@@ -95,6 +95,10 @@ class quantar_image:
         self.x = self.x*conversion
         self.y = self.y*conversion
     
+    def crop_image(self, image, c):
+        lx, ly = image.shape
+        return image[lx/2*(1-c) : lx/2*(1+c), ly/2*(1-c): ly/2*(1+c)]
+    
     def set_background_hist(self,image):
         """takes an instance of the class, stores it as a background"""
         xLab = image.x
