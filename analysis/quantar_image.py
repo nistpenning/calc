@@ -12,7 +12,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
+import skimage
 from skimage.feature import peak_local_max
+import skimage.exposure
 
 class quantar_image:
     """A class for images from quantar .dat files
@@ -99,6 +101,57 @@ class quantar_image:
         lx, ly = image.shape
         return image[lx/2*(1-c) : lx/2*(1+c), ly/2*(1-c): ly/2*(1+c)]
     
+    def plot_img_and_hist(self, img, axes, bins=256):
+        """Plot an image along with its histogram and cumulative histogram.
+
+        """
+        img = skimage.img_as_float(img)
+        ax_img, ax_hist = axes
+        ax_cdf = ax_hist.twinx()
+
+        # Display image
+        ax_img.imshow(img, cmap=plt.cm.gray)
+        ax_img.set_axis_off()
+
+        # Display histogram
+        ax_hist.hist(img.ravel(), bins=bins, histtype='step', color='black')
+        ax_hist.ticklabel_format(axis='y', style='scientific', scilimits=(0, 0))
+        ax_hist.set_xlabel('Pixel intensity')
+        ax_hist.set_xlim(0, 1)
+        ax_hist.set_yticks([])
+
+        # Display cumulative distribution
+        img_cdf, bins = skimage.exposure.cumulative_distribution(img, bins)
+        ax_cdf.plot(bins, img_cdf, 'r')
+        ax_cdf.set_yticks([])
+
+        return ax_img, ax_hist, ax_cdf
+    
+    def fix_contrast(self, img, debug=False):
+        # normalize
+        img = img / np.max(img)
+
+        # Contrast stretching
+        p2, p98 = np.percentile(img, (2, 98))
+        img_rescale = skimage.exposure.rescale_intensity(img, in_range=(p2, p98))
+
+        if debug:
+            # Display results
+            fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 5))
+            ax_img, ax_hist, ax_cdf = self.plot_img_and_hist(img, axes[:, 0])
+            ax_img.set_title('Low contrast image')
+            y_min, y_max = ax_hist.get_ylim()
+            ax_hist.set_ylabel('Number of pixels')
+            ax_hist.set_yticks(np.linspace(0, y_max, 5))
+
+            ax_img, ax_hist, ax_cdf = self.plot_img_and_hist(img_rescale, axes[:, 1])
+            ax_img.set_title('Contrast stretching')
+            # prevent overlap of y-axis labels
+            fig.subplots_adjust(wspace=0.4)
+            plt.show()
+            
+        return img_rescale
+    
     def set_background_hist(self,image):
         """takes an instance of the class, stores it as a background"""
         xLab = image.x
@@ -150,9 +203,21 @@ class quantar_image:
         self.rot_image = counts_filter
         self.extent = extent
         
-    def get_ion_positions(self):
-        self.coordinates = peak_local_max(self.rot_image, min_distance=3.0,threshold_rel=0.4)
-        
+    def get_ion_positions(self, extent=None, min_distance=3.0,threshold_rel=0.4):
+        self.coordinates = skimage.feature.peak_local_max(self.rot_image,
+                                          min_distance=min_distance,
+                                          threshold_rel=threshold_rel)
+        plt.close()
+        x = np.transpose(self.coordinates)[1]
+        y = np.transpose(self.coordinates)[0]
+        plt.plot(x,y,'r.')
+        plt.imshow(self.rot_image)
+        if extent is None:
+            pass
+        else:
+            plt.axis(extent)
+        plt.show()
+
     def show_rot_image(self,im_range,low_threshold= 0):
         if np.size(self.rot_image) == 0:
             print("No rotating frame image, must make_rot_image() first")
