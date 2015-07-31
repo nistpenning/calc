@@ -933,6 +933,5 @@ if __name__ == '__main__':
 
     df = np.linspace(-150.0E6, -1E6, 3)
     doff = np.linspace(0, 20.0E-6, 3)
-    #A = a.scan_detuning_and_offset(detuninglist=df, offsetlist=doff,
-    #                               parheating=False, no_rotating_wall=True)
+    A = a.scan_detuning_and_offset(detuninglist=df, offsetlist=doff, no_rotating_wall=True)
 

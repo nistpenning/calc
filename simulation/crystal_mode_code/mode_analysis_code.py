@@ -28,10 +28,15 @@ class ModeAnalysis:
     """
     Simulates a 2-dimensional ion crystal, determining an equilibrium plane configuration given
     Penning trap parameters, and then calculates the eigenvectors and eigenmodes.
-    Methods:
 
-    run(): Instantiates a crystal and
+    For reference the following ion number correspond the closed shells:
+    1  2  3  4  5   6   7   8   9  10  11  12  13  14
+    7 19 37 61 91 127 169 217 271 331 397 469 547 631...
+
+
+
     """
+    #Establish fundamental physical constants as class variables
     q = 1.602176565E-19
     amu = 1.66057e-27
     m_Be = 9.012182 * amu
@@ -101,8 +106,7 @@ class ModeAnalysis:
         self.wrot = 2 * pi * frot * 1e3  # Rotation frequency in units of angular fre   quency
 
         # Not used vvv
-        self.wmag = 0.5 * (
-            self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
+        #self.wmag = 0.5 * (self.wcyc - np.sqrt(self.wcyc ** 2 - 2 * self.wz ** 2))
         self.wmag=0 # a hack for now
 
         self.V0 = (0.5 * self.m_Be * self.wz ** 2) / self.q  # Find quadratic voltage at trap center
@@ -176,10 +180,15 @@ class ModeAnalysis:
         eigenmode determination, so this simply contains the comopnents which generate a crystal.
         :return: Returns a crystal's position vector while also saving it to the class.
         """
+
+        # This check hasn't been working properly, and so wmag has been set to
+        # 0 for the time being (July 2015, SBT)
         if self.wmag > self.wrot:
             print("Warning: Rotation frequency", self.wrot/(2*pi),
                   " is below magnetron frequency of", float(self.wrot/(2*pi)))
             return 0
+
+        #Generate a lattice in dimensionless units
         self.u0 = self.find_scaled_lattice_guess(mins=1, res=50)
         # self.u0 = self.generate_2D_hex_lattice(2)
 
@@ -187,16 +196,21 @@ class ModeAnalysis:
         # ions, and lighter ions to be near center
         # ADD self.addDefects()
 
+        #Solve for the equilibrium position
         self.u = self.find_eq_pos(self.u0)
 
 
 
-        # Will attempt to nudge the crystal to a slightly lower energy state via some random perturbation
-        # Only changes the positions if the potential energy was reduced.
+        # Will attempt to nudge the crystal to a slightly lower energy state via some
+        # random perturbation.
+        # Only changes the positions if the perturbed potential energy was reduced.
+
+        #Will perturb less for bigger crystals, as it takes longer depending on how many ions
+        #there are.
         if self.precision_solving is True:
             if self.quiet is False:
-                pass
-                #print("Perturbing crystal...")
+                print("Perturbing crystal...")
+
 
             if self.Nion <= 62:
                 for attempt in np.linspace(.05, .5, 50):
@@ -285,7 +299,7 @@ class ModeAnalysis:
         # The y positions are the last N elements of the position array
         y = pos_array[self.Nion:]
 
-        # dx flattens the array into a row and 'normalizes' by subtracting itself to get some zeroes.
+        # dx flattens the array into a row vector
         dx = x.reshape((x.size, 1)) - x
         dy = y.reshape((y.size, 1)) - y
         # rsep is the distances between
@@ -682,6 +696,11 @@ class ModeAnalysis:
         return True
 
     def get_x_and_y(self, pos_vect):
+        """
+        Hand it a position vector and it will return the x and y vectors
+        :param pos_vect:
+        :return: [x,y] arrays
+        """
         return [pos_vect[:self.Nion], pos_vect[self.Nion:]]
 
     def is_plane_stable(self):

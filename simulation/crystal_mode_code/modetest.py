@@ -14,21 +14,22 @@ class TestCalculationConsistency(unittest.TestCase):
         experimental results from July 30, 2014's data set. This could break if you
         redefined procedures in the Mode Analysis init method.
         """
-        print("Beginninng test 073014")
+        print("Beginninng test 07/30/14")
         a = ModeAnalysis(N=91, Vtrap=[-0.0, -203.0, -421.7], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         a.run()
         self.assertTrue(a.wz / (2 * pi) * .90 <= .853E6 <= a.wz / (2 * pi) * 1.10)
+
         self.assertTrue(
             max(a.axialEvalsE) / (2 * pi) * .90 <= .853E6 <= max(a.axialEvalsE) / (2 * pi) * 1.10)
-        print("Passed test 073014 1")
+        print("Passed test 07/30/14 1")
         b = ModeAnalysis(N=91, Vtrap=[-0.0, -423.0, -860.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         b.run()
         self.assertTrue(b.wz / (2 * pi) * .90 <= 1.253E6 <= b.wz / (2 * pi) * 1.10)
         self.assertTrue(max(b.axialEvalsE) / (2 * pi) * .90 <= 1.253E6 <= max(b.axialEvalsE) /
                         (2 * pi) * 1.10)
-        print("Passed test 073014 2")
+        print("Passed test 07/30/14 2")
 
 
         c = ModeAnalysis(N=91, Vtrap=[-0.0, -863.0, -1740.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
