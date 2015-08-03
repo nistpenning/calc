@@ -4,19 +4,20 @@ Created on Tue Mar 24 11:09:48 2015
 
 @author: jgb
 """
-from __future__ import division
 from scipy.constants import pi
 import numpy as np
 import scipy.ndimage as ndi
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import os
+import os, importlib
+import quantar_image
+importlib.reload(quantar_image)
 
 import skimage
 from skimage.feature import peak_local_max
 import skimage.exposure
 
-class quantar_image:
+class QuantarImage:
     """A class for images from quantar .dat files
     **parameters**, **types**, **return** and **return types**::
 
@@ -26,7 +27,7 @@ class quantar_image:
     :param file_time: time of each file
     :param fwall: rotating wall freq [kHz]
     :param first_file: string of first file to read
-    :param relative_dir_data: relative path to data folder (e.g. 'my_data')
+    :param fdir: absolute path to data folder (e.g. 'c:\\my_data')
     :return: return description
     :rtype: the return type description    
     
@@ -36,7 +37,7 @@ class quantar_image:
     #the constructor stores the data from the .dat files in the class
     def __init__(self, x0=0, y0=0, num_to_read=1, file_time=1.0,
                 fwall=100.0, first_file='00000001.dat',
-                relative_dir_data=''):
+                fdir='' ):
         #data for creating images
         self.x0 = x0
         self.y0 = y0
@@ -59,16 +60,15 @@ class quantar_image:
         self.x = np.empty(0)
         self.y = np.empty(0)
         self.t = np.empty(0)
-        
-        path_to_data_dir = os.getcwd() + '\\' + relative_dir_data
-        file_list = os.listdir(path_to_data_dir)
+
+        file_list = os.listdir(fdir)
         num_read = 0   
     
         for name in file_list:
             if name == self.first_file:
                 found_flag = 1
             if found_flag == 1 and num_read < self.num_to_read:
-                fpath = path_to_data_dir + '\\' + name
+                fpath = fdir + '\\' + name
                 with open(fpath, 'rb') as f:
                     norf = f.read(16)
                     if print_flag: print(norf)
