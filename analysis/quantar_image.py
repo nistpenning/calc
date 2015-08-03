@@ -24,7 +24,7 @@ class QuantarImage:
     :param x0:
     :param y0: 
     :param num_to_read: 
-    :param file_time: time of each file
+    :param file_time: integration time for each file [s]
     :param fwall: rotating wall freq [kHz]
     :param first_file: string of first file to read
     :param fdir: absolute path to data folder (e.g. 'c:\\my_data')
@@ -171,23 +171,39 @@ class QuantarImage:
                                                    cmap = mpl.cm.Blues,normed=False)
         self.bckgnd = counts_background*self.num_to_read/image.num_to_read
     
-    def make_lab_image(self,  im_range=None, gfilter=0.0):
+    def make_lab_image(self,  im_range=[-256,256,-256,256], gfilter=0.0):
+        """plot lab frame image
+
+        :param im_range: [-256,256,-256,256] is full range for Quantar
+        :gfilter: ndi.gaussian_filter() argument
+        :return: return description
+        """
         xLab = self.x
         yLab = self.y
         
-        counts, xedges, yedges, LabFrame = plt.hist2d(xLab,yLab,bins=self.bins, cmap = mpl.cm.Blues,
+        plt.subplot(111, aspect='equal')
+        ax = plt.gca()
+        ax.grid(True)
+        counts, xedges, yedges, LabFrame = plt.hist2d(xLab, yLab,
+                                           bins=self.bins, cmap = mpl.cm.Blues,
                                            normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
         counts_filter = ndi.gaussian_filter(counts-self.bckgnd, gfilter)
         #LabFrame = plt.imshow(counts_filter-self.bckgnd, cmap = mpl.cm.Blues,
         #                      vmin = 0, vmax = np.max(counts_filter))
-        if im_range!=None: plt.axis(im_range)
+        plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
         plt.show(LabFrame)
         return counts_filter,extent
         
-    def make_rot_image(self, gfilter=0.0):
+    def make_rot_image(self, im_range=[-256,256,-256,256], gfilter=0.0):
+        """plot rotating frame image
+
+        :param im_range: [-256,256,-256,256] is full range for Quantar
+        :gfilter: ndi.gaussian_filter() argument
+        :return: return description
+        """
         xLab = self.x
         yLab = self.y
         phaseOfWall = 2*pi*self.fw* self.t
@@ -196,34 +212,27 @@ class QuantarImage:
         yRot = yLab * np.cos(phaseOfWall) - xLab * np.sin(phaseOfWall)
         
         #Make Rotating Frame Image
-        counts, xedges, yedges, RotFrame = plt.hist2d(xRot,yRot,bins=self.bins,
-                                                   cmap = mpl.cm.Blues,normed=False)
+        plt.subplot(111, aspect='equal')
+        ax = plt.gca()
+        ax.grid(True)
+        counts, xedges, yedges, RotFrame = plt.hist2d(xRot, yRot,
+                                         bins=self.bins,
+                                         cmap = mpl.cm.Blues, normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
         counts_filter = ndi.gaussian_filter(counts-self.bckgnd,gfilter)
         RotFrame = plt.imshow(counts_filter,extent=extent, cmap = mpl.cm.Blues,
                               vmin = 0, vmax = np.max(counts_filter))
+        plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
         plt.show(RotFrame)
         self.rot_image = counts_filter
         self.extent = extent
         
-    def get_ion_positions(self, extent=None, min_distance=3.0,threshold_rel=0.4):
-        self.coordinates = skimage.feature.peak_local_max(self.rot_image,
-                                          min_distance=min_distance,
-                                          threshold_rel=threshold_rel)
-        plt.close()
-        x = np.transpose(self.coordinates)[1]
-        y = np.transpose(self.coordinates)[0]
-        plt.plot(x,y,'r.')
-        plt.imshow(self.rot_image)
-        if extent is None:
-            pass
-        else:
-            plt.axis(extent)
-        plt.show()
+    def get_ion_positions(self):
+        self.coordinates = peak_local_max(self.rot_image, min_distance=3.0,threshold_rel=0.4)
 
-    def show_rot_image(self,im_range,low_threshold= 0):
+    def show_rot_image(self, im_range, low_threshold= 0):
         if np.size(self.rot_image) == 0:
             print("No rotating frame image, must make_rot_image() first")
         else:
