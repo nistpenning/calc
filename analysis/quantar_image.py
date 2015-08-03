@@ -24,8 +24,9 @@ class quantar_image:
     :param y0: 
     :param num_to_read: 
     :param file_time: time of each file
-    :param fwall: rotating wall freq kHz
+    :param fwall: rotating wall freq [kHz]
     :param first_file: string of first file to read
+    :param relative_dir_data: relative path to data folder (e.g. 'my_data')
     :return: return description
     :rtype: the return type description    
     
@@ -33,7 +34,9 @@ class quantar_image:
     bins = 250
 
     #the constructor stores the data from the .dat files in the class
-    def __init__(self, x0, y0, num_to_read, file_time, fwall, first_file):
+    def __init__(self, x0=0, y0=0, num_to_read=1, file_time=1.0,
+                fwall=100.0, first_file='00000001.dat',
+                relative_dir_data=''):
         #data for creating images
         self.x0 = x0
         self.y0 = y0
@@ -57,14 +60,16 @@ class quantar_image:
         self.y = np.empty(0)
         self.t = np.empty(0)
         
-        file_list = os.listdir(os.getcwd())
+        path_to_data_dir = os.getcwd() + '\\' + relative_dir_data
+        file_list = os.listdir(path_to_data_dir)
         num_read = 0   
     
         for name in file_list:
             if name == self.first_file:
                 found_flag = 1
             if found_flag == 1 and num_read < self.num_to_read:
-                with open(name, 'rb') as f:
+                fpath = path_to_data_dir + '\\' + name
+                with open(fpath, 'rb') as f:
                     norf = f.read(16)
                     if print_flag: print(norf)
                     
