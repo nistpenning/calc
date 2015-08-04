@@ -95,6 +95,30 @@ class QuantarImage:
         fh.close()
         return xyt
 
+    def read_file_range(self, fdir, nfirst, n_to_read):
+        """Read range of files from disk
+        :param fdir: absolute path to directory [c:\\tmp]
+        :param nfirst: first file number
+        :param n_to_read: number to read
+        :return: xyt
+        """
+        xyt = self.read_niquantar_file(nfirst, fdir)
+        for fnum in range(nfirst+1,nfirst+n_to_read):
+            xyt_new = self.read_niquantar_file(fnum, fdir)
+            xyt = np.concatenate((xyt, xyt_new), axis=0)
+        return xyt
+
+    def rot_frame(self, xyt):
+        """Return xyt in rotating frame"""
+        x_lab = (xyt[:, 0] + self.x0)*self.scale_xy
+        y_lab = (xyt[:, 1] + self.y0)*self.scale_xy
+        phase_of_wall = 2*pi*self.fw*xyt[:, 2]
+
+        x_rot = x_lab*np.cos(phase_of_wall) + y_lab * np.sin(phase_of_wall)
+        y_rot = y_lab*np.cos(phase_of_wall) - x_lab * np.sin(phase_of_wall)
+
+        return np.column_stack((x_rot, y_rot, xyt[:,2]))
+
     def crop_image(self, image, c):
         lx, ly = image.shape
         return image[lx/2*(1-c) : lx/2*(1+c), ly/2*(1-c): ly/2*(1+c)]
@@ -149,21 +173,7 @@ class QuantarImage:
             plt.show()
             
         return img_rescale
-    
-    def set_background_hist(self,image):
-        """takes an instance of the class, stores it as a background"""
-        xLab = image.x
-        yLab = image.y
-        phaseOfWall = 2*pi*image.fw* image.t
 
-        xRot = xLab * np.cos(phaseOfWall) + yLab * np.sin(phaseOfWall)
-        yRot = yLab * np.cos(phaseOfWall) - xLab * np.sin(phaseOfWall)
-        
-        #Make Rotating Frame Image
-        counts_background, xedges, yedges, RotFrame = plt.hist2d(xRot,yRot,bins=self.bins,
-                                                   cmap = mpl.cm.Blues,normed=False)
-        self.bckgnd = counts_background*self.num_to_read/image.num_to_read
-    
     def make_lab_image(self, xyt,  im_range=[-256,256,-256,256], gfilter=0.0):
         """plot lab frame image
 
@@ -187,26 +197,20 @@ class QuantarImage:
         plt.ylabel("y [$\mu$m]")
         plt.show(LabFrame)
         return counts_filter,extent
-        
-    def make_rot_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0):
-        """plot rotating frame image
+
+    def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0):
+        """plot image
 
         :param im_range: [-256,256,-256,256] is full range for Quantar
         :gfilter: ndi.gaussian_filter() argument
         :return: return description
         """
-        xLab = (xyt[:,0] + self.x0)*self.scale_xy
-        yLab = (xyt[:,1] + self.y0)*self.scale_xy
-        phaseOfWall = 2*pi*self.fw* xyt[:,2]
-
-        xRot = xLab * np.cos(phaseOfWall) + yLab * np.sin(phaseOfWall)
-        yRot = yLab * np.cos(phaseOfWall) - xLab * np.sin(phaseOfWall)
         
         #Make Rotating Frame Image
         plt.subplot(111, aspect='equal')
         ax = plt.gca()
         ax.grid(True)
-        counts, xedges, yedges, RotFrame = plt.hist2d(xRot, yRot,
+        counts, xedges, yedges, RotFrame = plt.hist2d(xyt[:,0], xyt[:,1],
                                          bins=self.bins,
                                          cmap = mpl.cm.Blues, normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
@@ -242,13 +246,13 @@ def im_extent(mag):
     return np.array([-mag,mag,-mag,mag])
 
 def main():
+    fdir = "D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation"
     qi = QuantarImage(x0=55,y0=-15,fwall=188e3)
-    xyt = np.empty([3,1])
-    first_file = 2780
-    xyt = qi.read_niquantar_file(first_file, """D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation""")
-    for fnum in range(first_file+1,first_file+35):
-        xyt_new = qi.read_niquantar_file(fnum, """D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation""")
-        xyt = np.concatenate((xyt,xyt_new),axis=0)
-    qi.make_rot_image(xyt)
+    xyt = qi.read_file_range(fdir, 2780, 35)
+    xytr = qi.rot_frame(xyt)
+    xyt_bg = qi.read_file_range(fdir, 3100, 35)
+    xytr_bg = qi.rot_frame(xyt_bg)
+    qi.make_image(xytr)
+
 if __name__ == "__main__":
     main()
