@@ -17,6 +17,14 @@ import skimage
 from skimage.feature import peak_local_max
 import skimage.exposure
 
+
+class NiQuantarFileError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 class QuantarImage:
     """A class for images from quantar .dat files
     **parameters**, **types**, **return** and **return types**::
@@ -34,74 +42,59 @@ class QuantarImage:
     """
     bins = 250
 
-    #the constructor stores the data from the .dat files in the class
-    def __init__(self, x0=0, y0=0, num_to_read=1, file_time=1.0,
-                fwall=100.0, first_file='00000001.dat',
-                fdir='' ):
-        #data for creating images
+    def __init__(self, x0=0, y0=0,fwall=100e3 ):
         self.x0 = x0
         self.y0 = y0
         self.fw = fwall
-        
-        self.rot_image = None
-        self.extent = [0,0,0,0]
-        
-        #data for getting back to the raw data
-        self.file_time = file_time
-        self.first_file = first_file #the number of the first .dat file for data
-        self.num_to_read = num_to_read #the number of files used to create raw data
-        
-        #initialize background histogram
-        self.bckgnd = np.zeros((self.bins,self.bins))
-        
-        found_flag = 0
-        print_flag = 0
-        
-        self.x = np.empty(0)
-        self.y = np.empty(0)
-        self.t = np.empty(0)
 
-        file_list = os.listdir(fdir)
-        num_read = 0   
-    
-        for name in file_list:
-            if name == self.first_file:
-                found_flag = 1
-            if found_flag == 1 and num_read < self.num_to_read:
-                fpath = fdir + '\\' + name
-                with open(fpath, 'rb') as f:
-                    norf = f.read(16)
-                    if print_flag: print(norf)
-                    
-                    N_reps_per_scan, = np.fromfile(f, dtype=np.uint32, count=1)
-                    if print_flag: print(N_reps_per_scan)
-                    
-                    rep_boundary_message = f.read(14)
-                    if print_flag: print(rep_boundary_message)
-                    
-                    N_this_rep, = np.fromfile(f, dtype=np.uint32, count=1)
-                    if print_flag: print(N_this_rep)
-                    
-                    if N_this_rep > 0:
-                        #x = np.fromfile(f, dtype=np.float64, count=N_this_rep, sep="")
-                        x = np.fromfile(f, dtype=np.float64, count=N_this_rep, sep="")
-                        y = np.fromfile(f, dtype=np.float64, count=N_this_rep, sep="")
-                        t = np.fromfile(f, dtype=np.float64, count=N_this_rep, sep="")
-                    
-                self.x = np.append(self.x,x + x0)
-                self.y = np.append(self.y,y + y0)
-                self.t = np.append(self.t,t + self.file_time * num_read)
-                
-                num_read += 1
         '''attempt to scale the data to correct xy distances
         conversion from quantar data to um is (53mm/60)*(97um/38.5mm)
-        based on the size of the cloud on 032420125 and the known size of 
+        based on the size of the cloud on 032420125 and the known size of
         the qtxyt3 centering cicle
         '''
-        conversion = (53/60.0)*(97.0/38.5)
-        self.x = self.x*conversion
-        self.y = self.y*conversion
-    
+        self.scale_xy = (53/60.0)*(97.0/38.5)
+
+    def read_niquantar_file(self, fnum, fdir):
+        """Read binary file written by niquantar.exe
+        :param fnum: file number
+        :param fdir: absolute path to file directory
+        :return: (x,y,t)
+        """
+
+        fname = str(fnum).zfill(8) + ".dat" # e.g. 00000001.dat
+        fpath = "{}\\{}".format(fdir,fname)
+        print(fpath)
+        try:
+            fh = open(fpath, 'rb')
+        except IOError:
+            print("Error: File does not appear to exist.")
+            return -2
+        try:
+            # read file marker
+            norf = fh.read(16)
+            if norf != b'NumOfRepsFollows': raise NiQuantarFileError(-1)
+            # read number of reps per scan
+            nrps = np.fromfile(fh, dtype=np.uint32, count=1)
+            rep_boundary_message = fh.read(14)
+            if rep_boundary_message !=  b'NextRepFollows':
+                raise NiQuantarFileError(-3)
+            n_this_rep = np.fromfile(fh, dtype=np.uint32, count=1)
+            if n_this_rep < 0: raise NiQuantarFileError(-4)
+        except IOError:
+            print("Error reading norf"); return -5
+        except NiQuantarFileError as e:
+            print("NiQuantarFileError: {}".format(e)); return -6
+        xyt = np.zeros((n_this_rep,3))
+        try:
+            if n_this_rep > 0:
+                xyt[:,0] = np.fromfile(fh, dtype=np.float64, count=n_this_rep, sep="")
+                xyt[:,1] = np.fromfile(fh, dtype=np.float64, count=n_this_rep, sep="")
+                xyt[:,2] = np.fromfile(fh, dtype=np.float64, count=n_this_rep, sep="")
+        except IOError:
+            print("Error reading data"); return -7
+        fh.close()
+        return xyt
+
     def crop_image(self, image, c):
         lx, ly = image.shape
         return image[lx/2*(1-c) : lx/2*(1+c), ly/2*(1-c): ly/2*(1+c)]
@@ -171,15 +164,15 @@ class QuantarImage:
                                                    cmap = mpl.cm.Blues,normed=False)
         self.bckgnd = counts_background*self.num_to_read/image.num_to_read
     
-    def make_lab_image(self,  im_range=[-256,256,-256,256], gfilter=0.0):
+    def make_lab_image(self, xyt,  im_range=[-256,256,-256,256], gfilter=0.0):
         """plot lab frame image
 
         :param im_range: [-256,256,-256,256] is full range for Quantar
         :gfilter: ndi.gaussian_filter() argument
         :return: return description
         """
-        xLab = self.x
-        yLab = self.y
+        xLab = (xyt[:,0] + self.x0)*self.scale_xy
+        yLab = (xyt[:,1] + self.y0)*self.scale_xy
         
         plt.subplot(111, aspect='equal')
         ax = plt.gca()
@@ -188,25 +181,23 @@ class QuantarImage:
                                            bins=self.bins, cmap = mpl.cm.Blues,
                                            normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
-        counts_filter = ndi.gaussian_filter(counts-self.bckgnd, gfilter)
-        #LabFrame = plt.imshow(counts_filter-self.bckgnd, cmap = mpl.cm.Blues,
-        #                      vmin = 0, vmax = np.max(counts_filter))
+        counts_filter = ndi.gaussian_filter(counts, gfilter)
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
         plt.show(LabFrame)
         return counts_filter,extent
         
-    def make_rot_image(self, im_range=[-256,256,-256,256], gfilter=0.0):
+    def make_rot_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0):
         """plot rotating frame image
 
         :param im_range: [-256,256,-256,256] is full range for Quantar
         :gfilter: ndi.gaussian_filter() argument
         :return: return description
         """
-        xLab = self.x
-        yLab = self.y
-        phaseOfWall = 2*pi*self.fw* self.t
+        xLab = (xyt[:,0] + self.x0)*self.scale_xy
+        yLab = (xyt[:,1] + self.y0)*self.scale_xy
+        phaseOfWall = 2*pi*self.fw* xyt[:,2]
 
         xRot = xLab * np.cos(phaseOfWall) + yLab * np.sin(phaseOfWall)
         yRot = yLab * np.cos(phaseOfWall) - xLab * np.sin(phaseOfWall)
@@ -219,7 +210,7 @@ class QuantarImage:
                                          bins=self.bins,
                                          cmap = mpl.cm.Blues, normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
-        counts_filter = ndi.gaussian_filter(counts-self.bckgnd,gfilter)
+        counts_filter = ndi.gaussian_filter(counts,gfilter)
         RotFrame = plt.imshow(counts_filter,extent=extent, cmap = mpl.cm.Blues,
                               vmin = 0, vmax = np.max(counts_filter))
         plt.axis(im_range)
@@ -249,5 +240,15 @@ class QuantarImage:
 ######### useful functions but shouldn't be stored in the class  ########
 def im_extent(mag):
     return np.array([-mag,mag,-mag,mag])
-            
-        
+
+def main():
+    qi = QuantarImage(x0=55,y0=-15,fwall=188e3)
+    xyt = np.empty([3,1])
+    first_file = 2780
+    xyt = qi.read_niquantar_file(first_file, """D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation""")
+    for fnum in range(first_file+1,first_file+35):
+        xyt_new = qi.read_niquantar_file(fnum, """D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation""")
+        xyt = np.concatenate((xyt,xyt_new),axis=0)
+    qi.make_rot_image(xyt)
+if __name__ == "__main__":
+    main()
