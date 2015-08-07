@@ -34,18 +34,35 @@ def set_plot_mode(ax, mode='qunat'):
         pass
 
 def set_global_plot_mode(mode='qunat'):
+    plt.rcdefaults()
     if mode == 'quant':
-        mpl.rcParams['axes.grid'] = True
-        mpl.rcParams['xtick.major.size'] = 5
-        mpl.rcParams['ytick.major.size'] = 5
-        mpl.rcParams['savefig.dpi'] = 80
-        mpl.rcParams['lines.antialiased'] = True
+        style = {'axes.grid': True, 'xtick.major.size': 5,
+            'ytick.major.size': 5,
+            'savefig.dpi': 80,
+            'lines.antialiased': True}
     if mode == 'clean':
-        mpl.rcParams['axes.grid'] = False
-        mpl.rcParams['xtick.major.size'] = 2
-        mpl.rcParams['ytick.major.size'] = 2
-        mpl.rcParams['savefig.dpi'] = 80
-        mpl.rcParams['lines.antialiased'] = True
+        style = {'axes.grid': False,
+            'xtick.major.size': 2,
+            'ytick.major.size': 2,
+            'savefig.dpi': 80,
+            'lines.antialiased': True}
+    if mode == 'seaborn':
+        style = {'text.color': '.15', 'grid.color': '.8',
+             'axes.axisbelow': True, 'axes.labelcolor': '.15',
+             'xtick.minor.size': 0.0, 'lines.solid_capstyle': 'round',
+             'axes.edgecolor': '.8', 'font.family': ['sans-serif'],
+             'image.cmap': 'Greys', 'ytick.direction': 'out',
+             'legend.numpoints': 1, 'legend.frameon': False,
+             'xtick.direction': 'out', 'legend.scatterpoints': 1,
+             'axes.linewidth': 1.0, 'ytick.major.size': 0.0,
+             'axes.grid': True, 'grid.linestyle': '-',
+             'ytick.minor.size': 0.0, 'ytick.color': '.15',
+             'font.sans-serif': ['Arial', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
+             'figure.facecolor': 'white', 'xtick.major.size': 0.0,
+             'axes.facecolor': 'white', 'xtick.color': '.15'}
+
+    for key, value in style.items():
+        mpl.rcParams[key] = value
 
 def auto_extent(x,y):
     xm = np.min(x)
