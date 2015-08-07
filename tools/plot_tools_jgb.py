@@ -175,7 +175,6 @@ def plot_fit(x,y,fitfunc,fitguess,
 
     if show is True:
         #build figure
-        plt.close()
 
         if axis == 'default':
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
@@ -211,7 +210,6 @@ def plot_fit(x,y,fitfunc,fitguess,
         else:
             plt.title(labels[2])
 
-        plt.show()
     else:
         print(fit_message)
 
