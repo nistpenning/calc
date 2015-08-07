@@ -96,47 +96,24 @@ def plot_fit(x,y,fitfunc,fitguess,
             axis='default',
             save=False,
             show=True):
-    """Plot data and the fit to a given model, with ability to fix parameters.
+    """Plot & fit with supplied model.
 
-    Parameters
-    ----------
-    x : array
-        x data for plot
-    y : array
-        y data for plot
-    fitfunc : function
-        function of the form f(x,*args)
-    fitguess : array
-        must supply values for all the parameters in the model given by fitfunc
-
-
-    Keyword arguments
-    -----------------
-    yerr : array
-        1 std deviation for the y data to weight the fits
-        default is equal weight
-    hold : list
-        list of booleans, what model parameters to hold fixed (default none)
-        can also pass hold='all' to hold all params fixed
-    labels : list
-        list of strings, xlabel ylabel, plot title
-    axis : list
-        list of axis extent, [xmin, xmax, ymin, ymax] (default 0, xmax, 0, ymax)
-    save: boolean
-        boolean to choose if figure is saved as png file (dafault no save)
-    show: boolean
-        boolean to choose if the data and fit are shown on a plot
-    Returns
-    -------
-    popt : array
-        the fitted values only (fitguess if no free parameters)
-    perr : array
-        sqrt of the diagonals of the covariance matrix (1 sigma confidence interval)
-
+    :param x: numpy.array
+    :param y: numpy.array
+    :param fitfunc: fit function for N free parameters f(x, k0, k1, ..., kN); returns a scalar
+    :param fitguess: guess for each kN [guess_k0, guess_k1, ..., guess_kN]
+    :param yerr: error for y [numpy.array]
+    :param hold: model parameters to hold fixed [b1, b2, ..., bN]; 'none'; 'all'
+    :param labels: ["xlabel", "ylabel", "plot title"]
+    :param axis: axis extent [xmin, xmax, ymin, ymax]
+    :param save: save as .png, True or False
+    :param show: show data and fit on plot, True or False
+    :return: [[fit_param], [fit_error]]
+        fit_param is vector of fit coefficients of length N
+        fit_error sqrt of the diagonals of the covariance matrix (1 sigma confidence interval)
     """
 
-
-#process hold parameter to make a fit model with specified number of free params
+    #process hold parameter to make a fit model with specified number of free params
     if hold=='all':
         hold = np.ones(np.size(fitguess), dtype=bool)
 
@@ -238,7 +215,9 @@ def plot_polyfit(x,y, fitguess,
             labels=['X','Y','default'],
             axis='default',
             save=False,
-            show=True):
+            show=True,
+            fmt_points='o',
+            fmt_line='-'):
     """Plot data and the fit to a polynominal, with ability to fix parameters.
 
     Parameters
