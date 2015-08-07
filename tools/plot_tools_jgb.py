@@ -9,6 +9,7 @@ import numpy as np
 from numpy import pi, sin, cos
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.text
 import scipy.optimize as opt
 
 # define some plot colors
@@ -100,7 +101,7 @@ def plot_fit(x,y,fitfunc,fitguess,
             yerr=None,
             hold=[],
             labels=['X','Y','default'],
-            axis='default',
+            axis=None,
             save=False,
             show=True,
             fmt_data='o',
@@ -114,7 +115,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     :param yerr: error for y [numpy.array]
     :param hold: model parameters to hold fixed [b1, b2, ..., bN]; 'none'; 'all'
     :param labels: ["xlabel", "ylabel", "plot title"]
-    :param axis: axis extent [xmin, xmax, ymin, ymax]
+    :param axis: axis extent [xmin, xmax, ymin, ymax]; 'auto'
     :param save: save as .png, True or False
     :param show: show data and fit on plot, True or False
     :param fmt_data: matplotlib plot format string; default 'o'
@@ -169,36 +170,33 @@ def plot_fit(x,y,fitfunc,fitguess,
         x_curve = np.linspace(np.min(x),np.max(x), num=200)
         curve_fit = func(x_curve, *popt)
 
-#fit message
     poptf = ('%.3g, ' * len(popt))[:-1] % tuple(popt)
     perrf = ('%.3g, ' * len(perr))[:-1] % tuple(perr)
-
-    fit_message = 'Curve fit results: ' + poptf
-    fit_mess2 = '\n    uncertianties: ' +  perrf
-
-    fit_message = fit_message + fit_mess2
+    fit_message = "fit: {} +/- {} (1 sigma)".format(poptf, perrf)
 
     if show is True:
         # build figure
-        if axis == 'default':
+        if axis == None:
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
         elif axis == 'auto':
             axis = auto_extent(x,y)
         plt.axis(axis)
         plt.errorbar(x,y,yerr=yerr,fmt=fmt_data)
         plt.plot(x_curve,curve_fit,fmt_fit)
+
         # labels
         plt.xlabel(labels[0])
         plt.ylabel(labels[1])
+
+        # fit message on plot
         ym = axis[-2]
         xm = axis[0]
-        y_pos_msg = ym-(0.3*np.abs(axis[3]-ym))
-
+        y_pos_msg = ym-(0.4*np.abs(axis[3]-ym))
         if xm is 0.0:
             x_pos_msg = 0.0
         else:
             x_pos_msg = xm
-        plt.text(x_pos_msg, y_pos_msg, fit_message, fontsize=10)
+        plt.figtext(x_pos_msg, y_pos_msg, fit_message, fontsize=9)
 
         name = fitfunc.__name__
         if save:
