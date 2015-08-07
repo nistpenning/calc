@@ -47,19 +47,26 @@ def set_global_plot_mode(mode='qunat'):
             'savefig.dpi': 80,
             'lines.antialiased': True}
     if mode == 'seaborn':
-        style = {'text.color': '.15', 'grid.color': '.8',
-             'axes.axisbelow': True, 'axes.labelcolor': '.15',
-             'xtick.minor.size': 0.0, 'lines.solid_capstyle': 'round',
-             'axes.edgecolor': '.8', 'font.family': ['sans-serif'],
-             'image.cmap': 'Greys', 'ytick.direction': 'out',
-             'legend.numpoints': 1, 'legend.frameon': False,
-             'xtick.direction': 'out', 'legend.scatterpoints': 1,
-             'axes.linewidth': 1.0, 'ytick.major.size': 0.0,
-             'axes.grid': True, 'grid.linestyle': '-',
-             'ytick.minor.size': 0.0, 'ytick.color': '.15',
-             'font.sans-serif': ['Arial', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
-             'figure.facecolor': 'white', 'xtick.major.size': 0.0,
-             'axes.facecolor': 'white', 'xtick.color': '.15'}
+        style = {'lines.antialiased': True,
+            'text.color': '.15',
+            'grid.color': '.8',
+            'savefig.dpi': 200,
+            'axes.axisbelow': True, 'axes.labelcolor': '.15',
+            'xtick.minor.size': 0.0, 'lines.solid_capstyle': 'round',
+            'axes.edgecolor': '.8', 'font.family': ['sans-serif'],
+            'image.cmap': 'Greys', 'ytick.direction': 'out',
+            'legend.numpoints': 1, 'legend.frameon': False,
+            'xtick.direction': 'out', 'legend.scatterpoints': 1,
+            'axes.linewidth': 1.0, 'ytick.major.size': 0.0,
+            'axes.grid': True, 'grid.linestyle': '-',
+            'ytick.minor.size': 0.0, 'ytick.color': '.15',
+            'font.sans-serif': ['Arial', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
+            'figure.facecolor': 'white',
+            'figure.figsize': (3.37, 2.5),
+            'figure.autolayout': True,
+            'figure.dpi': 200,
+            'xtick.major.size': 0.0,
+            'axes.facecolor': 'white', 'xtick.color': '.15'}
 
     for key, value in style.items():
         mpl.rcParams[key] = value
@@ -95,7 +102,9 @@ def plot_fit(x,y,fitfunc,fitguess,
             labels=['X','Y','default'],
             axis='default',
             save=False,
-            show=True):
+            show=True,
+            fmt_data='o',
+            fmt_fit='-'):
     """Plot & fit with supplied model.
 
     :param x: numpy.array
@@ -108,6 +117,8 @@ def plot_fit(x,y,fitfunc,fitguess,
     :param axis: axis extent [xmin, xmax, ymin, ymax]
     :param save: save as .png, True or False
     :param show: show data and fit on plot, True or False
+    :param fmt_data: matplotlib plot format string; default 'o'
+    :param fmt_fit: matplotlib plot format string; default '-'
     :return: [[fit_param], [fit_error]]
         fit_param is vector of fit coefficients of length N
         fit_error sqrt of the diagonals of the covariance matrix (1 sigma confidence interval)
@@ -168,30 +179,25 @@ def plot_fit(x,y,fitfunc,fitguess,
     fit_message = fit_message + fit_mess2
 
     if show is True:
-        #build figure
-
+        # build figure
         if axis == 'default':
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
         elif axis == 'auto':
             axis = auto_extent(x,y)
         plt.axis(axis)
-
-        if yerr is None:
-            plt.plot(x,y,'o')
-        else:
-            plt.errorbar(x,y,yerr=yerr,fmt='o')
-        plt.plot(x_curve,curve_fit,'-')
-
-        #labels
+        plt.errorbar(x,y,yerr=yerr,fmt=fmt_data)
+        plt.plot(x_curve,curve_fit,fmt_fit)
+        # labels
         plt.xlabel(labels[0])
         plt.ylabel(labels[1])
         ym = axis[-2]
         xm = axis[0]
         y_pos_msg = ym-(0.3*np.abs(axis[3]-ym))
 
-        if xm is 0.0: x_pos_msg = 0.0
-        else: x_pos_msg = xm
-
+        if xm is 0.0:
+            x_pos_msg = 0.0
+        else:
+            x_pos_msg = xm
         plt.text(x_pos_msg, y_pos_msg, fit_message, fontsize=10)
 
         name = fitfunc.__name__
@@ -215,9 +221,7 @@ def plot_polyfit(x,y, fitguess,
             labels=['X','Y','default'],
             axis='default',
             save=False,
-            show=True,
-            fmt_points='o',
-            fmt_line='-'):
+            show=True,):
     """Plot data and the fit to a polynominal, with ability to fix parameters.
 
     Parameters
