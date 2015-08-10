@@ -11,66 +11,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.text
 import scipy.optimize as opt
-
-# define some plot colors
-red = '#A60628'
-blue = '#348ABD'
-purple = '#7A68A6'
-green = '#467821'
-orange = '#D55E00'
-pink = '#CC79A7'
-cyan = '#56B4E9'
-aqua = '#009E73'
-yellow = '#F0E442'
-navy = '#002b36'
-
-def set_plot_mode(ax, mode='qunat'):
-    if mode is 'clean':
-        plt.grid(False)
-        ax.xaxis.set_ticks_position('bottom')
-        ax.yaxis.set_ticks_position('left')
-        ax.xaxis.set_tick_params(which='major', size=3, width=1)
-        ax.yaxis.set_tick_params(which='major', size=3, width=1)
-    if mode is 'quant':
-        pass
-
-def set_global_plot_mode(mode='qunat'):
-    plt.rcdefaults()
-    if mode == 'quant':
-        style = {'axes.grid': True, 'xtick.major.size': 5,
-            'ytick.major.size': 5,
-            'savefig.dpi': 80,
-            'lines.antialiased': True}
-    if mode == 'clean':
-        style = {'axes.grid': False,
-            'xtick.major.size': 2,
-            'ytick.major.size': 2,
-            'savefig.dpi': 80,
-            'lines.antialiased': True}
-    if mode == 'seaborn':
-        style = {'lines.antialiased': True,
-            'text.color': '.15',
-            'grid.color': '.8',
-            'savefig.dpi': 200,
-            'axes.axisbelow': True, 'axes.labelcolor': '.15',
-            'xtick.minor.size': 0.0, 'lines.solid_capstyle': 'round',
-            'axes.edgecolor': '.8', 'font.family': ['sans-serif'],
-            'image.cmap': 'Greys', 'ytick.direction': 'out',
-            'legend.numpoints': 1, 'legend.frameon': False,
-            'xtick.direction': 'out', 'legend.scatterpoints': 1,
-            'axes.linewidth': 1.0, 'ytick.major.size': 0.0,
-            'axes.grid': True, 'grid.linestyle': '-',
-            'ytick.minor.size': 0.0, 'ytick.color': '.15',
-            'font.sans-serif': ['Arial', 'Liberation Sans', 'Bitstream Vera Sans', 'sans-serif'],
-            'figure.facecolor': 'white',
-            'figure.figsize': (3.37, 2.5),
-            'figure.autolayout': True,
-            'figure.dpi': 200,
-            'xtick.major.size': 0.0,
-            'axes.facecolor': 'white', 'xtick.color': '.15'}
-
-    for key, value in style.items():
-        mpl.rcParams[key] = value
+# assumes path to source cloned from github.com/nistpenning is in python path
+import calc.tools.xkcd_rgb as xrgb
+import calc.tools.matplotlib_rc_chooser as mplrc
 
 def auto_extent(x,y):
     xm = np.min(x)
@@ -175,6 +118,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     fit_message = "fit: {} +/- {} (1 sigma)".format(poptf, perrf)
 
     if show is True:
+        mplrc.set('default')
         # build figure
         if axis == None:
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
@@ -201,7 +145,8 @@ def plot_fit(x,y,fitfunc,fitguess,
         name = fitfunc.__name__
         if save:
             name_out = name+'_fit.png'
-            plt.savefig(name_out, format='png', bbox='tight')
+            plt.savefig('sinusoid_spin_echo.png', format='png', dpi=600,
+                        transparent=True, bbox='tight')
 
         if labels[2]=='default':
             plt.title(name)
