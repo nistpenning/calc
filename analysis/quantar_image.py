@@ -9,9 +9,7 @@ import numpy as np
 import scipy.ndimage as ndi
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import os, importlib
-import quantar_image
-importlib.reload(quantar_image)
+import os
 
 import skimage
 from skimage.feature import peak_local_max
