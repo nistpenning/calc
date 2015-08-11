@@ -52,7 +52,7 @@ class QuantarImage:
         '''
         self.scale_xy = (53/60.0)*(97.0/38.5)
 
-    def read_niquantar_file(self, fnum, fdir):
+    def read_niquantar_file(self, fnum, fdir, verbose=False):
         """Read binary file written by niquantar.exe
         :param fnum: file number
         :param fdir: absolute path to file directory
@@ -61,7 +61,8 @@ class QuantarImage:
 
         fname = str(fnum).zfill(8) + ".dat" # e.g. 00000001.dat
         fpath = os.path.join(fdir,fname)
-        print(fpath)
+        if verbose is True:
+            print(fpath)
         try:
             fh = open(fpath, 'rb')
         except IOError:
