@@ -79,13 +79,13 @@ def get_ionProp_dict(keys, where='props'):
         return 0
     else:
         ionprop = file_name
-        data = np.genfromtxt(ionprop, dtype=None, delimiter=' = ')
+        data = np.genfromtxt(ionprop, dtype='str', delimiter=' = ')
         vals =[]
         for prop in keys:
             ind = np.where(data == '{'+prop+'}')
             val_str = data[ind[0].astype(int)[0]][1]
             vals.append(np.float(val_str[1:-1]))
-        val_dict = dict(itertools.izip(keys,vals))
+        val_dict = dict(zip(keys,vals))
         if where is 'props':
             os.chdir('..')
         return val_dict
@@ -93,11 +93,11 @@ def get_ionProp_dict(keys, where='props'):
 
 def parse_raw_counts_data(file_name):
     #Get data from the file
-    with open(file_name, 'rb') as f:
+    with open(file_name) as f:
         reader = csv.reader(f)
-        colnames = reader.next()
+        colnames = next(reader)
 
-    colnames = filter(None, colnames)  # gets rid of column names that are empty strings
+    colnames = [i for i in colnames if i] # gets rid of column names that are empty strings
     num_reg_columns = len(colnames) - 1
     data = np.genfromtxt(file_name, delimiter=",", names=True, dtype=None, usecols=range(num_reg_columns+1))
     non_hist_cols = num_reg_columns  # defined by HFGUI expt type

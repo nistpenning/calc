@@ -12,7 +12,6 @@ import spont_emission as spe
 
 sys.path.append("c:\\Users\\bsawyer\\Documents\\Python Scripts\\subroutines")
 import wigner
-reload(wigner)
 
 gIp = -0.784955 #Be nuclear g-factor
 AhfS = -625.008837e6 * 2*pi #Hyperfine coefficient

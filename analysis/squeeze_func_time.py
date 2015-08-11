@@ -13,8 +13,7 @@ import matplotlib.pyplot as plt
 
 import ODF
 import hfGUIdata
-import plot_tools_jgb as pt
-reload(pt)
+import plot_model_fit as pt
 
 def OAT(psi, chi, N, t):
     """
@@ -127,7 +126,7 @@ def sq_analysis(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz):
     R = (sdev_min**2 - m_min)/(K**2/4.0/N)  # conservative inferred squeezing
     RO = (sdev_min**2)/(K**2/4.0/N)
     RO_all = 10*np.log10(pmterr**2/(K**2/4.0/N))
-    print pmterr
+    print(pmterr)
 
     print("=========== Numbers from the data ==============")
     print(title_name)
@@ -412,7 +411,7 @@ def data_point_histogram(pn, max_c, min_c, binwidth=0.025, save=False):
         try:
             plt.savefig(name_out, format='png', bbox='tight')
         except IOError as exception:
-            print "No such file or directory"
+            print("No such file or directory")
 
     return counts_data, x_data
 

@@ -14,8 +14,6 @@ from scicons import *
 #sys.path.append("c:\\Users\\bsawyer\\Documents\\Python Scripts\\subroutines")
 import wigner
 import ODF
-reload(wigner)
-reload(ODF)
 
 AhfS = -625.008837e6 * 2*pi #Hyperfine coefficient 
 AhfP = -118.6e6 * 2*pi #Hyperfine coefficient for P state
