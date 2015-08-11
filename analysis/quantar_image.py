@@ -9,7 +9,9 @@ import numpy as np
 import scipy.ndimage as ndi
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import os
+import os, importlib
+import quantar_image
+importlib.reload(quantar_image)
 
 import skimage
 from skimage.feature import peak_local_max
@@ -201,7 +203,7 @@ class QuantarImage:
 
         :param im_range: [-256,256,-256,256] is full range for Quantar
         :gfilter: ndi.gaussian_filter() argument
-        :return: return description
+        :return: 2d histogram
         """
         
         #Make Rotating Frame Image
@@ -218,9 +220,8 @@ class QuantarImage:
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
-        plt.show(RotFrame)
-        self.rot_image = counts_filter
-        self.extent = extent
+        plt.show(rot_img)
+
         
     def get_ion_positions(self):
         self.coordinates = peak_local_max(self.rot_image, min_distance=3.0,threshold_rel=0.4)
