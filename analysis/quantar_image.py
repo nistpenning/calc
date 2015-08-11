@@ -218,7 +218,7 @@ class QuantarImage:
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
-        plt.show(rot_img)
+        plt.show(RotFrame)
 
         
     def get_ion_positions(self):
