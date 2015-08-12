@@ -173,30 +173,6 @@ class QuantarImage:
             
         return img_rescale
 
-    def make_lab_image(self, xyt,  im_range=[-256,256,-256,256], gfilter=0.0):
-        """plot lab frame image
-
-        :param im_range: [-256,256,-256,256] is full range for Quantar
-        :gfilter: ndi.gaussian_filter() argument
-        :return: return description
-        """
-        xLab = (xyt[:,0] + self.x0)*self.scale_xy
-        yLab = (xyt[:,1] + self.y0)*self.scale_xy
-        
-        plt.subplot(111, aspect='equal')
-        ax = plt.gca()
-        ax.grid(True)
-        counts, xedges, yedges, LabFrame = plt.hist2d(xLab, yLab,
-                                           bins=self.bins, cmap = mpl.cm.Blues,
-                                           normed=False)
-        extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
-        counts_filter = ndi.gaussian_filter(counts, gfilter)
-        plt.axis(im_range)
-        plt.xlabel("x [$\mu$m]")
-        plt.ylabel("y [$\mu$m]")
-        plt.show(LabFrame)
-        return counts_filter,extent
-
     def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0):
         """plot image
 
