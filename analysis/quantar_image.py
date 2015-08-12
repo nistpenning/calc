@@ -173,15 +173,15 @@ class QuantarImage:
             
         return img_rescale
 
-    def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0):
+    def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, bck=False):
         """plot image
 
         :param im_range: [-256,256,-256,256] is full range for Quantar
         :gfilter: ndi.gaussian_filter() argument
+        :bck: xyt of background data
         :return: 2d histogram
         """
         
-        #Make Rotating Frame Image
         plt.subplot(111, aspect='equal')
         ax = plt.gca()
         ax.grid(True)
@@ -189,7 +189,12 @@ class QuantarImage:
                                          bins=self.bins,
                                          cmap = mpl.cm.Blues, normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
-        counts_filter = ndi.gaussian_filter(counts,gfilter)
+        if bck is False:
+            counts_filter = ndi.gaussian_filter(counts,gfilter)
+        else:
+            counts_background, xedges, yedges, RotFrame = plt.hist2d(bck[:,0], bck[:,1],bins=self.bins,
+                                                   cmap = mpl.cm.Blues,normed=False)
+            counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
         RotFrame = plt.imshow(counts_filter,extent=extent, cmap = mpl.cm.Blues,
                               vmin = 0, vmax = np.max(counts_filter))
         plt.axis(im_range)
