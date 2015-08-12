@@ -58,7 +58,7 @@ def get_ionProp_value(prop, where='props'):
         return 0
     else:
         ionprop = file_name
-        data = np.genfromtxt(ionprop, dtype=None, delimiter=' = ')
+        data = np.genfromtxt(ionprop, dtype='str', delimiter=' = ')
         ind = np.where(data == '{'+prop+'}')
         val_str = data[ind[0].astype(int)[0]][1]
         if where is 'props':
