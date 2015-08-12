@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import os
 
 import skimage
-from skimage.feature import peak_local_max
 import skimage.exposure
 
 
@@ -176,10 +175,12 @@ class QuantarImage:
     def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, bck=False):
         """plot image
 
-        :param im_range: [-256,256,-256,256] is full range for Quantar
+        :param im_range: sets output image axis values
         :gfilter: ndi.gaussian_filter() argument
         :bck: xyt of background data
         :return: 2d histogram
+        
+        :[-256,256,-256,256] is full range for Quantar
         """
         
         plt.subplot(111, aspect='equal')
@@ -201,10 +202,8 @@ class QuantarImage:
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
         plt.show(RotFrame)
-
         
-    def get_ion_positions(self):
-        self.coordinates = peak_local_max(self.rot_image, min_distance=3.0,threshold_rel=0.4)
+        return counts_filter
 
     def show_rot_image(self, im_range, low_threshold= 0):
         if np.size(self.rot_image) == 0:
