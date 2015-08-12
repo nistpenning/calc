@@ -13,6 +13,7 @@ import os
 
 import skimage
 import skimage.exposure
+from skimage.feature import peak_local_max
 
 
 class NiQuantarFileError(Exception):
@@ -205,18 +206,21 @@ class QuantarImage:
         
         return counts_filter
 
-    def show_rot_image(self, im_range, low_threshold= 0):
-        if np.size(self.rot_image) == 0:
-            print("No rotating frame image, must make_rot_image() first")
+    def get_ion_positions(self, img, extent=None, min_distance=3.0,threshold_rel=0.4):
+        coordinates = peak_local_max(img,
+                                          min_distance=min_distance,
+                                          threshold_rel=threshold_rel)
+        plt.close()
+        x = np.transpose(coordinates)[1]
+        y = np.transpose(coordinates)[0]
+        plt.plot(x,y,'r.')
+        plt.imshow(img)
+        if extent is None:
+            pass
         else:
-            image = np.copy(self.rot_image)
-            image[image < low_threshold] = 0
-            RotFrame = plt.imshow(image,extent=self.extent, cmap = mpl.cm.Blues,
-                              vmin = 0, vmax = np.max(image))
-            if im_range!=None: plt.axis(im_range)
-            plt.xlabel("x [$\mu$m]")
-            plt.ylabel("y [$\mu$m]")
-            plt.show(RotFrame)
+            plt.axis(extent)
+        plt.show()
+        return coordinates
 
 
 ######### useful functions but shouldn't be stored in the class  ########
@@ -224,13 +228,15 @@ def im_extent(mag):
     return np.array([-mag,mag,-mag,mag])
 
 def main():
-    fdir = "D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation"
+    fdir = os.path.normpath("D:\\tmp\\20150730\\pic_2_load300_188kHz_rotation")
+    print(fdir)
     qi = QuantarImage(x0=55,y0=-15,fwall=188e3)
     xyt = qi.read_file_range(fdir, 2780, 35)
     xytr = qi.rot_frame(xyt)
     xyt_bg = qi.read_file_range(fdir, 3100, 35)
     xytr_bg = qi.rot_frame(xyt_bg)
-    qi.make_image(xytr)
+    img = qi.make_image(xytr, bck=xytr_bg, gfilter=0.2,
+              im_range=im_extent(100))
 
 if __name__ == "__main__":
     main()
