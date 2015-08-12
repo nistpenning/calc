@@ -29,12 +29,13 @@ Ns = []
 J1ks = []
 Ncals = []
 names = []
+hist = []
 
 base_path = os.getcwd()
 add_path = ""
 fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [0]]
-J1ks = (475.0*3.03)*np.ones(np.shape(fns))
-Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
+J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
+Ncals = 1.7425 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here
@@ -67,12 +68,18 @@ for i,fn in enumerate(fns):
     b_prob_err = pmterr_of_mean/(float(bm - dm))
     contrast_est = 1-(2*b_prob)
     contrast_est_err = 2 * b_prob_err
+    
+    # Load histgram
+    data_name = [x for x in files if "_raw.csv" in x][0]
+    hdata = np.genfromtxt(data_name, delimiter=",", dtype='float')
+    print(np.shape(hdata))
 
     ats.append(arm_time)
     Cs.append(contrast_est)
     Cerrs.append(contrast_est_err)
     Ns.append(N)
     names.append(hf.n_slice(fn))
+    hist.append(hdata)
     os.chdir(base_path)
 
 #%%
@@ -112,3 +119,34 @@ plt.grid('off')
 
 if save is True:
     plt.savefig(name,dpi=300,bbox='tight',transparent=True)
+    
+#%%
+#play with histdata
+#plt.close()
+#
+#def parse_raw_counts(array):
+#    bad = 0
+#    for x in np.nditer(array, op_flags=['readwrite']):
+#        if x == -1:
+#            print('Found bad data point')
+#            bad += 1
+#            x[...] = -1
+#        else:
+#            x[...] = int(x) & 0x1fff
+#    if bad > 0:
+#        print("# of bad points: {}".format(bad))
+#
+#det_array = np.copy(hist[0])
+#parse_raw_counts(det_array)
+#histim = []
+#bins = range(0,450,15)
+##for row in [det_array[i] for i in [17]]:
+#for row in det_array:
+#    h, bin_edges = np.histogram(row, density=False, bins=bins)
+#    histim.append(h)
+#    #plt.hist(row,bins)
+#plt.imshow(np.transpose(histim), aspect='auto', origin='lower')
+#
+#pt.save_data_txt('histdata.txt', histim)
+
+
