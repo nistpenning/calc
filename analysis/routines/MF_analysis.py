@@ -5,9 +5,8 @@ Created on Mon Apr 13 21:02:26 2015
 @author: justinbohnet
 """
 
-import os, importlib
+import os, importlib, shutil
 import numpy as np
-import scipy.optimize as opt
 
 import matplotlib.pyplot as plt
 
@@ -15,6 +14,10 @@ import hfGUIdata
 importlib.reload(hfGUIdata)
 import plot_model_fit as pt
 importlib.reload(pt)
+
+# make a copy of the analysis at the folder
+if True:
+    shutil.copy(__file__, os.getcwd())
 
 def get_immediate_subdirectories(a_dir):
     return [name for name in os.listdir(a_dir)

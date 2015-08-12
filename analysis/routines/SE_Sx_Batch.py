@@ -4,7 +4,7 @@ Created on Thu Jul 23 10:37:46 2015
 
 @author: jgb
 """
-import os
+import os, shutil
 import numpy as np
 from numpy import pi, sin, cos, sqrt
 import matplotlib.pyplot as plt
@@ -17,6 +17,9 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 save = False
 name = "SE_Sx_batch_analysis.png"
+# make a copy of the analysis at the folder
+if save is True:
+    shutil.copy(__file__, os.getcwd())
 
 # containers for data sets
 ats=[]
