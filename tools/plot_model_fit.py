@@ -6,10 +6,7 @@ Created on Tue Jun 02 10:19:20 2015
 """
 
 import numpy as np
-from numpy import pi, sin, cos
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.text
 import scipy.optimize as opt
 
 def auto_extent(x,y):
@@ -129,14 +126,7 @@ def plot_fit(x,y,fitfunc,fitguess,
         plt.ylabel(labels[1])
 
         # fit message on plot
-        ym = axis[-2]
-        xm = axis[0]
-        y_pos_msg = ym-(0.4*np.abs(axis[3]-ym))
-        if xm is 0.0:
-            x_pos_msg = 0.0
-        else:
-            x_pos_msg = xm
-        plt.figtext(x_pos_msg, y_pos_msg, fit_message, fontsize=9)
+        plt.figtext(0.0, -0.05, fit_message, fontsize=10)
 
         name = fitfunc.__name__
         if save:
@@ -189,6 +179,7 @@ def plot_polyfit(x,y, fitguess,
         boolean to choose if figure is saved as png file (dafault no save)
     show: boolean
         boolean to choose if the data and fit are shown on a plot
+        
     Returns
     -------
     popt : array
@@ -272,16 +263,7 @@ def plot_polyfit(x,y, fitguess,
         plt.plot(x_curve,curve_fit,'-')
 
         #labels
-        plt.xlabel(labels[0])
-        plt.ylabel(labels[1])
-        ym = axis[-2]
-        xm = axis[0]
-        y_pos_msg = ym-(0.3*np.abs(axis[3]-ym))
-
-        if xm is 0.0: x_pos_msg = 0.0
-        else: x_pos_msg = xm
-
-        plt.text(x_pos_msg, y_pos_msg, fit_message, fontsize=10)
+        plt.figtext(0.0, -0.05, fit_message, fontsize=10)
 
         name = fitfunc.__name__
         if save:
