@@ -173,7 +173,9 @@ class QuantarImage:
             
         return img_rescale
 
-    def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, bck=False):
+    def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, 
+                   bck=False,
+                   cmap=mpl.cm.Blues):
         """plot image
 
         :param im_range: sets output image axis values
@@ -189,15 +191,15 @@ class QuantarImage:
         ax.grid(True)
         counts, xedges, yedges, RotFrame = plt.hist2d(xyt[:,0], xyt[:,1],
                                          bins=self.bins,
-                                         cmap = mpl.cm.Blues, normed=False)
+                                         cmap=cmap, normed=False)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
         if bck is False:
             counts_filter = ndi.gaussian_filter(counts,gfilter)
         else:
             counts_background, xedges, yedges, RotFrame = plt.hist2d(bck[:,0], bck[:,1],bins=self.bins,
-                                                   cmap = mpl.cm.Blues,normed=False)
+                                                   cmap=cmap, normed=False)
             counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
-        RotFrame = plt.imshow(counts_filter,extent=extent, cmap = mpl.cm.Blues,
+        RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
                               vmin = 0, vmax = np.max(counts_filter))
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
