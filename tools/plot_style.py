@@ -29,4 +29,3 @@ def save_data_txt(filename, out_list, col_names=False):
         if col_names is not False:
             csvw.writerow(col_names)
         csvw.writerows(numpy.transpose(out_list))
-        csv.writer()

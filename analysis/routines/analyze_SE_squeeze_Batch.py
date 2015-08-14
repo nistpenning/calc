@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = False
-img_name = "spinNoise_after_imageII_8_11.png"
+img_name = "spinNoise_before_imageII_8_11.png"
 
 # containers for data sets
 psis=[]
@@ -29,9 +29,9 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [6,7]]
+fns = [os.listdir(base_path)[i] for i in [1]]
 J1ks = (475.24*3.03)*np.ones(np.shape(fns))
-Ncals = 1.7425 * np.ones(np.shape(fns))  # #photons per ion per ms
+Ncals = 1.63 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
