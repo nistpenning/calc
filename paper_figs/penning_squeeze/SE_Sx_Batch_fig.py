@@ -33,17 +33,17 @@ names = []
 hist = []
 
 base_path = os.getcwd()
-add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [0]]
+#for the figure creation, point to the file folders that have the data sets we need
+fns = ["/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150807/Load304/depolarization/2015-08-07--15.10.19.547",
+       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339"]
 J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
 Ncals = 1.4924 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here
 for i,fn in enumerate(fns):
-    folder = os.path.join(base_path,add_path,fn)
-    print(folder)
-    os.chdir(folder)
+    os.chdir(fn)
+    print(fn)
     files = os.listdir(os.getcwd())
 
  #Load properties data
