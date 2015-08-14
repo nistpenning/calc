@@ -113,6 +113,7 @@ names.append("phaseflop_datasets_7_22_L296")
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
+#fig = plt.figure(figsize=(6.0,4.5))
 for i,data in enumerate(ats):
     l = "N: {:.0f}, J: {:.0f}".format(Ns[i],float(J1ks[i]))
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
