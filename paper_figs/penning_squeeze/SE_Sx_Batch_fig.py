@@ -4,23 +4,21 @@ Created on Thu Jul 23 10:37:46 2015
 
 @author: jgb
 """
-import os, shutil
+import os, importlib, shutil
 import numpy as np
 from numpy import pi, sin, cos, sqrt
 import matplotlib.pyplot as plt
 
 import hfGUIdata as hf
+importlib.reload(hf)
 import plot_style as ps
 import squeeze_func_time as squ
 
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
-name = "SE_Sx_batch_analysis.png"
-# make a copy of the analysis at the folder
-if save is True:
-    shutil.copy(__file__, os.getcwd())
+save = True
+name = "depolarizationVsN_fig.png"
 
 # containers for data sets
 ats=[]
@@ -28,16 +26,16 @@ Cs = []
 Cerrs = []
 Ns = []
 J1ks = []
-Ncals = []
 names = []
 hist = []
 
 base_path = os.getcwd()
 #for the figure creation, point to the file folders that have the data sets we need
-fns = ["/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150807/Load304/depolarization/2015-08-07--15.10.19.547",
-       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339"]
-J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
-Ncals = 1.4924 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = ["/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339",
+       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150807/Load304/depolarization/2015-08-07--15.10.19.547"]
+#store the parameters for the N value in the props file
+#J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
+#Ncals = 1.4924 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here
@@ -53,8 +51,11 @@ for i,fn in enumerate(fns):
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
     int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
+    Ncal = data_p['Ncal']
+    J1k = data_p['J1k']
+    
     k = bm-dm  # phtns per N atoms
-    N = k/(det_t*1e-3)/Ncals[i]
+    N = k/(det_t*1e-3)/Ncal
 
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -77,6 +78,7 @@ for i,fn in enumerate(fns):
         print(np.shape(hdata))
         hist.append(hdata)
 
+    J1ks.append(J1k)
     ats.append(arm_time)
     Cs.append(contrast_est)
     Cerrs.append(contrast_est_err)
@@ -85,15 +87,38 @@ for i,fn in enumerate(fns):
 
     os.chdir(base_path)
 
+#Have to get a data set by hand from this day, since analysis is different
+
+fn_8_6 = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150806/depolarization/phaseflop_datasets_8_06_save.csv"
+data_8_6 = np.genfromtxt(fn_8_6, delimiter=",", names=True, dtype=None)
+J1ks.append(472.0*3.03)
+ats.append(data_8_6['tau_ms']/2.0*1e3)
+Cs.append(data_8_6['C'])
+Cerrs.append(data_8_6['C_err'])
+Ns.append(97)
+names.append("phaseflop_datasets_8_06")
+
+
+"""
+fn_7_22 = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150722/Load296/depolarization/phaseflop_datasets_7_22_L296.csv"
+data_7_22 = np.genfromtxt(fn_7_22, delimiter=",", names=True, dtype=None)
+J1ks.append(420*3.03)
+ats.append(data_7_22['tau_ms']/2.0*1e3)
+Cs.append(data_7_22['C'])
+Cerrs.append(data_7_22['C_err'])
+Ns.append(130)
+names.append("phaseflop_datasets_7_22_L296")
+"""
+
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
-for i,data in enumerate(ats[0:3]):
-    l = "N: {:.0f}, J: {:.0f}".format(Ns[i],J1ks[i])
+for i,data in enumerate(ats):
+    l = "N: {:.0f}, J: {:.0f}".format(Ns[i],float(J1ks[i]))
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
 plt.legend(loc=3, fontsize=10)
-plt.xlabel("Interaction time [ms]")
-plt.ylabel("Ramsey fringe contrast")
+plt.xlabel(r"Interaction time  $\tau$ [ms]")
+plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")
 
 
 #________________________________________________________________________
@@ -108,8 +133,8 @@ ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 spem = np.exp(-G_tot*ti)
 plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
 
-colors = ['k', ps.red, ps.blue]
-for j,Jbar1k in enumerate(J1ks[0:3]):
+colors = ['k', ps.red, ps.blue, ps.purple]
+for j,Jbar1k in enumerate(J1ks):
     Jbar = Jbar1k/(0.002/ti)
     out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_el, G_ud, G_du)
     C_coherent_pred = np.real(out[1])
