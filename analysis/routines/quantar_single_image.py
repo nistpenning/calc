@@ -8,12 +8,14 @@ import os, importlib
 import numpy as np
 from numpy import sin, cos, pi
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import quantar_image
 importlib.reload(quantar_image)
 
 from skimage.feature import peak_local_max
 
+#%%
 x0 = 41.5
 y0 = -1.1
 num_img = 60
@@ -31,8 +33,11 @@ xytr_bg = qi.rot_frame(xyt_bg)
 #%%
 
 img = qi.make_image(xytr, gfilter=0.2,
-              im_range=quantar_image.im_extent(100))
+              im_range=quantar_image.im_extent(100), cmap=quantar_image.bluehot_cmap)
 print("x0: {}, y0: {}, File#: {}".format(x0,y0,data_num))
+
+
               
-coord = qi.get_ion_positions(img, extent=[90,160,90,160], min_distance=2.0,threshold_rel=0.2)
+coord = qi.get_ion_positions(img, extent=[90,160,90,160], min_distance=2.0,
+                             threshold_rel=0.4)
 print(np.shape(coord))

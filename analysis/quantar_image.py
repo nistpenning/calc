@@ -15,6 +15,20 @@ import skimage
 import skimage.exposure
 from skimage.feature import peak_local_max
 
+#define a custom colormap with black at the zero
+cdict = {'red':   ((0., 0.0, 0.0),
+                       (0.746032, 0.000000, 0.000000),
+                       (1.0, 1.0, 1.0)),
+             'green': ((0., 0., 0.),
+                       (0.365079, 0.000000, 0.000000),
+                       (0.746032, 1.000000, 1.000000),
+                       (1.0, 1.0, 1.0)),
+             'blue':  ((0., 0.0, 0.0),
+                       (0.365079, 1.000000, 1.000000),
+                       (1.0, 1.0, 1.0))}
+#(0., 0.0416, 0.0416)
+                       
+bluehot_cmap = mpl.colors.LinearSegmentedColormap('bluehot_cmap',cdict,256)
 
 class NiQuantarFileError(Exception):
     def __init__(self, value):
@@ -200,7 +214,7 @@ class QuantarImage:
                                                    cmap=cmap, normed=False)
             counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
         RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
-                              vmin = 0, vmax = np.max(counts_filter))
+                              vmin = 0.0, vmax = np.max(counts_filter))
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
