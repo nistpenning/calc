@@ -1,0 +1,5 @@
+{
+    "total": npscalar("int64", "ZicAAAAAAAA="),
+    "flopping_freq": 1500.0164816344934,
+    "hk_default_ion_present": true
+}
