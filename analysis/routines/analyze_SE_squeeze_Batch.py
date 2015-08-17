@@ -5,19 +5,26 @@ Created on Thu Jul 23 14:42:25 2015
 @author: jgb
 """
 
-import os, shutil
+import os, shutil, importlib
 import numpy as np
 from numpy import pi, sqrt
 import matplotlib.pyplot as plt
 
 import hfGUIdata as hf
 import plot_style as ps
+importlib.reload(ps)
 import squeeze_func_time as squ
 
 #options
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_after_imageII_8_11"
+
+#theory calc info
+mult = 2
+G_el = mult* 60.56
+G_ud = mult* 9.075
+G_du = mult* 6.413
 
 # containers for data sets
 psis=[]
@@ -25,13 +32,14 @@ its=[]
 sig_obs = []
 sig_ins = []
 sig_pns = []
+SE = []
 Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [7,6]]
-J1ks = (414.24*3.03)*np.ones(np.shape(fns))
-Ncals = 1.74 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in range(8)]
+J1ks = (475.0*3.03)*np.ones(np.shape(fns))
+Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -48,6 +56,7 @@ for i,fn in enumerate(fns):
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
     int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
+    reps = data_p["reps"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
 
@@ -61,7 +70,7 @@ for i,fn in enumerate(fns):
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    reps = np.mean(data.T[3])
+    #reps = np.mean(data.T[3])
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])
@@ -77,6 +86,14 @@ for i,fn in enumerate(fns):
 
     dB_squ_in = 10*np.log10((sig_in**2)/(sig_pn**2))
     dB_squ_ob = 10*np.log10((sig_ob**2)/(sig_pn**2))
+    
+    # calc reduction in constrast (from model shown to represent data)
+    Jbar = J1ks[i] /(0.002/int_t)
+    out = squ.OAT_decoh(0.0, int_t, Jbar, N, G_el, G_ud, G_du)
+    C_coherent_pred = np.real(out[1])
+    csi_R2 = (sig_ob**2)/(sig_pn**2)/C_coherent_pred**2
+    dB_csi_R2 = 10*np.log10(csi_R2)
+    
 
     #Load data messages
     print( "______________Data set: {}__________________".format(hf.n_slice(file_name)))
@@ -88,6 +105,7 @@ for i,fn in enumerate(fns):
         print( "Est. added noise sqrt((cal_ob^2 - cal_sn^2)-pn^2): {:.3f}, or {:.3f} deg".format(sig_a,sig_a_deg))
     print( "Minimum inferred spin variance: {:.3f} dB".format(np.min(dB_squ_in))) 
     print( "Minimum observed spin variance: {:.3f} dB".format(np.min(dB_squ_ob)))
+    print( r"Minimum observed $\csi_R^2$: {:.3f} dB".format(np.min(dB_csi_R2)))
 
 
     psis.append(psi_deg)
@@ -95,6 +113,7 @@ for i,fn in enumerate(fns):
     sig_obs.append(sig_ob)
     sig_ins.append(sig_in)
     sig_pns.append(sig_pn)
+    SE.append(np.max(10*np.log10(csi_R2**(-1))))
     Ns.append(N)
     names.append(hf.n_slice(file_name))
     os.chdir(base_path)
@@ -112,22 +131,18 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-5,12])
+plt.axis([-1,181,-7,17])
 plt.xlabel(r"Tomography angle $\psi$ [deg]")
 plt.ylabel("Spin variance [dB]")
 plt.grid('off')
 plt.legend(loc=0,fontsize=10)
 
+
 #________________________________________________________________________
 #add some theory curves
-mult = 2
-G_el = mult* 60.56
-G_ud = mult* 9.075
-G_du = mult* 6.413
 
 psi = np.linspace(0.001,pi,num=100) # radians
 
-colors = ['k', ps.red, ps.blue]
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
@@ -135,8 +150,17 @@ for i,name in enumerate(names):
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
     R_dB = 10*np.log10(R)
-    plt.plot(psi*180/pi,R_dB,color=colors[i])
+    plt.plot(psi*180/pi,R_dB,color=ps.colorlist[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
+
+plt.show()
+
+plt.close()
+int_times = np.array(its)*1e3
+plt.plot(int_times,SE,'o')
+plt.ylabel('Spectroscopic Enhancement [dB]')
+plt.xlabel('Interaction time [ms]')
+plt.show()
 
 if save is True:
     os.chdir('..')
