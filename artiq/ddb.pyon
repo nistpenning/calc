@@ -1,15 +1,16 @@
+# This is configured for the Penning lab's KC705
 {
     "comm": {
         "type": "local",
         "module": "artiq.coredevice.comm_tcp",
         "class": "Comm",
-        "arguments": {"host": "192.168.0.42"}
+        "arguments": {"host": "132.163.182.67"}
     },
     "core": {
         "type": "local",
         "module": "artiq.coredevice.core",
         "class": "Core",
-        "arguments": {"ref_period": 1e-9}
+        "arguments": {"external_clock": False}
     },
 
     "pmt0": {
@@ -29,25 +30,97 @@
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 2}
+        "arguments": {"channel": 2} # ttl0
     },
     "ttl1": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 3}
+        "arguments": {"channel": 3} # ttl1
     },
     "ttl2": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 4}
+        "arguments": {"channel": 4} # ttl2
     },
     "ttl3": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 5}
+        "arguments": {"channel": 5} # ttl3
+    },
+    "ttl4": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 6} # ttl4
+    },
+    "ttl5": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 7} # ttl5
+    },
+    "ttl6": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 8} #ttl6
+    },
+    "ttl7": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 9} # ttl7
+    },
+    "ttl8": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 10} #ttl8
+    },
+    "ttl9": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 11} #ttl9
+    },
+    "ttl10": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 12} #ttl10
+    },
+    "ttl11": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 13} # ttl11
+    },
+    "ttl12": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 14} #ttl12
+    },
+    "ttl13": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 15} #ttl13
+    },
+    "ttl14": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 16} #ttl14
+    },
+    "ttl15": {
+        "type": "local",
+        "module": "artiq.coredevice.ttl",
+        "class": "TTLOut",
+        "arguments": {"channel": 17} #ttl15
     },
     "led": {
         "type": "local",
@@ -80,64 +153,55 @@
         "class": "AD9858",
         "arguments": {"sysclk": 1e9, "channel": 2}
     },
-
-    "qc_q1_0": {
-        "type": "controller",
-        "best_effort": false,
-        "host": "::1",
-        "port": 4000,
-        "target_name": "pdq2",
-        "command": "pdq2_controller -p {port} --bind {bind} --simulation --dump qc_q1_0.bin"
-    },
-    "qc_q1_1": {
-        "type": "controller",
-        "best_effort": false,
-        "host": "::1",
-        "port": 4001,
-        "target_name": "pdq2",
-        "command": "pdq2_controller -p {port} --bind {bind} --simulation --dump qc_q1_1.bin"
-    },
-    "qc_q1_2": {
-        "type": "controller",
-        "best_effort": false,
-        "host": "::1",
-        "port": 4002,
-        "target_name": "pdq2",
-        "command": "pdq2_controller -p {port} --bind {bind} --simulation --dump qc_q1_2.bin"
-    },
-    "qc_q1_3": {
-        "type": "controller",
-        "best_effort": false,
-        "host": "::1",
-        "port": 4003,
-        "target_name": "pdq2",
-        "command": "pdq2_controller -p {port} --bind {bind} --simulation --dump qc_q1_3.bin"
-    },
-    "electrodes": {
+    "dds3": {
         "type": "local",
-        "module": "artiq.devices.pdq2",
-        "class": "CompoundPDQ2",
-        "arguments": {
-            "pdq2_devices": ["qc_q1_0", "qc_q1_1", "qc_q1_2", "qc_q1_3"],
-            "trigger_device": "ttl3",
-            "frame_devices": ["ttl0", "ttl1", "ttl2"]
-        }
+        "module": "artiq.coredevice.dds",
+        "class": "AD9858",
+        "arguments": {"sysclk": 1e9,
+                      "channel": 3}
+    },
+    "dds4": {
+        "type": "local",
+        "module": "artiq.coredevice.dds",
+        "class": "AD9858",
+        "arguments": {"sysclk": 1e9,
+                      "channel": 4}
+    },
+    "dds5": {
+        "type": "local",
+        "module": "artiq.coredevice.dds",
+        "class": "AD9858",
+        "arguments": {"sysclk": 1e9,
+                      "channel": 5}
+    },
+    "dds6": {
+        "type": "local",
+        "module": "artiq.coredevice.dds",
+        "class": "AD9858",
+        "arguments": {"sysclk": 1e9,
+                      "channel": 6}
+    },
+    "dds7": {
+        "type": "local",
+        "module": "artiq.coredevice.dds",
+        "class": "AD9858",
+        "arguments": {"sysclk": 1e9,
+                      "channel": 7}
     },
 
-    "lda": {
-        "type": "controller",
-        "best_effort": true,
-        "host": "::1",
-        "port": 3253,
-        "target_name": "lda",
-        "command": "lda_controller -p {port} --bind {bind} --simulation"
-    },
-
-    "ttl_inout": "pmt0",
-    "ttl_out": "ttl0",
-    "ttl_out_serdes": "ttl0",
-
-    "pmt_side": "pmt0",
-    "doppler_sw": "ttl0",
-    "repump_sw": "ttl1"
+    "pmt": "pmt0",
+    "dds_nsf": "dds0", # nuclear spin flip
+    "dds_odf_lower": "dds4",
+    "dds_odf_upper": "dds5",
+    "exp_start": "ttl0",
+    "sw_doppler": "ttl1",
+    "sw_repump": "ttl2",
+    "sw_uw": "ttl5",
+    "sw_odf_lower": "ttl6",
+    "sw_odf_upper": "ttl9",
+    "sw_pmt1_andor0": "ttl12",
+    #names for testing of DDSs using dds_tests.py
+    "ddsA": "dds1",
+    "ddsB": "dds7",
+    "ddsC": "dds3"
 }
