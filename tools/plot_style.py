@@ -18,6 +18,8 @@ aqua = '#009E73'
 yellow = '#F0E442'
 navy = '#002b36'
 
+colorlist = ['k', red, blue, green, orange, purple, pink, cyan, aqua, yellow, navy]
+
 def save_data_txt(filename, out_list, col_names=False):
     """
     filename: string with filename, including extenstion
