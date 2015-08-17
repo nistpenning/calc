@@ -36,9 +36,15 @@ plt.errorbar([round(n) for n in Ns], np.array(sig_subs)**2, yerr=sfe, xerr=Ns_er
 plt.plot(N_pred,1/np.array(N_pred),'-')
 plt.yscale('log')
 plt.xscale('log')
-plt.axis([0,220, 0.00,0.06])
+plt.axis([0,220, 0.003,0.06])
 plt.ylabel(r'Fractional spin noise $(\Delta S_z/|\vec{S}|)^2$')
 plt.xlabel('Ion number N')
+
+#spectroscopic enhancement data
+SE = data['SE']
+SE_N = data['SE_N']
+squ_spin_var = SE/SE_N
+plt.plot(SE_N, squ_spin_var,'s')
 
 majorLocator = FixedLocator([20,50,100,200])
 majorFormatter = FormatStrFormatter('%d')
