@@ -16,8 +16,8 @@ import squeeze_func_time as squ
 
 #options
 verbose = True
-save = True
-img_name = "spinNoise_after_imageII_8_11"
+save = False
+img_name = "spinNoise_8_7"
 
 # containers for data sets
 psis=[]
@@ -29,9 +29,10 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [7,6]]
-J1ks = (414.24*3.03)*np.ones(np.shape(fns))
-Ncals = 1.74 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in [2,5]]
+fns = [os.listdir(base_path)[i] for i in [9]]
+J1ks = (475.0*3.03)*np.ones(np.shape(fns))
+Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -112,7 +113,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-5,12])
+#plt.axis([-1,181,-5,12])
 plt.xlabel(r"Tomography angle $\psi$ [deg]")
 plt.ylabel("Spin variance [dB]")
 plt.grid('off')
@@ -127,9 +128,10 @@ G_du = mult* 6.413
 
 psi = np.linspace(0.001,pi,num=100) # radians
 
-colors = ['k', ps.red, ps.blue]
+colors = ['k', ps.red, ps.blue, ps.purple]
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
+    #Jbar = J1ks[i]/10.0
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
@@ -140,7 +142,9 @@ for i,name in enumerate(names):
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
+    #save figure in the dir with the script, since it is a figure maker
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)

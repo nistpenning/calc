@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = True
-img_name = "spinNoise_after_imageII_8_11"
+img_name = "spinNoise_8_6"
 
 # containers for data sets
 psis=[]
@@ -29,9 +29,10 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [7,6]]
-J1ks = (414.24*3.03)*np.ones(np.shape(fns))
-Ncals = 1.74 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in [0,1,2]]
+fns = [os.listdir(base_path)[i] for i in [6,5]]
+J1ks = (475.0*3.03)*np.ones(np.shape(fns))
+Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -47,6 +48,7 @@ for i,fn in enumerate(fns):
     bm = data_p['det_brightMean']
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
+    reps = data_p['reps']
     int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
@@ -61,7 +63,6 @@ for i,fn in enumerate(fns):
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    reps = np.mean(data.T[3])
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])
@@ -112,7 +113,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-5,12])
+plt.axis([-1,181,-8,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]")
 plt.ylabel("Spin variance [dB]")
 plt.grid('off')
@@ -140,7 +141,9 @@ for i,name in enumerate(names):
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
+    #save figure in the dir with the script, since it is a figure maker
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)

@@ -140,7 +140,9 @@ for i,name in enumerate(names):
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
+    #save figure in the dir with the script, since it is a figure maker
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)
