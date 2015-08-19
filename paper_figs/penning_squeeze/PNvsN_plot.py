@@ -30,7 +30,7 @@ sig_subs = data['sig_sub_rad']
 sfe = data['sig_full_err_rad']**2
 N_pred = np.linspace(18,200)
 
-fig, ax = plt.subplots(figsize=(3.0,4.0))
+fig, ax = plt.subplots()
 plt.grid('off')
 plt.errorbar([round(n) for n in Ns], np.array(sig_subs)**2, yerr=sfe, xerr=Ns_err, fmt='o')
 plt.plot(N_pred,1/np.array(N_pred),'-')
@@ -59,4 +59,4 @@ os.chdir(base)
 
 plt.tight_layout()
 
-plt.savefig("PNvsN_fig.png",dpi=300,transparent=True)
+plt.savefig("PNvsN_fig_alone.png",dpi=300,transparent=True)
