@@ -186,7 +186,7 @@ def plotit_uv_zoom(lasers, ions):
     xmin = 225
     plt.clf()
     plt.figure(1, figsize=(5,5))
-    plt.subplots_adjust(left=0.15, right=0.95, top=0.8, bottom=0.1)
+    plt.subplots_adjust(left=0.25, right=0.95, top=0.8, bottom=0.15)
     ax1 = plt.subplot(211)
     ax2 = plt.subplot(212)
 
@@ -233,7 +233,7 @@ def plotit_uv_zoom(lasers, ions):
         for nm, label in ion.colors.items():
             s = "{} {}".format(ion.name, label)
             ax1.axvline(x=nm, color='y')
-            ax1.text(x=nm, y=i+1, s=s, rotation=90)
+            ax1.text(x=nm, y=i+1.5, s=s, rotation=90, size=9)
 
     # get axis labels sorted out
 
@@ -258,7 +258,7 @@ def plotit_uv_zoom(lasers, ions):
 def plotit_all(lasers, ions):
     plt.clf()
     fig = plt.figure(1, figsize=(10,2))
-    plt.subplots_adjust(left=0.15, right=0.95, top=0.9, bottom=0.1)
+    plt.subplots_adjust(left=0.25, right=0.95, top=0.95, bottom=0.15)
     ax1 = plt.subplot(111)
 
     # plot ion colors
@@ -292,24 +292,29 @@ def plotit_all(lasers, ions):
         if r.type == "high_power":
             xbars = [(r.l1[0], r.l1[1]-r.l1[0])]
             xmax = np.max([xmax, r.l1[1]])
-            ax1.broken_barh(xbars , (i, 1), facecolors='red',
-                        alpha=laser_alpha, linewidth=0)
+            b1 = ax1.broken_barh(xbars , (i, 1), facecolors='red',
+                        alpha=laser_alpha, linewidth=0,
+                            label="fundamental")
 
         # second and higher harmonics only for high-power lasers
         if r.type == "high_power":
             # second harmonic
             xbars = [(r.l2[0], r.l2[1]-r.l2[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='green',
-                            alpha=laser_alpha, linewidth=0)
+            b2 = ax1.broken_barh(xbars, (i, 1), facecolors='green',
+                            alpha=laser_alpha, linewidth=0,
+                            label="2nd harmonic")
             # third harmonic
             xbars = [(r.l3[0], r.l3[1]-r.l3[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='blue',
-                            alpha=laser_alpha, linewidth=0)
+            b3= ax1.broken_barh(xbars, (i, 1), facecolors='blue',
+                            alpha=laser_alpha, linewidth=0,
+                            label="3rd harmonic")
             # fourth harmonic
             xbars = [(r.l4[0], r.l4[1]-r.l4[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='purple',
-                            alpha=laser_alpha, linewidth=0)
+            b4 = ax1.broken_barh(xbars, (i, 1), facecolors='purple',
+                            alpha=laser_alpha, linewidth=0,
+                            label='4th harmonic')
         i += 1
+
     yticks.append(1 + i)
     yticklabels.append("Sources:")
 
@@ -324,10 +329,10 @@ def plotit_all(lasers, ions):
 # diode source data from
 # http://tf.boulder.nist.gov/general/pdf/2765.pdf
 #
-lasers = [Laser.high_power(1118, 40, "OPSL A"),
-        Laser.high_power(1156, 60, "OPSL K3381 J271"),
-        Laser.high_power(1200, 40, "OPSL C"),
-        Laser.high_power(705, 30, "OPSL wish"),
+lasers = [Laser.high_power(1118, 40, "1118nm OPSL"),
+        Laser.high_power(1156, 60, "1156nm OPSL K3381"),
+        Laser.high_power(1200, 40, "1200nm OPSL"),
+        Laser.high_power(705, 30, "705nm OPSL wish"),
         Laser.low_power([1083, 671, 640, 766, 850, 854, 866, 649, 658, 812, \
                          780, 795, 1033, 1092, 882, 650, 935, 718],\
                         2, "direct diode")]
@@ -344,5 +349,5 @@ ions = [Ion("Be+", {313:"", 235:"pi"}),
         Ion("Ba+", {554:"pi",455:"",493:"",650:""})]
 [print(x) for x in ions]
 
-plotit_all(lasers, ions)
-#plotit_uv_zoom(lasers, ions)
+#plotit_all(lasers, ions)
+plotit_uv_zoom(lasers, ions)
