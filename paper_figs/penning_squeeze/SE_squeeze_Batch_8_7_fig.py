@@ -115,7 +115,7 @@ for i,data in enumerate(sig_obs):
 #plt.xscale('log')
 #plt.axis([-1,181,-5,12])
 plt.xlabel(r"Tomography angle $\psi$ [deg]")
-plt.ylabel("Spin variance [dB]")
+plt.ylabel(r"Spin variance $(\Delta S_\psi)^2/N/4$ [dB]")
 plt.grid('off')
 plt.legend(loc=0,fontsize=10)
 

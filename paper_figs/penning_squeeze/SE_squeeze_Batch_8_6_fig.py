@@ -103,19 +103,19 @@ for i,fn in enumerate(fns):
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
-
+colors = ['k', ps.blue, ps.red]
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.1f} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
-    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l)
+    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
 #plt.yscale('log')
 #plt.xscale('log')
 plt.axis([-1,181,-8,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]")
-plt.ylabel("Spin variance [dB]")
+plt.ylabel(r"Spin variance $(\Delta S_\psi)^2/N/4$ [dB]")
 plt.grid('off')
 plt.legend(loc=0,fontsize=10)
 
@@ -128,7 +128,7 @@ G_du = mult* 6.413
 
 psi = np.linspace(0.001,pi,num=100) # radians
 
-colors = ['k', ps.red, ps.blue]
+
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
