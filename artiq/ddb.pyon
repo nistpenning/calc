@@ -189,17 +189,17 @@
                       "channel": 7}
     },
 
-    "pmt": "pmt0",
+    "sideview_pmt": "pmt0",
     "dds_nsf": "dds0", # nuclear spin flip
     "dds_odf_lower": "dds4",
     "dds_odf_upper": "dds5",
     "exp_start": "ttl0",
-    "sw_doppler": "ttl1",
-    "sw_repump": "ttl2",
-    "sw_uw": "ttl5",
-    "sw_odf_lower": "ttl6",
-    "sw_odf_upper": "ttl9",
-    "sw_pmt1_andor0": "ttl12",
+    "doppler_sw": "ttl1",
+    "repump_sw": "ttl2",
+    "uw_sw": "ttl5",
+    "odf_lower_sw": "ttl6",
+    "odf_upper_sw": "ttl9",
+    "sideview_pmt_or_andor_sw": "ttl12",
     #names for testing of DDSs using dds_tests.py
     "ddsA": "dds1",
     "ddsB": "dds7",
