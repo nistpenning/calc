@@ -32,31 +32,32 @@ N_pred = np.linspace(18,200)
 
 fig, ax = plt.subplots(figsize=(5.0,3.7))
 plt.grid('off')
-plt.errorbar([round(n) for n in Ns], np.array(sig_subs)**2, yerr=sfe, xerr=Ns_err, fmt='o')
-plt.plot(N_pred,1/np.array(N_pred),'-')
-plt.yscale('log')
+Ns_round = np.array([round(n) for n in Ns])
+plt.errorbar(Ns_round, np.array(sig_subs)**2*Ns_round, yerr=sfe, xerr=Ns_err, fmt='o')
+plt.plot(N_pred,np.ones(np.shape(N_pred)),'-')
+#plt.yscale('log')
 plt.xscale('log')
-plt.axis([0,220, 0.003,0.06])
-plt.ylabel(r'Fractional spin noise $(\Delta S_z/|\vec{S}|)^2$')
+plt.axis([20,220, 0.0,1.1])
+plt.ylabel(r'Squeezing parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
 
 #spectroscopic enhancement data
 SE = data['SE']
 SE_N = data['SE_N']
-squ_spin_var = SE/SE_N
+squ_spin_var = SE
 plt.plot(SE_N, squ_spin_var,'s')
 
 majorLocator = FixedLocator([20,50,100,200])
 majorFormatter = FormatStrFormatter('%d')
-majorLocatorY = FixedLocator([0.005,0.01,0.06])
-majorFormatterY = FormatStrFormatter('%g')
+#majorLocatorY = FixedLocator([0.005,0.01,0.06])
+#majorFormatterY = FormatStrFormatter('%g')
 ax.xaxis.set_major_locator(majorLocator)
 ax.xaxis.set_major_formatter(majorFormatter)
-ax.yaxis.set_major_locator(majorLocatorY)
-ax.yaxis.set_major_formatter(majorFormatterY)
+#ax.yaxis.set_major_locator(majorLocatorY)
+#ax.yaxis.set_major_formatter(majorFormatterY)
 
 os.chdir(base)
 
 plt.tight_layout()
 
-#plt.savefig("PNvsN_fig_alone.pdf",dpi=300,transparent=True)
+plt.savefig("XiR2vsN_fig_alone.pdf",dpi=300,transparent=True)
