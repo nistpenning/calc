@@ -34,6 +34,7 @@ det_t = data_p["det_t"]
 int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
 k = bm-dm  # phtns per N atoms
 N = k/(det_t*1e-3)/Ncals
+print(N)
 
 data_name = [x for x in files if "_data.csv" in x][0]
 file_name, data = hf.get_gen_csv(data_name, skip_header=True)
@@ -60,13 +61,24 @@ histim = []
 bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.1,0.06]]
 #for row in [det_array[i] for i in [17]]:
 data_sets = [6,11,19]
+
+taus = []
+hists = []
+bin_list  = []
+
 for j,row in enumerate([Sz_array[i] for i in data_sets]):
     #h, bin_edges = np.histogram(row, density=False, bins=bins[j])
     #histim.append(h)
     l = r"$\tau$ = {0:.2f}".format(2e-3*arm_time[data_sets[j]])
     plt.hist(row,bins[j],histtype='stepfilled',
              alpha=0.35, normed=False,label=l)
+    taus.append(2e-3*arm_time[data_sets[j]])
+    hists.append(row)
+    bin_list.append(bins[j])
+             
 #plt.imshow(np.transpose(histim), aspect='auto', origin='lower')
+
+plt.hist()
 
 plt.ylabel("Number of trials")
 plt.xlabel(r"Spin projection $2 S_x/N$" )
@@ -77,6 +89,8 @@ plt.grid('off')
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 plt.savefig("Sx_hist_8_11.pdf",bbox='tight',transparent=True)
+
+ps.save_data_txt('histdata.txt', hists)
 
 os.chdir(base)
 #ps.save_data_txt('histdata.txt', histim)
