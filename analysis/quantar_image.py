@@ -189,6 +189,7 @@ class QuantarImage:
 
     def make_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, 
                    bck=False,
+                   int_range='auto',
                    cmap=mpl.cm.Blues):
         """plot image
 
@@ -213,8 +214,12 @@ class QuantarImage:
             counts_background, xedges, yedges, RotFrame = plt.hist2d(bck[:,0], bck[:,1],bins=self.bins,
                                                    cmap=cmap, normed=False)
             counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
-        RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
+        if int_range is 'auto':    
+            RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
                               vmin = 0.0, vmax = np.max(counts_filter))
+        else:
+            RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
+                              vmin = int_range[0], vmax = int_range[1])
         plt.axis(im_range)
         plt.xlabel("x [$\mu$m]")
         plt.ylabel("y [$\mu$m]")
