@@ -18,7 +18,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
 save = True
-name = "depolarizationVsN_fig.png"
+name = "depolarizationVsN_fig.pdf"
 
 # containers for data sets
 ats=[]
@@ -32,7 +32,8 @@ hist = []
 base_path = os.getcwd()
 #for the figure creation, point to the file folders that have the data sets we need
 fns = ["/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339",
-       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150807/Load304/depolarization/2015-08-07--15.10.19.547"]
+       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150807/Load304/depolarization/2015-08-07--15.10.19.547",
+       "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150820/Load308/depolarization/2015-08-20--19.04.50.675"]
 #store the parameters for the N value in the props file
 #J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
 #Ncals = 1.4924 * np.ones(np.shape(fns))  # #photons per ion per ms
@@ -88,7 +89,7 @@ for i,fn in enumerate(fns):
     os.chdir(base_path)
 
 #Have to get a data set by hand from this day, since analysis is different
-
+"""
 fn_8_6 = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150806/depolarization/phaseflop_datasets_8_06_save.csv"
 data_8_6 = np.genfromtxt(fn_8_6, delimiter=",", names=True, dtype=None)
 J1ks.append(472.0*3.03)
@@ -97,7 +98,7 @@ Cs.append(data_8_6['C'])
 Cerrs.append(data_8_6['C_err'])
 Ns.append(97)
 names.append("phaseflop_datasets_8_06")
-
+"""
 
 """
 fn_7_22 = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150722/Load296/depolarization/phaseflop_datasets_7_22_L296.csv"

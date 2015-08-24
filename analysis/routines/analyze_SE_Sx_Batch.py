@@ -16,7 +16,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = True
+save = False
 name = "SE_Sx_batch_analysis.png"
 # make a copy of the analysis at the folder
 if save is True:
@@ -34,9 +34,9 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [0]]
-J1ks = (528*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
-Ncals = 1.425 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [4]]
+J1ks = (396*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
+Ncals = 1.1435 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here
@@ -93,7 +93,7 @@ for i,data in enumerate(ats[0:3]):
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
 plt.legend(loc=3, fontsize=10)
 plt.xlabel("Interaction time [ms]")
-plt.ylabel("Ramsey fringe contrast")
+plt.ylabel(r"Avgerage spin 2$S_x$/N")
 if len(names) is 1:
     plt.title(names[0])
 
