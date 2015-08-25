@@ -30,97 +30,97 @@
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 2} # ttl0
+        "arguments": {"channel": 2, "nickname": "exp_start"} # ttl0
     },
     "ttl1": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 3} # ttl1
+        "arguments": {"channel": 3, "nickname": "doppler_sw"} # ttl1
     },
     "ttl2": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 4} # ttl2
+        "arguments": {"channel": 4, "nickname": "repump_sw"} # ttl2
     },
     "ttl3": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 5} # ttl3
+        "arguments": {"channel": 5, "nickname": ""} # ttl3
     },
     "ttl4": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 6} # ttl4
+        "arguments": {"channel": 6, "nickname": "andor_trig"} # ttl4
     },
     "ttl5": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 7} # ttl5
+        "arguments": {"channel": 7, "nickname": "124_GHz_sw"} # ttl5
     },
     "ttl6": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 8} #ttl6
+        "arguments": {"channel": 8, "nickname": "odf_lower_sw"} #ttl6
     },
     "ttl7": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 9} # ttl7
+        "arguments": {"channel": 9, "nickname": "cyclotron_sw"} # ttl7
     },
     "ttl8": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 10} #ttl8
+        "arguments": {"channel": 10, "nickname": "beam_block"} #ttl8
     },
     "ttl9": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 11} #ttl9
+        "arguments": {"channel": 11, "nickname": "odf_upper_sw"} #ttl9
     },
     "ttl10": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 12} #ttl10
+        "arguments": {"channel": 12, "nickname": ""} #ttl10
     },
     "ttl11": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 13} # ttl11
+        "arguments": {"channel": 13, "nickname": ""} # ttl11
     },
     "ttl12": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 14} #ttl12
+        "arguments": {"channel": 14, "nickname": "sideview: 0 PMT, 1 Andor"} #ttl12
     },
     "ttl13": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 15} #ttl13
+        "arguments": {"channel": 15, "nickname": "excimer_ttl"} #ttl13
     },
     "ttl14": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 16} #ttl14
+        "arguments": {"channel": 16, "nickname": "odf_beatnote_sync"} #ttl14
     },
     "ttl15": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 17} #ttl15
+        "arguments": {"channel": 17, "nickname": "endcap_tickle_sw"} #ttl15
     },
     "led": {
         "type": "local",
@@ -139,54 +139,54 @@
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 0}
+        "arguments": {"sysclk": 1e9, "channel": 0, "nickname": "nukesf"}
     },
     "dds1": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 1}
+        "arguments": {"sysclk": 1e9, "channel": 1, "nickname": ""}
     },
     "dds2": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 2}
+        "arguments": {"sysclk": 1e9, "channel": 2, "nickname": "odf_offset"}
     },
     "dds3": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 3}
+                      "channel": 3, "nickname": "endcap_tickle"}
     },
     "dds4": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 4}
+                      "channel": 4, "nickname": "odf_lower"}
     },
     "dds5": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 5}
+                      "channel": 5, "nickname": "odf_upper"}
     },
     "dds6": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 6}
+                      "channel": 6, "nickname": "spin_flip"}
     },
     "dds7": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 7}
+                      "channel": 7, "nickname": "offset"}
     },
 
     "sideview_pmt": "pmt0",
