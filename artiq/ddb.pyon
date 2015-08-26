@@ -30,165 +30,193 @@
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 2, "nickname": "exp_start"} # ttl0
+        "arguments": {"channel": 2},
+        "comment": "exp_start"
     },
     "ttl1": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 3, "nickname": "doppler_sw"} # ttl1
+        "arguments": {"channel": 3},
+        "comment": "doppler_sw"
     },
     "ttl2": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 4, "nickname": "repump_sw"} # ttl2
+        "arguments": {"channel": 4},
+        "comment": "repump_sw"
     },
     "ttl3": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 5, "nickname": ""} # ttl3
+        "arguments": {"channel": 5},
+        "comment": ""
     },
     "ttl4": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 6, "nickname": "andor_trig"} # ttl4
+        "arguments": {"channel": 6},
+        "comment": "andor_trig"
     },
     "ttl5": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 7, "nickname": "124_GHz_sw"} # ttl5
+        "arguments": {"channel": 7},
+        "comment": "124_GHz_sw"
     },
     "ttl6": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 8, "nickname": "odf_lower_sw"} #ttl6
+        "arguments": {"channel": 8},
+        "comment": "odf_lower_sw"
     },
     "ttl7": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 9, "nickname": "cyclotron_sw"} # ttl7
+        "arguments": {"channel": 9},
+        "comment": "cyclotron_sw"
     },
     "ttl8": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 10, "nickname": "beam_block"} #ttl8
+        "arguments": {"channel": 10},
+        "comment": "beam_block"
     },
     "ttl9": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 11, "nickname": "odf_upper_sw"} #ttl9
+        "arguments": {"channel": 11},
+        "comment": "odf_upper_sw"
     },
     "ttl10": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 12, "nickname": ""} #ttl10
+        "arguments": {"channel": 12},
+        "comment": ""
     },
     "ttl11": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 13, "nickname": ""} # ttl11
+        "arguments": {"channel": 13}, 
+        "comment": ""
     },
     "ttl12": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 14, "nickname": "sideview: 0 PMT, 1 Andor"} #ttl12
+        "arguments": {"channel": 14},
+        "comment": "sideview: 0 PMT, 1 Andor"
     },
     "ttl13": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 15, "nickname": "excimer_ttl"} #ttl13
+        "arguments": {"channel": 15},
+        "comment": "excimer_ttl"
     },
     "ttl14": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 16, "nickname": "odf_beatnote_sync"} #ttl14
+        "arguments": {"channel": 16},
+        "comment": "odf_beatnote_sync"
     },
     "ttl15": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 17, "nickname": "endcap_tickle_sw"} #ttl15
+        "arguments": {"channel": 17},
+        "comment": "endcap_tickle_sw"
     },
     "led": {
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 17}
+        "arguments": {"channel": 17},
+        "comment": "led"
     },
 
     "dds_bus": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "DDSBus",
-        "arguments": {}
+        "comment":"dds_bus"
     },
     "dds0": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 0, "nickname": "nukesf"}
+        "arguments": {"sysclk": 1e9, "channel": 0},
+        "comment": "nukesf"
     },
     "dds1": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 1, "nickname": ""}
+        "arguments": {"sysclk": 1e9, "channel": 1},
+        "comment": ""
     },
     "dds2": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9, "channel": 2, "nickname": "odf_offset"}
+        "arguments": {"sysclk": 1e9, "channel": 2},
+        "comment": ""
     },
     "dds3": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9,
-                      "channel": 3, "nickname": "endcap_tickle"}
+        "arguments": {"sysclk": 1e9, "channel": 3},
+        "comment": ""
     },
     "dds4": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9,
-                      "channel": 4, "nickname": "odf_lower"}
+        "arguments": {"sysclk": 1e9, "channel": 4},
+        "comment": "odf_lower"
     },
     "dds5": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
         "arguments": {"sysclk": 1e9,
-                      "channel": 5, "nickname": "odf_upper"}
+                      "channel": 5, "comment": "odf_upper"}
     },
     "dds6": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9,
-                      "channel": 6, "nickname": "spin_flip"}
+        "arguments": {"sysclk": 1e9, "channel": 6},
+        "comment": "spin_flip"
     },
     "dds7": {
         "type": "local",
         "module": "artiq.coredevice.dds",
         "class": "AD9858",
-        "arguments": {"sysclk": 1e9,
-                      "channel": 7, "nickname": "offset"}
+        "arguments": {"sysclk": 1e9, "channel": 7},
+        "comment": "offset"
     },
 
+    "novatech_a": {
+        "type": "controller",
+        "host": "::1",
+        "port": 3254,
+        "target_name": "novatech409b",
+        "command": "novatech409b_controller -v -v --simulation -p {port} --bind {bind}" 
+    },
+# -d \"hwgrep://VID:PID=0403:6001 SNR=FTXQLBXE\" "
     "sideview_pmt": "pmt0",
     "dds_nsf": "dds0", # nuclear spin flip
     "dds_odf_lower": "dds4",
