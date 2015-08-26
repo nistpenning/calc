@@ -216,7 +216,14 @@
         "target_name": "novatech409b",
         "command": "novatech409b_controller -v -v --simulation -p {port} --bind {bind}" 
     },
-# -d \"hwgrep://VID:PID=0403:6001 SNR=FTXQLBXE\" "
+    "novatech_wall": {
+        "type": "controller",
+        "host": "132.163.82.67",
+        "comment": "over_aluminum_table_PC",
+        "port": 3254,
+        "target_name": "novatech409b",
+        "command": "novatech409b_controller -v -v -p {port} --bind {bind} -d \"hwgrep://VID:PID=067B:2303 SNR=6\" "
+    },
     "sideview_pmt": "pmt0",
     "dds_nsf": "dds0", # nuclear spin flip
     "dds_odf_lower": "dds4",
