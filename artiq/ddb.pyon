@@ -142,10 +142,9 @@
         "type": "local",
         "module": "artiq.coredevice.ttl",
         "class": "TTLOut",
-        "arguments": {"channel": 17},
+        "arguments": {"channel": 18},
         "comment": "led"
     },
-
     "dds_bus": {
         "type": "local",
         "module": "artiq.coredevice.dds",
@@ -211,10 +210,10 @@
 
     "novatech_a": {
         "type": "controller",
-        "host": "::1",
+        "host": "132.163.82.66",
         "port": 3254,
         "target_name": "novatech409b",
-        "command": "novatech409b_controller -v -v --simulation -p {port} --bind {bind}" 
+        "command": "novatech409b_controller -v -v -p {port} --bind {bind}  -d \"hwgrep://VID:PID=0403:6001 SNR=FTXQLBXE\" "
     },
     "novatech_wall": {
         "type": "controller",
