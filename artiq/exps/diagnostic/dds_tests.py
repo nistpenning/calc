@@ -31,8 +31,8 @@ class TestDDS(EnvExperiment):
         while True:
             # mark start of experiment
             self.ttl0.pulse(2*us)
-            self.ddsA.set(1*MHz, phase=0)
-            delay(2.443*ms)  
+            self.ddsA.set(2*MHz, phase=0)
+            delay(2*ms)  
 
     @kernel
     def test0(self):
@@ -40,6 +40,8 @@ class TestDDS(EnvExperiment):
         # This fails to change phase.
 
         self.ddsA.set_phase_mode(PHASE_MODE_ABSOLUTE)
+        #end_delay = 50*us
+        end_delay = 53.123*us
         while True:
             # mark start of experiment
             self.ttl0.pulse(2*us)
@@ -49,8 +51,8 @@ class TestDDS(EnvExperiment):
             delay(2*us)
             self.ddsA.set(2*MHz, phase=0)
             delay(2*us)
-            self.ddsA.set(10*MHz, phase=0)
-            delay(1*ms)
+            self.ddsA.set(2*MHz, phase=0)
+            delay(end_delay)
     @kernel
     def test4(self):
         """using ddsN.set(freq, phase_mode=PHASE_MODE_ABSOLUTE); do RF phase increment"""
