@@ -1,86 +1,83 @@
 from artiq import *
 import numpy as np
 
-class StdPrepare():
-    """Standard qubit state perparation
+class StdCool(HasEnvironment):
+    """Standard qubit cooling and state perparation
     """
-    def __init__(self):
-        super(StdPrepare, self).__init__()
     def build(self):
-        super(StdPrepare, self).build()  
+        self.attr_device("core")
         self.attr_device("doppler_sw")
         self.attr_device("repump_sw")
-        self.attr_argument("std_prepare_cool_t", FreeValue(3*ms))
-        self.attr_argument("std_prepare_repump_t", FreeValue(1*ms))
+        self.attr_device("led")
+
+        gui_group = "Standard Cool"
+        self.attr_argument("cool_t",
+                           NumberValue(3e-3, unit="s", step=1e-3, ndecimals=3, min=0, max=1),
+                           gui_group)
+        self.attr_argument("repump_t",
+                           NumberValue(1e-3, unit="s", step=1e-3, ndecimals=3, min=0, max=1),
+                           gui_group)
           
     @kernel
-    def std_prepare(self):
+    def go(self):
         """prepare qubit by cooling and repumping
         """
         with parallel:
             self.led.on()
             self.doppler_sw.on()
             self.repump_sw.on() 
-            delay(self.std_prepare_cool_t)
+            delay(self.cool_t)
             self.doppler_sw.off()
-            delay(self.std_prepare_repump_t) 
+            delay(self.repump_t)
             self.repump_sw.off()
-            self.led.off()      
+            self.led.off()
 
-class StdDetect():
+class StdDetect(HasEnvironment):
     """Standard qubit state detection
     """
-    def __init__(self):
-        super(StdDetect, self).__init__()
     def build(self):
-        super(StdDetect, self).build()
+        self.attr_device("core")
         self.attr_device("doppler_sw")
         self.attr_device("repump_sw")
         self.attr_device("led")
         self.attr_device("sideview_pmt")
 
-        self.attr_argument("std_det_hist_nbins", FreeValue(60))
-        self.attr_argument("std_det_hist_nmax", FreeValue(200))
-        self.attr_argument("std_det_nreps", FreeValue(100))
-        self.attr_argument("std_detect_t", FreeValue(1*ms))
-
-        self.std_detect_counts = [0 for _ in range(self.std_det_nreps)]
-        self.std_detect_rep_i = 0
+        gui_group = "Standard Detect"
+        self.attr_argument("hist_nbins",
+                           NumberValue(60, step=10, ndecimals=0, min=0),
+                           gui_group)
+        self.attr_argument("hist_nmax",
+                           NumberValue(200, step=10, ndecimals=0, min=10),
+                           gui_group)
+        self.attr_argument("nreps",
+                           NumberValue(100, step=50, ndecimals=0, min=1, max=1000),
+                           gui_group)
+        self.attr_argument("detect_t",
+                           NumberValue(1e-3, unit="s", step=1e-3, ndecimals=4, min=1e-6, max=1),
+                           gui_group)
 
     @kernel
-    def std_detect_rep(self):
+    def rep(self):
         """projective measurement; of single experiment repetition
         """
-        self.core.break_realtime()
         with parallel:
-            self.led.pulse(self.std_detect_t)
-            self.doppler_sw.pulse(self.std_detect_t)
-            self.sideview_pmt.gate_rising(self.std_detect_t)
+            self.led.pulse(self.detect_t)
+            self.doppler_sw.pulse(self.detect_t)
+            self.sideview_pmt.gate_rising(self.detect_t)
         cts = self.sideview_pmt.count()
-        self.std_detect_counts[self.std_detect_rep_i] = cts
-        self.std_detect_rep_i += 1
+        self.counts[self.rep_i] = cts
+        self.rep_i += 1
 
     @kernel
-    def std_detect_rep_done(self):
+    def rep_done(self):
         """call at conclusion of a set of identical experiment reps
         """
-        self.std_detect_counts = [0 for _ in range(self.std_det_nreps)]
-        self.std_detect_rep_i = 0
-        mean, std = self.std_detect_rep_hist_rpc()
-        return mean, std
+        return self.counts
 
-    def std_detect_rep_hist_rpc(self):
-        """update histogram in GUI
+    @kernel
+    def rep_start(self):
+        """initialize count buffer
         """
-        counts = self.std_detect_counts
-        hist, bins = np.histogram(counts, self.std_det_hist_nbins, 
-            range=(0, self.std_det_hist_nmax))
-        hist = list(hist)
-        hist_bins = list(bins)
-        self.set_result("std_det_hist_bins", 
-            hist_bins, store=False, realtime=True)
-        self.set_result("std_det_hist", 
-            hist, store=False, realtime=True)
-        mean = np.mean(counts)
-        std = np.std(counts)
-        return mean, std
+        self.rep_i = 0
+        self.counts = [0 for _ in range(int(self.nreps))]
+
