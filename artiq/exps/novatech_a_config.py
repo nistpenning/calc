@@ -22,12 +22,12 @@ class NovatechAConfig(EnvExperiment):
             default = local_defaults.get(ch, global_default)
             gui_group_name = "Channel {}".format(ch)
 
-            self.get_argument("comment_ch{}".format(ch), 
+            self.attr_argument("comment_ch{}".format(ch),
                 StringValue(default.get("comment")), 
                 gui_group_name)
 
-            self.get_argument("freq_ch{}".format(ch), 
-                NumberValue(default.get("freq")/1e6, unit="MHz", step=1e-6, ndecimals=6, min=1e-7, max=171), 
+            self.attr_argument("freq_ch{}".format(ch),
+                NumberValue(default.get("freq")/1e6, unit="MHz", step=1e-6, ndecimals=6, min=1e-7, max=171),
                 gui_group_name)
 
             self.get_argument("phase_ch{}".format(ch),
