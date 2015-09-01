@@ -19,6 +19,8 @@ class CoreDDSDebug(EnvExperiment):
     def build(self):
         self.attr_device("core")
         [self.attr_device("dds{}".format(x)) for x in range(self.numdds)]
+        #dmgr, pdb, rdb = self.dbs()
+        #print(dmgr.ddb["ttl0"]["comment"])
 
         def make_gui(ch):
             default = local_defaults.get(ch, global_default)
@@ -48,12 +50,10 @@ class CoreDDSDebug(EnvExperiment):
             gn2)
 
     @kernel
-    def run_kernel(self, ch, freq, phase):
+    def run_kernel(self, freq, phase):
         self.core.break_realtime()
-        fn = "dds{}".format(ch)
-        f = getattr(self, fn)
-        f.set(freq*MHz, phase)
-    
+        self.f.set(freq, phase)
+
     def run(self):
         if self.reset == "NONE":
             chnos = []
@@ -79,4 +79,7 @@ class CoreDDSDebug(EnvExperiment):
             else:
                 freq = getattr(self, "freq_ch{}".format(ch))
                 phase = getattr(self, "phase_ch{}".format(ch))
-            self.run_kernel(ch, freq, phase)
+
+            fn = "dds{}".format(ch)
+            self.f = getattr(self, fn)
+            self.run_kernel(freq*1e6, phase)
