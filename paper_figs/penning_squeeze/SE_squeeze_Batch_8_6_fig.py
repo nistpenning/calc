@@ -121,10 +121,9 @@ plt.legend(loc=0,fontsize=10)
 
 #________________________________________________________________________
 #add some theory curves
-mult = 2
-G_el = mult* 60.56
-G_ud = mult* 9.075
-G_du = mult* 6.413
+G_el =  58.46
+G_ud =  8.76
+G_du =  6.19
 
 psi = np.linspace(0.001,pi,num=100) # radians
 
