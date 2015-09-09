@@ -34,7 +34,7 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [4]]
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [1]]
 J1ks = (396*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
 Ncals = 1.1435 * np.ones(np.shape(fns))  # #photons per ion per ms
 

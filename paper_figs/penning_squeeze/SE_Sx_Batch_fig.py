@@ -18,7 +18,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
 save = True
-name = "depolarizationVsN_fig.pdf"
+name = "depolarizationVsN_noJ_fig.pdf"
 
 # containers for data sets
 ats=[]
@@ -116,7 +116,7 @@ names.append("phaseflop_datasets_7_22_L296")
 # visualizing the experimental data
 #fig = plt.figure(figsize=(6.0,4.5))
 for i,data in enumerate(ats):
-    l = "N: {:.0f}, J: {:.0f}".format(Ns[i],float(J1ks[i]))
+    l = "N: {:.0f}".format(Ns[i])
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
 plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"Interaction time  $\tau$ [ms]")
