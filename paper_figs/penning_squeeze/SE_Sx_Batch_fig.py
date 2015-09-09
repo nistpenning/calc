@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = True
+save = False
 name = "depolarizationVsN_noJ_fig.pdf"
 
 # containers for data sets
@@ -125,11 +125,10 @@ plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")
 
 #________________________________________________________________________
 #add some theory curves
-mult = 2
-G_el = mult* 60.56
-G_ud = mult* 9.075
-G_du = mult* 6.413
-G_tot = 70.0  # per s
+G_el =  57.1 * 1.0
+G_ud =  8.56157395
+G_du =  6.04795106
+G_tot = 35.9  # per s
 
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 spem = np.exp(-G_tot*ti)
