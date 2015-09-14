@@ -27,8 +27,8 @@ folders = get_immediate_subdirectories(os.getcwd())
 
 #Do the analysis on all the folders
 #define intial parameters
-Gamma = 76.3e-6
-w_a = 1570
+Gamma = 40.0e-6
+w_a = 1490.0
 Jbar_1kHz = 1200
 Jbar_guess = 1.0*Jbar_1kHz*1e-6
 
@@ -57,7 +57,7 @@ def analysis():
 
 
 
-    title = "$t_{a}$: %d us, $\delta$: %.3g kHz"%(arm_time,det)
+    title = "Data set: %s, $t_{a}$: %d us, $\delta$: %.3g kHz"%(folder[12:-4],arm_time,det)
 
     label = ['Inital angle [degrees]', 'Spin up fraction', title]
 
