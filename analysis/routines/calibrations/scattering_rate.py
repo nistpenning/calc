@@ -17,30 +17,32 @@ import squeeze_func_time as squ
 ats = []
 cons = []
 
-fns = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [6]]
+fns = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [2]]
+# fit guess values
+g = np.array([40.0])
 
 def expdecay(t,G):
-    return np.exp(-G*2*t)
-g = np.array([70.0])
+    return np.exp(-G*t*1e-3)
 
 def gaussdecay(t,GG):
-    return np.exp(-(GG*2*t)**2)
+    return np.exp(-(GG*t*1e-3)**2)
 
-nofn = "2015-09-11--14.22.47.446"
+nofn = "2015-09-15--14.55.34.957"
 os.chdir(nofn)
 fn, data = hfGUIdata.get_gen_csv('phase', skip_header=True)
 arm_time = np.array(data.T[0][1:],dtype='float')
 t0_ind = np.where(arm_time==10.0)
-arm_time = arm_time*(1e-6)
+int_time = arm_time*(2e-3)
 A = np.array(data.T[1][1:],dtype='float')
 B = np.array(data.T[2][1:],dtype='float')
 contrast = ((A - B)/(A[t0_ind]-B[t0_ind]))
 ats.append(arm_time)
 cons.append(contrast)
-l = ["X","Y","No beams"]
-res, res_err = pt.plot_fit(arm_time,contrast,gaussdecay,fitguess=[70],labels=l )
+l = ["Interaction time [ms]","2|S|/N","No beams"]
+res, res_err = pt.plot_fit(int_time,contrast,gaussdecay,fitguess=g,labels=l )
 loss = res[0]
 os.chdir('..')
+plt.show()
 plt.close()
 
 
@@ -49,12 +51,12 @@ for filename in fns:
     fn, data = hfGUIdata.get_gen_csv('phase', skip_header=True)
     arm_time = np.array(data.T[0][1:],dtype='float')
     t0_ind = np.where(arm_time==10.0)
-    arm_time = arm_time*(1e-6)
+    int_time = arm_time*(2e-3)
     A = np.array(data.T[1][1:],dtype='float')
     B = np.array(data.T[2][1:],dtype='float')
-    contrast = ((A - B)/(A[t0_ind]-B[t0_ind])) * np.exp((loss*2*arm_time)**2)
+    contrast = ((A - B)/(A[t0_ind]-B[t0_ind])) * np.exp((loss*int_time*1e-3)**2)
     ats.append(arm_time)
     cons.append(contrast)
-    l = ["X","Y",fn]
-    pt.plot_fit(arm_time,contrast,expdecay,fitguess=g,labels=l )
+    l = ["Interaction time [ms]","2|S|/N",fn]
+    pt.plot_fit(int_time,contrast,expdecay,fitguess=g,labels=l )
     os.chdir('..')
