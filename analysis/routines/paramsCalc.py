@@ -16,8 +16,8 @@ power_u = 4.85e-3  # W
 power_L = 5.12e-3  # W
 wpu = 60.0
 wpl = 36.0
-ACSS_u_pi = 2*pi*19.06e3
-ACSS_L_pi = 2*pi*15.62e3
+ACSS_u_pi = 2*pi*19.6e3
+ACSS_L_pi = 2*pi*15.9e3
 wz = 2*pi*1570.0*1e3  # 1/s
 
 #known constants
@@ -45,7 +45,7 @@ phip_L = (wpl - wpl_offset)*2  # degrees
 G_u = spe.spont_emission(I=I_fit_u, omegaL=wL, phip=phip_u*pi/180.)
 G_L = spe.spont_emission(I=I_fit_L, omegaL=wL, phip=phip_L*pi/180.)
 
-F0 = ODF.ODF(I=I_fit_avg, thetaR=20.0, omegaL=wL)
+F0 = ODF.ODF(I=I_fit_avg, thetaR=10.0, omegaL=wL)
 
 def Jbar(delta): return F0**2/(4*hbar*m_Be*wz*(2*pi*delta*1e3))
 

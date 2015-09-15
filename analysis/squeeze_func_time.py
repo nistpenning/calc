@@ -422,7 +422,7 @@ def hist_data_browser(max_c, min_c, num):
     for i in range(num):
         data_point_histogram(i, max_c, min_c, save=directory)
 
-    def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
+def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         """
         Model for OAT accounting for decohrence based on paper by MFF
         psi: angle of final rotation about x, radians

@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
+save = True
 name = "depolarizationVsN_noJ_fig.pdf"
 
 # containers for data sets
