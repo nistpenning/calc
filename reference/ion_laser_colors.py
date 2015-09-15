@@ -1,5 +1,6 @@
 __author__ = 'jwbritto'
 
+import sys
 import numpy as np
 import matplotlib.pylab as plt
 import matplotlib
@@ -7,7 +8,6 @@ from matplotlib.transforms import Bbox, TransformedBbox, \
      blended_transform_factory
 from mpl_toolkits.axes_grid1.inset_locator import BboxPatch, BboxConnector,\
      BboxConnectorPatch
-
 
 class Laser:
     """Laser properties
@@ -57,8 +57,8 @@ class Laser:
         else:
             return ""
 
-class Ion:
-    """Trapped ion wavelengths
+class Species:
+    """Atomic species wavelengths
     """
     def __init__(self, name, colors):
         """
@@ -67,6 +67,7 @@ class Ion:
         """
         self.name = name
         self.colors = colors
+
     def __str__(self):
         stmp = ["{}:,{:.1f}nm, ".format(v, k) for k,v in self.colors.items()]
         s = "{name} :: {colors}".format(name=self.name, colors=stmp)
@@ -180,13 +181,13 @@ def zoom_effect02(ax1, ax2, **kwargs):
 
     return c1, c2, bbox_patch1, bbox_patch2, p
 
-def plotit_uv_zoom(lasers, ions):
+def plotit_uv_zoom(lasers, species, fig_title=''):
     xstretch = 0.1
     zoom_x_max = 425
     xmin = 225
     plt.clf()
     plt.figure(1, figsize=(5,5))
-    plt.subplots_adjust(left=0.25, right=0.95, top=0.8, bottom=0.15)
+    plt.subplots_adjust(left=0.25, right=0.95, top=0.70, bottom=0.1)
     ax1 = plt.subplot(211)
     ax2 = plt.subplot(212)
 
@@ -229,11 +230,28 @@ def plotit_uv_zoom(lasers, ions):
     ax1.xaxis.set_tick_params(labeltop='on')
     ax1.xaxis.set_tick_params(labelbottom='off')
     # plot ion colors
-    for ion in ions:
+    lbl_sqz = 3 # labels are too close, nm
+    sqzd = False
+    nions = len(ion_qubits)
+    all_colors = []  # list of all ion colors
+    for ion in species:
         for nm, label in ion.colors.items():
-            s = "{} {}".format(ion.name, label)
+            sqzd = any( [(abs(x-nm)<lbl_sqz) or (abs(nm-x)<lbl_sqz)
+                         for x in all_colors] )
+            all_colors.append(nm)
+            if sqzd == False:
+                ys = nions-0.75
+                ynm = -0.75
+            else:
+                ys = nions+1.7
+                ynm = .25
+                sqzd = False
+            s = "{}: {}".format(ion.name, label)
             ax1.axvline(x=nm, color='y')
-            ax1.text(x=nm, y=i+1.5, s=s, rotation=90, size=9)
+            ax1.text(x=nm, y=ys, s=s, rotation=90, size=9,
+                     verticalalignment='bottom', horizontalalignment='center')
+            ax1.text(x=nm, y=ynm, s=nm, rotation=90, size=9,
+                     verticalalignment='bottom', horizontalalignment='center')
 
     # get axis labels sorted out
 
@@ -253,6 +271,17 @@ def plotit_uv_zoom(lasers, ions):
     ax2.set_xlabel("wavelength [nm]")
     ax1.set_xlim([xmin, zoom_x_max])
     zoom_effect01(ax1, ax2, xmin, zoom_x_max)
+
+    caption_s = "LC is laser cooling\n" \
+                "RP is repump\n" \
+                "RA is Raman-transition\n" \
+                "PI is photo-ionization"
+    plt.figtext(x=0.01, y=0.99, s=caption_s,
+                verticalalignment='top')
+
+    plt.figtext(x=.5, y=0.99, s=fig_title,
+                horizontalalignment="center", verticalalignment='top',
+                weight='bold')
     plt.show()
 
 def plotit_all(lasers, ions):
@@ -338,16 +367,42 @@ lasers = [Laser.high_power(1118, 40, "1118nm OPSL"),
                         2, "direct diode")]
 [print(x) for x in lasers]
 
-# ion colors from
+# import OPSL chips
+# not for public distribution
+opsl_path = "C:\\Users\\jwbritto\\Google Drive\\0workSync\\reference\\tomi_laser_colors_opsl.py"
+exec(open(opsl_path).read())
+
+# qubit and clock ions
 # http://tf.boulder.nist.gov/general/pdf/2765.pdf
-ions = [Ion("Be+", {313:"", 235:"pi"}),
-        Ion("Mg+", {280:"", 285:"pi"}),
-        Ion("Yb+", {399:"pi", 556:"pi", 328:"", 369:"", 395:""}),
-        Ion("Ca+", {422:"pi", 850:"", 854:"", 866:"", \
-                    393:"", 397:""}),
-        Ion("Sr+", {461:"pi",407:"",421:"", 1033:"", 1092:""}),
-        Ion("Ba+", {554:"pi",455:"",493:"",650:""})]
-[print(x) for x in ions]
+ion_qubits = [Species("Be+", {313:"LC,RA",
+                               235:"PI"}),
+        Species("Mg+", {280:"LC,RA",
+                        285:"PI"}),
+        Species("Yb+", {399:"PI",
+                        556:"PI",
+                        328:"LC,RA",
+                        369:"LC,RA",
+                        935:"RP"}),
+        Species("Ca+", {422:"PI",
+                        850:"RP",
+                        854:"RP",
+                        866:"RP",
+                        393:"LC,RA",
+                        397:"LC,RA"}),
+        Species("Sr+", {461:"PI",
+                        407:"LC,RA",
+                        421:"LC,RA",
+                        1033:"RP",
+                        1092:"RP"}),
+        Species("Ba+", {554:"PI",
+                        455:"LC,RA",
+                        493:"LC,RA",
+                        650:"RP"})]
+[print(x) for x in ion_qubits]
+
+neutrals = [Species("He*", {1083:"LC,DP"}),
+               Species("Li", {671:"LC,RA,DP"})]
 
 #plotit_all(lasers, ions)
-plotit_uv_zoom(lasers, ions)
+plotit_uv_zoom(lasers, ion_qubits, fig_title="NIST Ions, Burd OPSL")
+#plotit_uv_zoom(lasers, neutrals)
