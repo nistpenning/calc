@@ -9,12 +9,14 @@ class DDSTest(EnvExperiment):
         self.attr_device("doppler_sw")
         self.attr_device("repump_sw")
         self.attr_device("led")
+        self.attr_device("exp_start")
 
     @kernel
     def run(self):
         no_cool_t = 30*ms
         cool_t = 3*ms
         while True:
+            self.exp_start.pulse(5*us)
             with parallel:
                 self.led.on()
                 self.doppler_sw.on()
