@@ -181,108 +181,6 @@ def zoom_effect02(ax1, ax2, **kwargs):
 
     return c1, c2, bbox_patch1, bbox_patch2, p
 
-def plotit_uv_zoom(lasers, species, fig_title=''):
-    xstretch = 0.1
-    zoom_x_max = 425
-    xmin = 225
-    plt.clf()
-    plt.figure(1, figsize=(5,5))
-    plt.subplots_adjust(left=0.25, right=0.95, top=0.70, bottom=0.1)
-    ax1 = plt.subplot(211)
-    ax2 = plt.subplot(212)
-
-    i = 0
-    yticks = []; yticklabels = []
-    xticks = []; xticklabels = []
-
-    xmax = 0
-    for r in lasers:
-        yticks.append(0.5 + i)
-        yticklabels.append(r.label)
-        # fundamental
-        if r.type == "low_power":
-            # there's a list of wavelengths for a low power laser class
-            xbars = [(x[0], x[1]-x[0]) for x in r.l1]
-            xmax = np.max([xmax, np.max(r.l1)])
-        if r.type == "high_power":
-            xbars = [(r.l1[0], r.l1[1]-r.l1[0])]
-            xmax = np.max([xmax, r.l1[1]])
-        ax1.broken_barh(xbars , (i, 1), facecolors='red')
-        ax2.broken_barh(xbars , (i, 1), facecolors='red')
-
-        # second and higher harmonics only for high-power lasers
-        if r.type == "high_power":
-            # second harmonic
-            xbars = [(r.l2[0], r.l2[1]-r.l2[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='green')
-            ax2.broken_barh(xbars , (i, 1), facecolors='green')
-            # third harmonic
-            xbars = [(r.l3[0], r.l3[1]-r.l3[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='blue')
-            ax2.broken_barh(xbars , (i, 1), facecolors='blue')
-            # fourth harmonic
-            xbars = [(r.l4[0], r.l4[1]-r.l4[0])]
-            ax1.broken_barh(xbars , (i, 1), facecolors='purple')
-            ax2.broken_barh(xbars , (i, 1), facecolors='purple')
-        i += 1
-
-    # plot ion colors
-    ax1.xaxis.set_tick_params(labeltop='on')
-    ax1.xaxis.set_tick_params(labelbottom='off')
-    # plot ion colors
-    lbl_sqz = 3 # labels are too close, nm
-    sqzd = False
-    nions = len(ion_qubits)
-    all_colors = []  # list of all ion colors
-    for ion in species:
-        for nm, label in ion.colors.items():
-            sqzd = any( [(abs(x-nm)<lbl_sqz) or (abs(nm-x)<lbl_sqz)
-                         for x in all_colors] )
-            all_colors.append(nm)
-            if sqzd == False:
-                ys = nions-0.75
-                ynm = -0.75
-            else:
-                ys = nions+1.7
-                ynm = .25
-                sqzd = False
-            s = "{}: {}".format(ion.name, label)
-            ax1.axvline(x=nm, color='y')
-            ax1.text(x=nm, y=ys, s=s, rotation=90, size=9,
-                     verticalalignment='bottom', horizontalalignment='center')
-            ax1.text(x=nm, y=ynm, s=nm, rotation=90, size=9,
-                     verticalalignment='bottom', horizontalalignment='center')
-
-    # get axis labels sorted out
-
-    ax1.grid(True)
-    ax1.set_yticks(yticks)
-    ax1.set_yticklabels(yticklabels)
-    ax1.set_xticks(xticks)
-    ax1.set_xticklabels(xticklabels)
-    for label in ax1.xaxis.get_ticklabels():
-        label.set_rotation(90)
-    ax2.set_xlim([xmin*(1-xstretch), xmax*(1+xstretch)])
-    ax2.set_ylim([0,i+0.5])
-    ax2.grid(True)
-    ax2.set_yticks(yticks)
-    ax2.set_yticklabels(yticklabels)
-    ax2.set_ylim([0,i+0.5])
-    ax2.set_xlabel("wavelength [nm]")
-    ax1.set_xlim([xmin, zoom_x_max])
-    zoom_effect01(ax1, ax2, xmin, zoom_x_max)
-
-    caption_s = "LC is laser cooling\n" \
-                "RP is repump\n" \
-                "RA is Raman-transition\n" \
-                "PI is photo-ionization"
-    plt.figtext(x=0.01, y=0.99, s=caption_s,
-                verticalalignment='top')
-
-    plt.figtext(x=.5, y=0.99, s=fig_title,
-                horizontalalignment="center", verticalalignment='top',
-                weight='bold')
-    plt.show()
 
 def plotit_all(lasers, ions):
     plt.clf()
@@ -355,17 +253,138 @@ def plotit_all(lasers, ions):
     ax1.set_xlabel("wavelength [nm]")
     plt.show()
 
+
+def plotit_uv_zoom(lasers, species, fig_title=''):
+    nspecies = len(species)
+    nions = len(ion_qubits)
+
+    xstretch = 0.1
+    zoom_x_max = 425
+    xmin = 225
+    plt.clf()
+    plt.figure(1, figsize=(5,5))
+    plt.subplots_adjust(left=0.25, right=0.95, top=0.70, bottom=0.1)
+    ax1 = plt.subplot(211)
+    ax2 = plt.subplot(212)
+
+    i = 0
+    yticks = []; yticklabels = []
+    xticks = []; xticklabels = []
+
+    xmax = 0
+    for r in lasers:
+        yticks.append(0.5 + i)
+        yticklabels.append(r.label)
+        # fundamental
+        if r.type == "low_power":
+            # there's a list of wavelengths for a low power laser class
+            xbars = [(x[0], x[1]-x[0]) for x in r.l1]
+            xmax = np.max([xmax, np.max(r.l1)])
+        if r.type == "high_power":
+            xbars = [(r.l1[0], r.l1[1]-r.l1[0])]
+            xmax = np.max([xmax, r.l1[1]])
+        ax1.broken_barh(xbars , (i, 1), facecolors='red')
+        ax2.broken_barh(xbars , (i, 1), facecolors='red')
+
+        # second and higher harmonics only for high-power lasers
+        if r.type == "high_power":
+            # second harmonic
+            xbars = [(r.l2[0], r.l2[1]-r.l2[0])]
+            ax1.broken_barh(xbars , (i, 1), facecolors='green')
+            ax2.broken_barh(xbars , (i, 1), facecolors='green')
+            # third harmonic
+            xbars = [(r.l3[0], r.l3[1]-r.l3[0])]
+            ax1.broken_barh(xbars , (i, 1), facecolors='blue')
+            ax2.broken_barh(xbars , (i, 1), facecolors='blue')
+            # fourth harmonic
+            xbars = [(r.l4[0], r.l4[1]-r.l4[0])]
+            ax1.broken_barh(xbars , (i, 1), facecolors='purple')
+            ax2.broken_barh(xbars , (i, 1), facecolors='purple')
+        i += 1
+
+    # plot ion colors
+    lbl_sqz = 3 # labels are too close, nm
+    sqzd = False
+    all_colors = []  # list of all ion colors
+    for ion in species:
+        for nm, label in ion.colors.items():
+            sqzd = any( [(abs(x-nm)<lbl_sqz) or (abs(nm-x)<lbl_sqz)
+                         for x in all_colors] )
+            all_colors.append(nm)
+            if sqzd == False:
+                ys = nions-0.75
+                ynm = -0.75
+            else:
+                ys = nions+1.7
+                ynm = .25
+                sqzd = False
+            s = "{}: {}".format(ion.name, label)
+            ax1.axvline(x=nm, color='y')
+            ax1.text(x=nm, y=ys, s=s, rotation=90, size=9,
+                     verticalalignment='bottom', horizontalalignment='center')
+            ax1.text(x=nm, y=ynm, s=nm, rotation=90, size=9,
+                     verticalalignment='bottom', horizontalalignment='center')
+
+    # get axis labels sorted out
+    if nspecies:
+        ax1.xaxis.set_tick_params(labeltop='on')
+        ax1.xaxis.set_tick_params(labelbottom='off')
+        ax1.set_xticks(xticks)
+        ax1.set_xticklabels(xticklabels)
+        for label in ax1.xaxis.get_ticklabels():
+            label.set_rotation(90)
+        caption_s = "LC is laser cooling\n" \
+            "RP is repump\n" \
+            "RA is Raman-transition\n" \
+            "PI is photo-ionization"
+        plt.figtext(x=0.01, y=0.99, s=caption_s,
+            verticalalignment='top')
+
+    else:
+       caption_right="RED is fundamental\n" \
+                  "   (>500mW tuning)\n" \
+                  "GREEN is doubled\n" \
+                  "BLUE is trippled\n" \
+                  "PURPLE is quadrupled"
+       plt.figtext(x=0.75, y=0.99, s=caption_right,
+            horizontalalignment="left", verticalalignment='top')
+    ax1.grid(True)
+    ax1.set_yticks(yticks)
+    ax1.set_yticklabels(yticklabels)
+    ax2.set_xlim([xmin*(1-xstretch), xmax*(1+xstretch)])
+    ax2.set_ylim([0,i+0.5])
+    ax2.grid(True)
+    ax2.set_yticks(yticks)
+    ax2.set_yticklabels(yticklabels)
+    ax2.set_ylim([0,i+0.5])
+    ax2.set_xlabel("wavelength [nm]")
+    ax1.set_xlim([xmin, zoom_x_max])
+    zoom_effect01(ax1, ax2, xmin, zoom_x_max)
+    plt.figtext(x=.5, y=0.99, s=fig_title,
+                horizontalalignment="center", verticalalignment='top',
+                weight='bold')
+    plt.show()
+
 # diode source data from
 # http://tf.boulder.nist.gov/general/pdf/2765.pdf
 #
-lasers = [Laser.high_power(1118, 40, "1118nm OPSL"),
+lasers_nist = [Laser.high_power(1118, 40, "1118nm OPSL"),
         Laser.high_power(1156, 60, "1156nm OPSL K3381"),
         Laser.high_power(1200, 40, "1200nm OPSL"),
         Laser.high_power(705, 30, "705nm OPSL wish"),
-        Laser.low_power([1083, 671, 640, 766, 850, 854, 866, 649, 658, 812, \
-                         780, 795, 1033, 1092, 882, 650, 935, 718],\
-                        2, "direct diode")]
-[print(x) for x in lasers]
+        Laser.low_power([0],
+                        2, ""),
+        # Laser.low_power([1083, 671, 640, 766, 850, 854, 866, 649, 658, 812,
+        #                  780, 795, 1033, 1092, 882, 650, 935, 718],
+        #                 2, "direct sources"),
+        # Laser.low_power(np.array([626, 1178, 844, 852, 922, 814, 842, 1108, 910, 986])/2,
+        #                 2, "doubled sources"),
+        # Laser.low_power(np.array([939, 855, 840, 1179, 1191, 984, 1197, 984, 1107])/3,
+        #                 2, "tripled sources"),
+        # Laser.low_power(np.array([940, 1140, 1120, 916, 856, 908])/4,
+        #                 2, "quadrupled sources")
+        ]
+[print(x) for x in lasers_nist]
 
 # import OPSL chips
 # not for public distribution
@@ -400,9 +419,16 @@ ion_qubits = [Species("Be+", {313:"LC,RA",
                         650:"RP"})]
 [print(x) for x in ion_qubits]
 
+species_empty = []
+
 neutrals = [Species("He*", {1083:"LC,DP"}),
                Species("Li", {671:"LC,RA,DP"})]
 
 #plotit_all(lasers, ions)
-plotit_uv_zoom(lasers, ion_qubits, fig_title="NIST Ions, Burd OPSL")
-#plotit_uv_zoom(lasers, neutrals)
+plotit_uv_zoom(lasers_nist, ion_qubits,
+               fig_title="OPSLs at NIST (Burd)")
+# plotit_uv_zoom(lasers_tomi_tested, species_empty,
+#                fig_title="OPSLs Demonstrated by tut.fi (2015)")
+# plotit_uv_zoom(lasers_tomi_prospects, species_empty,
+#                fig_title="OPSLs Predicted by tut.fi")
+
