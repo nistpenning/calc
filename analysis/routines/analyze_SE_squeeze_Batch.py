@@ -18,13 +18,12 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = False
-img_name = "spinNoise_after_imageII_8_11"
+img_name = "spinNoise_9_18"
 
 #theory calc info
-mult = 2
-G_el = mult* 60.56
-G_ud = mult* 9.075
-G_du = mult* 6.413
+G_el =  60.56
+G_ud =  10.07
+G_du =  7.10
 
 # containers for data sets
 psis=[]
@@ -37,9 +36,9 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in range(8)]
-J1ks = (475.0*3.03)*np.ones(np.shape(fns))
-Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in [8,9]]
+J1ks = (2316.0)*np.ones(np.shape(fns))
+Ncals = 0.85 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -56,7 +55,7 @@ for i,fn in enumerate(fns):
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
     int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
-    reps = data_p["reps"]
+    #reps = data_p["reps"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
 
@@ -70,7 +69,7 @@ for i,fn in enumerate(fns):
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    #reps = np.mean(data.T[3])
+    reps = np.mean(data.T[3])
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])
@@ -131,9 +130,9 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-7,17])
-plt.xlabel(r"Tomography angle $\psi$ [deg]")
-plt.ylabel("Spin variance [dB]")
+plt.axis([-1,181,-10,13])
+plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
+plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
 plt.legend(loc=0,fontsize=10)
 
@@ -142,7 +141,7 @@ plt.legend(loc=0,fontsize=10)
 #add some theory curves
 
 psi = np.linspace(0.001,pi,num=100) # radians
-
+cs = ['b','g']
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
@@ -150,7 +149,7 @@ for i,name in enumerate(names):
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
     R_dB = 10*np.log10(R)
-    plt.plot(psi*180/pi,R_dB,color=ps.colorlist[i])
+    plt.plot(psi*180/pi,R_dB,color=cs[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 
 plt.show()

@@ -4,7 +4,7 @@ Created on Thu Jul 23 10:37:46 2015
 
 @author: jgb
 """
-import os, shutil
+import os, shutil, os.path
 import numpy as np
 from numpy import pi, sin, cos, sqrt
 import matplotlib.pyplot as plt
@@ -17,10 +17,20 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
 save = False
-name = "SE_Sx_batch_analysis.png"
+name = "SE_Sx_batch_analysis"
 # make a copy of the analysis at the folder
 if save is True:
-    shutil.copy(__file__, os.getcwd())
+    shutil.copy(__file__, os.path.normpath(os.getcwd()))
+    
+#theory calc info
+G_el =  67.10
+G_ud =  10.07
+G_du =  7.10
+G_tot = 42.1
+#adjust for extra decohrence
+G_tot = 0.5*(67.10+17.1+38.6)
+print(G_tot)
+G_el = 67.10 + 38.6
 
 # containers for data sets
 ats=[]
@@ -34,9 +44,9 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [1]]
-J1ks = (396*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
-Ncals = 1.1435 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-2]]
+J1ks = (2316.0)*np.ones(np.shape(fns))
+Ncals = 0.85 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here
@@ -92,20 +102,15 @@ for i,data in enumerate(ats[0:3]):
     l = "N: {:.0f}, J: {:.0f}".format(Ns[i],J1ks[i])
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
 plt.legend(loc=3, fontsize=10)
-plt.xlabel("Interaction time [ms]")
-plt.ylabel(r"Avgerage spin 2$S_x$/N")
+plt.xlabel("Interaction time [ms]",fontsize=14)
+#plt.ylabel(r"Avgerage spin 2$S_x$/N")
+plt.ylabel("Ramsey Contrast",fontsize=14)
 if len(names) is 1:
     plt.title(names[0])
 
 
 #________________________________________________________________________
 #add some theory curves
-mult = 2
-G_el = mult* 60.56
-G_ud = mult* 9.075
-G_du = mult* 6.413
-G_tot = 70.0  # per s
-
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 spem = np.exp(-G_tot*ti)
 plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')

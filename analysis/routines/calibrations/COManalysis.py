@@ -25,9 +25,9 @@ F12 = 2*pi*120.0e3  # per sec
 lACSS = 2*pi*20.3e3  # per sec
 uACSS = 2*pi*20.3e3  # per sec
 
-Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, 2*pi*1487.0*1e3)
+Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, 2*pi*1580.0*1e3)
 Gamma = Gamma
-wa_hold = True
+wa_hold = False
 
 Nion = 240
 
@@ -46,7 +46,7 @@ def analysis():
     fz_str = 'raman%raman_fz'
     w_a = hfGUIdata.get_ionProp_value(fz_str)
     w_a = 2*pi*w_a*1e3
-    w_a = 2*pi*1573.8*1e3
+    w_a = 2*pi*1580.8*1e3
     
     #Fit guesses
     K0 = (F0/ sqrt(2.0))**2 / (hbar*2*m_Be*Nion*w_a) #sqrt(2) tries to account for DW factor
@@ -64,7 +64,7 @@ def analysis():
     hold = np.array([False, True, True, wa_hold])
 
     #plot labels
-    extent = [1560.0, 1580.0, 0.0, 0.60]
+    extent = [1570.0, 1590.0, 0.0, 0.60]
     l = ['Raman detuning [kHz]', 'Bright Fraction', '%s, $t_{a}$: %d us, $t_{pre}$: %d ms'%(file_name[-14:-8],arm_time*1e6,pre_time)]
 
     # print out relevant parameters
