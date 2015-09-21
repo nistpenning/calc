@@ -29,6 +29,7 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
+base_path = '/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/squeeze_after_image_II'
 fns = [os.listdir(base_path)[i] for i in [7,6]]
 J1ks = (414.24*3.03)*np.ones(np.shape(fns))
 Ncals = 1.74 * np.ones(np.shape(fns))  # #photons per ion per ms
@@ -102,13 +103,18 @@ for i,fn in enumerate(fns):
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
-
+data_for_save = []
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.1f} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l)
+    if save is True:
+        data_for_save.append(psis[i])
+        data_for_save.append(spin_noise_dB)
+        data_for_save.append(spin_noise_err_dB)
+        
 
 #plt.yscale('log')
 #plt.xscale('log')
@@ -118,9 +124,12 @@ plt.ylabel(r"Spin variance $(\Delta S_\psi)^2/N/4$ [dB]")
 plt.grid('off')
 plt.legend(loc=0,fontsize=10)
 
+if save is True:
+    ps.save_data_txt("var_data.txt", data_for_save)
+
 #________________________________________________________________________
 #add some theory curves
-G_el =  57.1
+G_el =  38.1
 G_ud =  8.56
 G_du =  6.05
 
