@@ -20,7 +20,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
 save = False
-save_txt = True
+save_txt = False
 name = "depolarizationVsN_noJ_fig.pdf"
 
 # containers for data sets
@@ -137,19 +137,22 @@ plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")
 
 #________________________________________________________________________
 #add some theory curves
-G_el =  57.1 * 1.0
+G_el =  57.1 
 G_ud =  8.56157395
 G_du =  6.04795106
 G_tot = 35.9  # per s
+G_r = G_ud + G_du
+
 
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
-spem = np.exp(-G_tot*ti)
-plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
-
+#spem = np.exp(-G_tot*ti)
+#plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
+G_els = 57.1 + np.array([120.0,100.0,45.0])
 colors = ['k', ps.red, ps.blue, ps.purple]
 for j,Jbar1k in enumerate(J1ks):
+    print(0.5*(G_els[j] + G_r))
     Jbar = Jbar1k/(0.002/ti)
-    out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_el, G_ud, G_du)
+    out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_els[j], G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     #plt.plot(ti*1e3,C_coherent_pred,c=colors[j])
     plt.plot(ti*1e3,C_coherent_pred,color=colors[j])
