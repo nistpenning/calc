@@ -17,13 +17,19 @@ import squeeze_func_time as squ
 
 #options
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_9_18"
 
+
 #theory calc info
-G_el =  60.56
+G_el =  67.10
 G_ud =  10.07
 G_du =  7.10
+G_tot = 42.1
+#adjust for extra decohrence
+G_tot = 0.5*(67.10+17.1+38.6)
+print(G_tot)
+G_el = 67.10 + 38.6
 
 # containers for data sets
 psis=[]
@@ -152,18 +158,17 @@ for i,name in enumerate(names):
     plt.plot(psi*180/pi,R_dB,color=cs[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 
-plt.show()
-
-plt.close()
-int_times = np.array(its)*1e3
-plt.plot(int_times,SE,'o')
-plt.ylabel('Spectroscopic Enhancement [dB]')
-plt.xlabel('Interaction time [ms]')
-plt.show()
-
 if save is True:
     os.chdir('..')
     plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)
+
+plt.show()
+plt.close()
+int_times = np.array(its)*1e3
+plt.plot(int_times,SE,'o')
+plt.ylabel('Spectroscopic Enhancement [dB]')
+plt.xlabel('Interaction time [ms]')
+plt.show()
