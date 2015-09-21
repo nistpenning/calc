@@ -12,12 +12,15 @@ import matplotlib.pyplot as plt
 import hfGUIdata as hf
 importlib.reload(hf)
 import plot_style as ps
+import plot_model_fit as pt
+importlib.reload(pt)
 import squeeze_func_time as squ
 
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = True
+save = False
+save_txt = True
 name = "depolarizationVsN_noJ_fig.pdf"
 
 # containers for data sets
@@ -115,9 +118,18 @@ names.append("phaseflop_datasets_7_22_L296")
 #________________________________________________________________________
 # visualizing the experimental data
 #fig = plt.figure(figsize=(6.0,4.5))
+data_for_save = []
 for i,data in enumerate(ats):
     l = "N: {:.0f}".format(Ns[i])
     plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
+    if save_txt is True:
+        data_for_save.append(2e-3*ats[i])
+        data_for_save.append(Cs[i])
+        data_for_save.append(Cerrs[i])
+if save_txt is True:
+    names = "t_ms_21, Sx_21, Sx_err_21, t_ms_66, Sx_66, Sx_err_66, t_ms_100, Sx_100, Sx_err_100"
+    pt.save_data_txt("Sx_data.txt",data_for_save, col_names=names)
+        
 plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"Interaction time  $\tau$ [ms]")
 plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")

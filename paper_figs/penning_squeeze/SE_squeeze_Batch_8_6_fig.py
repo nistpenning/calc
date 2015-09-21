@@ -16,7 +16,7 @@ import squeeze_func_time as squ
 
 #options
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_8_6"
 
 # containers for data sets

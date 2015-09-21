@@ -6,6 +6,7 @@ Created on Tue Jun 02 10:19:20 2015
 """
 
 import numpy as np
+import itertools
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
@@ -19,17 +20,24 @@ def auto_extent(x,y):
     axis = [xm-0.05*full_x, xx + 0.1*full_x, ym-0.1*full_y, yx+0.1*full_y]
     return axis
 
-def save_data_txt(filename, out_list):
+def save_data_txt(filename, out_list, col_names=None):
     """
     filename: string with filename, including extenstion
     out_array: list with different data to be output
+    col_names: comma delimited string of column names
     """
-    s=''
+    if col_names is None:    
+        s=''
+    else:
+        s = col_names +" \n"
     fh = open(filename, 'w+')
-    out = map(list, zip(*out_list))
+    out = map(list, itertools.zip_longest(*out_list))
     for row in out:
         for i in row:
-            s = s+'%f,'% (i)
+            if i is None:
+                s = s + ","
+            else:
+                s = s+'%f,'% (i)
         s = s+" \n"
     fh.write(s)
     fh.close()
