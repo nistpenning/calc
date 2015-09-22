@@ -14,6 +14,7 @@ import hfGUIdata as hf
 import plot_style as ps
 import squeeze_func_time as squ
 
+save = False
 base = os.getcwd()
 
 os.chdir("/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339")
@@ -59,6 +60,7 @@ Sz_array = 2*((det_array-dm)/k) - 1.0
 
 histim = []
 bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.1,0.06]]
+#bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.15,0.15]]
 #for row in [det_array[i] for i in [17]]:
 data_sets = [6,11,19]
 
@@ -70,27 +72,28 @@ for j,row in enumerate([Sz_array[i] for i in data_sets]):
     #h, bin_edges = np.histogram(row, density=False, bins=bins[j])
     #histim.append(h)
     l = r"$\tau$ = {0:.2f}".format(2e-3*arm_time[data_sets[j]])
-    plt.hist(row,bins[j],histtype='stepfilled',
-             alpha=0.35, normed=False,label=l)
+    plt.hist(row,bins[j],
+             alpha=0.6, normed=False,label=l)
     taus.append(2e-3*arm_time[data_sets[j]])
     hists.append(row)
     bin_list.append(bins[j])
              
 #plt.imshow(np.transpose(histim), aspect='auto', origin='lower')
 
-plt.hist()
-
-plt.ylabel("Number of trials")
-plt.xlabel(r"Spin projection $2 S_x/N$" )
-#plt.title("2015-08-11 -- N: {0:.0f}".format(N))
-plt.axis([-1.1,1.1,0,90])
-plt.legend(fontsize=12)
 plt.grid('off')
 
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
-plt.savefig("Sx_hist_8_11.pdf",bbox='tight',transparent=True)
+plt.ylabel("Experiments")
+plt.xlabel(r"Spin projection 2$S_x$/N" )
+#plt.title("2015-08-11 -- N: {0:.0f}".format(N))
+plt.axis([-1.1,1.1,0,135])
+#plt.legend(fontsize=12)
+plt.grid('off')
 
-ps.save_data_txt('histdata.txt', hists)
+if save is True:
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig("Sx_hist_8_11.pdf",bbox='tight',transparent=True)
+    
+    ps.save_data_txt('histdata.txt', hists)
 
 os.chdir(base)
 #ps.save_data_txt('histdata.txt', histim)
