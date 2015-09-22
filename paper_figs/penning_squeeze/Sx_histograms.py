@@ -14,7 +14,7 @@ import hfGUIdata as hf
 import plot_style as ps
 import squeeze_func_time as squ
 
-save = False
+save = True
 base = os.getcwd()
 
 os.chdir("/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150811/Load306/depolarization/2015-08-11--19.53.00.339")
@@ -59,7 +59,7 @@ parse_raw_counts(det_array)
 Sz_array = 2*((det_array-dm)/k) - 1.0
 
 histim = []
-bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.1,0.06]]
+bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.1,0.05]]
 #bins = [np.arange(-1.1,1.1,n) for n in [0.15,0.15,0.15]]
 #for row in [det_array[i] for i in [17]]:
 data_sets = [6,11,19]
@@ -85,7 +85,7 @@ plt.grid('off')
 plt.ylabel("Experiments")
 plt.xlabel(r"Spin projection 2$S_x$/N" )
 #plt.title("2015-08-11 -- N: {0:.0f}".format(N))
-plt.axis([-1.1,1.1,0,135])
+plt.axis([-1.1,1.1,0,95])
 #plt.legend(fontsize=12)
 plt.grid('off')
 
@@ -97,3 +97,25 @@ if save is True:
 
 os.chdir(base)
 #ps.save_data_txt('histdata.txt', histim)
+
+plt.show()
+plt.close()
+subs = [0,0,0]
+for j,row in enumerate([Sz_array[i] for i in data_sets]):
+    #h, bin_edges = np.histogram(row, density=False, bins=bins[j])
+    #histim.append(h)
+    subs[j] = plt.subplot(3,1,j+1)
+    l = r"$\tau$ = {0:.2f}".format(2e-3*arm_time[data_sets[j]])
+    plt.hist(row,bins[j],
+             alpha=0.6, normed=False,label=l)
+    plt.grid('off')
+    plt.grid('off')
+    if j is not 2:
+        plt.setp( subs[j].get_xticklabels(), visible=False)
+
+plt.ylabel("Experiments")
+plt.xlabel(r"Spin projection 2$S_x$/N" )
+#plt.title("2015-08-11 -- N: {0:.0f}".format(N))
+plt.axis([-1.1,1.1,0,95])
+#plt.legend(fontsize=12)
+
