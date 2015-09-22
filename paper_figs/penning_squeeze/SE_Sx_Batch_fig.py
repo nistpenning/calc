@@ -19,9 +19,9 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
+save = True
 save_txt = False
-name = "depolarizationVsN_noJ_fig.pdf"
+name = "SxVsN_fig.pdf"
 
 # containers for data sets
 ats=[]
@@ -119,9 +119,10 @@ names.append("phaseflop_datasets_7_22_L296")
 # visualizing the experimental data
 #fig = plt.figure(figsize=(6.0,4.5))
 data_for_save = []
+shape = ['o','s','D']
 for i,data in enumerate(ats):
     l = "N: {:.0f}".format(Ns[i])
-    plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l)
+    plt.errorbar(2e-3*ats[i],Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shape[i])
     if save_txt is True:
         data_for_save.append(2e-3*ats[i])
         data_for_save.append(Cs[i])
@@ -130,8 +131,8 @@ if save_txt is True:
     names = "t_ms_21, Sx_21, Sx_err_21, t_ms_66, Sx_66, Sx_err_66, t_ms_100, Sx_100, Sx_err_100"
     pt.save_data_txt("Sx_data.txt",data_for_save, col_names=names)
         
-plt.legend(loc=3, fontsize=10)
-plt.xlabel(r"Interaction time  $\tau$ [ms]")
+#plt.legend(loc=3, fontsize=10)
+plt.xlabel(r"Interaction time  $\tau$ (ms)")
 plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")
 
 
@@ -150,7 +151,7 @@ ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 G_els = 57.1 + np.array([120.0,100.0,45.0])
 colors = ['k', ps.red, ps.blue, ps.purple]
 for j,Jbar1k in enumerate(J1ks):
-    print(0.5*(G_els[j] + G_r))
+    print("Total scattering rate: {0:0.2g}, Ratio to Spont. Emission {1:0.2g}".format(0.5*(G_els[j] + G_r),(0.5*(G_els[j] + G_r)-G_tot)/G_tot))
     Jbar = Jbar1k/(0.002/ti)
     out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_els[j], G_ud, G_du)
     C_coherent_pred = np.real(out[1])
@@ -158,12 +159,21 @@ for j,Jbar1k in enumerate(J1ks):
     plt.plot(ti*1e3,C_coherent_pred,color=colors[j])
 
 
-plt.axis([0,4.0,0.0,1.1])
+plt.axis([0,4.0,0.0,1.05])
 plt.grid('off')
 
 if save is True:
     plt.savefig(name,dpi=300,bbox='tight',transparent=True)
-    
+
+plt.show()
+plt.close()
+for j,Jbar1k in enumerate(J1ks):
+    Jbar = Jbar1k/(0.002/ti)
+    coh_ratio = Jbar/(0.5*(G_els[j] + G_r))
+    plt.plot(ti*1e3,coh_ratio,color=colors[j])
+plt.ylabel("Ratio of Jbar to Gamma_tot")
+plt.xlabel("Interaction time (ms)")
+
 #%%
 #play with histdata
 #plt.close()
