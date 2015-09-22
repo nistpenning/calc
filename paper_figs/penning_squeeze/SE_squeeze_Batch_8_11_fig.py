@@ -119,19 +119,20 @@ for i,data in enumerate(sig_obs):
 #plt.yscale('log')
 #plt.xscale('log')
 plt.axis([-1,181,-5,12])
-plt.xlabel(r"Tomography angle $\psi$ [deg]")
-plt.ylabel(r"Spin variance $(\Delta S_\psi)^2/N/4$ [dB]")
+plt.xlabel(r"Tomography angle $\psi$ (deg)")
+plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)")
 plt.grid('off')
-plt.legend(loc=0,fontsize=10)
+#plt.legend(loc=0,fontsize=10)
 
 if save is True:
     ps.save_data_txt("var_data.txt", data_for_save)
 
 #________________________________________________________________________
 #add some theory curves
-G_el =  38.1
+G_el =  58.46
 G_ud =  8.56
 G_du =  6.05
+G_el =  G_el + 120.0
 
 psi = np.linspace(0.001,pi,num=100) # radians
 

@@ -16,7 +16,7 @@ import squeeze_func_time as squ
 
 #options
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_8_6"
 
 # containers for data sets
@@ -113,17 +113,19 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-8,15])
-plt.xlabel(r"Tomography angle $\psi$ [deg]")
-plt.ylabel(r"Spin variance $(\Delta S_\psi)^2/N/4$ [dB]")
+plt.axis([-1,181,-9,15])
+plt.xlabel(r"Tomography angle $\psi$ (deg)")
+plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)")
 plt.grid('off')
-plt.legend(loc=0,fontsize=10)
+#plt.legend(loc=0,fontsize=10)
 
 #________________________________________________________________________
 #add some theory curves
 G_el =  58.46
 G_ud =  8.76
 G_du =  6.19
+#include additional decoherence term
+G_el = G_el + 45.0
 
 psi = np.linspace(0.001,pi,num=100) # radians
 

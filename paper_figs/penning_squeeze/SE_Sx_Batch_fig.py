@@ -133,7 +133,7 @@ if save_txt is True:
         
 #plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"Interaction time  $\tau$ (ms)")
-plt.ylabel(r"Spin Coherence  $ 2\left \langle S_x \right \rangle /N$")
+plt.ylabel(r"Spin Coherence  2$\left \langle S_x \right \rangle$/N")
 
 
 #________________________________________________________________________
