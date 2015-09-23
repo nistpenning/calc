@@ -3,8 +3,21 @@ __author__ = 'sbt'
 import unittest
 
 from scipy.constants import pi
+import numpy as np
+import importlib
 
-from mode_analysis_code import ModeAnalysis
+import mode_analysis_code as mac
+importlib.reload(mac)
+
+class TestHexLattice(unittest.TestCase):
+
+    def test_hex_lattice(self):
+        # confirm that a lattice with the right numbe of points is generated
+        for s in range(0, 10):
+            xs, ys = mac.ModeAnalysis.hex_lattice(shells=s)
+            npoints = 1 + 6 * np.sum(range(1, s + 1))
+            self.assertTrue(len(xs) == npoints)
+            self.assertTrue(len(xs) == npoints)
 
 
 class TestCalculationConsistency(unittest.TestCase):
@@ -15,7 +28,7 @@ class TestCalculationConsistency(unittest.TestCase):
         redefined procedures in the Mode Analysis init method.
         """
         print("Beginninng test 07/30/14")
-        a = ModeAnalysis(N=91, Vtrap=[-0.0, -203.0, -421.7], Ctrap=1.0, frot=177.0, Vwall=0.10,
+        a = mac.ModeAnalysis(N=91, Vtrap=[-0.0, -203.0, -421.7], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         a.run()
         self.assertTrue(a.wz / (2 * pi) * .90 <= .853E6 <= a.wz / (2 * pi) * 1.10)
@@ -23,7 +36,7 @@ class TestCalculationConsistency(unittest.TestCase):
         self.assertTrue(
             max(a.axialEvalsE) / (2 * pi) * .90 <= .853E6 <= max(a.axialEvalsE) / (2 * pi) * 1.10)
         print("Passed test 07/30/14 1")
-        b = ModeAnalysis(N=91, Vtrap=[-0.0, -423.0, -860.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
+        b = mac.ModeAnalysis(N=91, Vtrap=[-0.0, -423.0, -860.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         b.run()
         self.assertTrue(b.wz / (2 * pi) * .90 <= 1.253E6 <= b.wz / (2 * pi) * 1.10)
@@ -31,8 +44,7 @@ class TestCalculationConsistency(unittest.TestCase):
                         (2 * pi) * 1.10)
         print("Passed test 07/30/14 2")
 
-
-        c = ModeAnalysis(N=91, Vtrap=[-0.0, -863.0, -1740.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
+        c = mac.ModeAnalysis(N=91, Vtrap=[-0.0, -863.0, -1740.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         c.run()
 
@@ -41,8 +53,7 @@ class TestCalculationConsistency(unittest.TestCase):
           (2 * pi) * 1.10)
         print("Passed test 073014 3")
 
-
-        d = ModeAnalysis(N=91, Vtrap=[-0.0, -1194.0, -2047.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
+        d = mac.ModeAnalysis(N=91, Vtrap=[-0.0, -1194.0, -2047.0], Ctrap=1.0, frot=177.0, Vwall=0.10,
                          wall_order=2)
         d.run()
         self.assertTrue(d.wz / (2 * pi) * .90 <= 1.865E6 <= d.wz / (2 * pi) * 1.10)
@@ -50,14 +61,13 @@ class TestCalculationConsistency(unittest.TestCase):
           (2 * pi) * 1.10)
         print("Passed test 073014 4")
 
-
     def test_043015_axial_mode_consistency(self):
         """
         Checks to see if the axial frequency (which is identically equal to the COM mode eigenfrequency)
         agrees with the values obtained for varying frot in the lab on April 30th, 2015's data set.
         """
         print("beginning test 043015")
-        a = ModeAnalysis(N=331, Vtrap=[-0.0, -1750.0, -2000.0], Ctrap=1.0, frot=177.5, Vwall=2.13,
+        a = mac.ModeAnalysis(N=331, Vtrap=[-0.0, -1750.0, -2000.0], Ctrap=1.0, frot=177.5, Vwall=2.13,
                          wall_order=2)
         a.run()
         # Using units of hertz
@@ -81,5 +91,6 @@ class TestCalculationConsistency(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculationConsistency)
-    unittest.TextTestRunner(verbosity=1).run(suite)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(TestCalculationConsistency)
+    #unittest.TextTestRunner(verbosity=1).run(suite)
+    unittest.main(exit=False)

@@ -241,14 +241,12 @@ class ModeAnalysis:
         """
         # number of closed shells
         S = int((np.sqrt(9 - 12 * (1 - self.Nion)) - 3) / 6)
-        u0 = self.generate_2D_hex_lattice(S)
-        N0 = int(u0.size / 2)
-        x0 = u0[0:N0]
-        y0 = u0[N0:]
+        x0, y0 = self.hex_lattice(S)
+        N0 = x0.size
         Nadd = self.Nion - N0  # Number of ions left to add
         self.Nion = N0
 
-        pair = self.add_hex_shell(S + 1)  # generate next complete shell
+        pair = self.hex_shell(S + 1)  # generate next complete shell
         xadd = pair[0::2]
         yadd = pair[1::2]
 
@@ -451,18 +449,20 @@ class ModeAnalysis:
         configuration.
 
         :param u0: The position vector which defines the crystal.
+        :param method: {"bfgs", "newton"}
         :return: The equilibrium position vector.
         """
         newton_tolerance = 1e-34
         bfgs_tolerance = 1e-34
         if method is "newton":
-
             out = optimize.minimize(self.pot_energy, u0, method='Newton-CG', jac=self.force_penning,
                                     hess=self.hessian_penning,
                                     options={'xtol': newton_tolerance, 'disp': not self.quiet})
-        else:
+        elif method is "bfgs":
             out = optimize.minimize(self.pot_energy, u0, method='BFGS', jac=self.force_penning,
-                                    options={'gtol': bfgs_tolerance, 'disp': False})  # not self.quiet})
+                                    options={'gtol': bfgs_tolerance, 'disp': False})
+        else:
+            return
         return out.x
 
     def calc_axial_modes(self, pos_array):
@@ -569,8 +569,8 @@ class ModeAnalysis:
         :param pos_vect: The crystal position vector to be seen.
         """
         plt.plot(pos_vect[0:self.Nion], pos_vect[self.Nion:], '.')
-        plt.xlabel('x position [um]')
-        plt.ylabel('y position [um]')
+        plt.xlabel('x (um)')
+        plt.ylabel('y (um)')
         plt.axes().set_aspect('equal')
 
         plt.show()
@@ -799,22 +799,23 @@ class ModeAnalysis:
         return r, dx, dy, rsep
 
     @staticmethod
-    def generate_2D_hex_lattice(shells=1, scale=1):
+    def hex_lattice(shells=1, scale=1):
         """Generate closed shell hexagonal lattice with shells and scale spacing.
 
         :param scale: scales lattice
-        :return: a flattened xy position vector defining the 2d hexagonal lattice.
+        :return: x, y coordinates of a hexagonal lattice
         """
-        posvect = np.array([0.0, 0.0])  # center ion at [0,0]
-
-        for s in range(1, shells + 1):
-            posvect = np.append(posvect, ModeAnalysis.add_hex_shell(s))
-        posvect *= scale
-        return np.hstack((posvect[0::2], posvect[1::2]))
+        nion = 1 + 6 * np.sum(range(1, shells + 1))
+        shellsx = []
+        shellsy = []
+        for s in range(0, shells + 1):
+            x, y = ModeAnalysis.hex_shell(s)
+            shellsx.append(x)
+            shellsy.append(y)
+        return np.hstack(shellsx), np.hstack(shellsy)
 
     @staticmethod
-    # A slave function used to append shells onto a position vector
-    def add_hex_shell(s):
+    def hex_shell(s):
         """
         A method used by generate_2d_hex_lattice to add the s-th hex shell to the 2d lattice.
         Generates the sth shell.
@@ -822,21 +823,25 @@ class ModeAnalysis:
 
         :return: the position vector defining the ions in sth shell.
         """
-        a = list(range(s, -s - 1, -1))
-        a.extend(-s * np.ones(s - 1))
-        a.extend(list(range(-s, s + 1)))
-        a.extend(s * np.ones(s - 1))
+        if(s==0):
+            x = np.array([0])
+            y = np.array([0])
+        else:
+            a = list(range(s, -s - 1, -1))
+            a.extend(-s * np.ones(s - 1))
+            a.extend(list(range(-s, s + 1)))
+            a.extend(s * np.ones(s - 1))
 
-        b = list(range(0, s + 1))
-        b.extend(s * np.ones(s - 1))
-        b.extend(list(range(s, -s - 1, -1)))
-        b.extend(-s * np.ones(s - 1))
-        b.extend(list(range(-s, 0)))
+            b = list(range(0, s + 1))
+            b.extend(s * np.ones(s - 1))
+            b.extend(list(range(s, -s - 1, -1)))
+            b.extend(-s * np.ones(s - 1))
+            b.extend(list(range(-s, 0)))
 
-        x = np.sqrt(3) / 2.0 * np.array(b)
-        y = 0.5 * np.array(b) + np.array(a)
-        pair = np.column_stack((x, y)).flatten()
-        return pair
+            x = np.sqrt(3) / 2.0 * np.array(b)
+            y = 0.5 * np.array(b) + np.array(a)
+
+        return x, y
 
 ########################################################################################
 
