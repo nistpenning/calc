@@ -15,6 +15,8 @@ import scipy.optimize as opt
 import calc.tools.xkcd_rgb as xrgb
 import calc.tools.matplotlib_rc_chooser as mplrc
 
+
+
 def auto_extent(x,y):
     xm = np.min(x)
     ym = np.min(y)
@@ -48,7 +50,8 @@ def plot_fit(x,y,fitfunc,fitguess,
             save=False,
             show=True,
             fmt_data='o',
-            fmt_fit='-'):
+            fmt_fit='-',
+            mplrc_mode='default'):
     """Plot & fit with supplied model.
 
     :param x: numpy.array
@@ -63,6 +66,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     :param show: show data and fit on plot, True or False
     :param fmt_data: matplotlib plot format string; default 'o'
     :param fmt_fit: matplotlib plot format string; default '-'
+    :param mplrc_mode: matplotlib RC mode
     :return: [[fit_param], [fit_error]]
         fit_param is vector of fit coefficients of length N
         fit_error sqrt of the diagonals of the covariance matrix (1 sigma confidence interval)
@@ -118,7 +122,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     fit_message = "fit: {} +/- {} (1 sigma)".format(poptf, perrf)
 
     if show is True:
-        mplrc.set('default')
+        mplrc.set_rc(mplrc_mode)
         # build figure
         if axis == None:
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]

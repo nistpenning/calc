@@ -11,7 +11,7 @@ import calc.tools.xkcd_rgb as xrgb
 def set_rc(mode='qunat'):
     """ Set matplotlib RC parameters for different plotting applications.
 
-    :param mode: {'default', 'quant', 'seaborn'
+    :param mode: {'default', 'quant', 'seaborn'}
     :return: none
     """
 
