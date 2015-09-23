@@ -17,8 +17,8 @@ import squeeze_func_time as squ
 
 #options
 verbose = True
-save = True
-img_name = "spinNoise_9_18"
+save = False
+img_name = "spinNoise_9_23"
 
 
 #theory calc info
@@ -42,9 +42,9 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [8,9]]
+fns = [os.listdir(base_path)[i] for i in [-1]]
 J1ks = (2316.0)*np.ones(np.shape(fns))
-Ncals = 0.85 * np.ones(np.shape(fns))  # #photons per ion per ms
+Ncals = 0.85* np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -136,7 +136,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-10,13])
+plt.axis([-1,181,-10,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
