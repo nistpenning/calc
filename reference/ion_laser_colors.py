@@ -392,12 +392,15 @@ opsl_path = "C:\\Users\\jwbritto\\Google Drive\\0workSync\\reference\\tomi_laser
 exec(open(opsl_path).read())
 
 # qubit and clock ions
-# http://tf.boulder.nist.gov/general/pdf/2765.pdf
+# from ref [0] unless otherwise noted
+# [0] http://tf.boulder.nist.gov/general/pdf/2765.pdf
+# [1] http://link.aps.org/doi/10.1103/PhysRevA.85.012502
 ion_qubits = [Species("Be+", {313:"LC,RA",
                                235:"PI"}),
         Species("Mg+", {280:"LC,RA",
                         285:"PI"}),
-        Species("Yb+", {399:"PI",
+        Species("Yb+", {297:"PI,LC[1]",
+                        399:"PI",
                         556:"PI",
                         328:"LC,RA",
                         369:"LC,RA",
@@ -425,10 +428,10 @@ neutrals = [Species("He*", {1083:"LC,DP"}),
                Species("Li", {671:"LC,RA,DP"})]
 
 #plotit_all(lasers, ions)
-plotit_uv_zoom(lasers_nist, ion_qubits,
-               fig_title="OPSLs at NIST (Burd)")
+# plotit_uv_zoom(lasers_nist, ion_qubits,
+#                fig_title="OPSLs at NIST (Burd)")
 # plotit_uv_zoom(lasers_tomi_tested, species_empty,
 #                fig_title="OPSLs Demonstrated by tut.fi (2015)")
-# plotit_uv_zoom(lasers_tomi_prospects, species_empty,
-#                fig_title="OPSLs Predicted by tut.fi")
+plotit_uv_zoom(lasers_tomi_prospects, species_empty,
+               fig_title="Anticipated OPSLs (2015, tut.fi)")
 
