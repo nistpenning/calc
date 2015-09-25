@@ -134,8 +134,10 @@ for i,data in enumerate(ats[0:3]):
                 hold=hold,
                 labels=pl)
     pout_deg = sqrt(pout)/np.mean(p_counts[i])*180/pi
+    pout_var_rad = pout/np.mean(p_counts[i])**2
     plt.show()
 print("Added std dev (degrees): {0:.4g} t^2, {1:.4g} t^4)".format(pout_deg[0],pout_deg[1]))
+print("Added var (rad^2/ms): {0:.4g} t^2, {1:.4g} t^4)".format(pout_var_rad[0],pout_var_rad[1]))
                 
 """
 #________________________________________________________________________
