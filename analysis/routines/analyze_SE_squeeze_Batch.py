@@ -19,7 +19,7 @@ import squeeze_func_time as squ
 verbose = True
 save = False
 img_name = "spinNoise_9_24"
-files_to_use = [0]
+files_to_use = []
 J1k = 1938.0    
 Ncal = 1.0347
 
@@ -134,7 +134,7 @@ for i,fn in enumerate(fns):
 # visualizing the experimental data
 
 for i,data in enumerate(sig_obs):
-    l = r"$\tau=$ {:.1f} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
+    l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
@@ -164,8 +164,11 @@ for i,name in enumerate(names):
     plt.plot(psi*180/pi,R_dB,color=cs[i])
     plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--',label="Jy_dephasing")
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
+    print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
 plt.legend(loc=0,fontsize=10)
+if len(names) is 1:
+    plt.title(names[0])
 
 if save is True:
     os.chdir('..')
