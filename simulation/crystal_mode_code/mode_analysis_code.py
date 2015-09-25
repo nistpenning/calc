@@ -843,6 +843,28 @@ class ModeAnalysis:
 
         return x, y
 
+    @staticmethod
+    def n_hexagonal_lattice(nshells):
+        """Number of lattice sites for a fully fully filled hexagonal lattice
+        with nshells. A single lattice site lies at the center.
+
+        :param nshells: number of hexagonal shells
+        :return: number of lattice sites
+        """
+        return 1 + 6 * np.sum(range(1, nshells + 1))
+
+    @staticmethod
+    def s_hexagonal_lattice(nions):
+        """Number of lattice sites for fully filled hexagonal lattice
+        nearest to nions.
+        :param nshells: number of hexagonal shells
+        :return: number of lattice sites
+        """
+        for s in range(0,10):
+            ntest = ModeAnalysis.n_hexagonal_lattice(s)
+            if nions < ntest:
+                return s-1
+
 ########################################################################################
 
 if __name__ == "__main__":
