@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 #inputs
-Ncal = 1.034
+Ncal = 0.85
 files_to_use = [-1]
 
 verbose = False
