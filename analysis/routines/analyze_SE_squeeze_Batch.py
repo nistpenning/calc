@@ -18,10 +18,10 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = False
-img_name = "spinNoise_9_23"
-files_to_use = [-2]
-J1k = 2316.0    
-Ncal = 0.85
+img_name = "spinNoise_9_24"
+files_to_use = [0]
+J1k = 1938.0    
+Ncal = 1.0347
 
 #theory calc info
 G_el =  67.10
@@ -31,7 +31,7 @@ G_tot = 42.1
 #adjust for extra decohrence
 G_tot = 0.5*(67.10+17.1+ 30.06)
 print(G_tot)
-G_el = 67.10 + 30.0
+G_el = 67.10 + 38.0
 
 #added noise from Jy noise fit
 A = 0.001859  # rad^2/ms^2
