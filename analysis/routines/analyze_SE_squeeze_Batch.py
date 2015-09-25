@@ -19,7 +19,9 @@ import squeeze_func_time as squ
 verbose = True
 save = False
 img_name = "spinNoise_9_23"
-
+files_to_use = [1,3]
+J1k = 1938.0
+Ncal = 1.035
 
 #theory calc info
 G_el =  67.10
@@ -30,6 +32,10 @@ G_tot = 42.1
 G_tot = 0.5*(67.10+17.1+38.6)
 print(G_tot)
 G_el = 67.10 + 38.6
+
+#added noise from Jy noise fit
+A = 0.001652  # rad^2/ms^2
+B = 0.0001096 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -42,9 +48,9 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [1]]
-J1ks = (1940.0)*np.ones(np.shape(fns))
-Ncals = 1.2 * np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in files_to_use]
+J1ks = J1k*np.ones(np.shape(fns))
+Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -140,8 +146,6 @@ plt.axis([-1,181,-10,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
-plt.legend(loc=0,fontsize=10)
-
 
 #________________________________________________________________________
 #add some theory curves
@@ -154,12 +158,14 @@ for i,name in enumerate(names):
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
-    R_add = R + 1.0*sin(psi)
-    R_dB = 10*np.log10(R)
+    R_add = R + (A*(its[i]*1e3)**2)*N * sin(psi) + (B*(its[i]*1e3)**4)*N * sin(psi)
+    R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=cs[i])
-    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
+    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--',label="Jy_dephasing")
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
+
+plt.legend(loc=0,fontsize=10)
 
 if save is True:
     os.chdir('..')
