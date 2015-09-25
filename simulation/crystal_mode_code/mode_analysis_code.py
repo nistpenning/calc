@@ -465,6 +465,36 @@ class ModeAnalysis:
             return
         return out.x
 
+    def calc_axial_modes_simple(self, pos_array):
+        """Solution for axial eigenvalues. Based on Adam Keith's 2011
+        MATLAB code.
+
+        :param pos_array: Position vector which defines the crystal to be analyzed.
+
+        :return: Array of eigenvalues, Array of eigenvectors
+        """
+        m = self.m[0]
+        N = int(pos_array.size / 2)
+        A = np.empty((N, N))
+        q = self.q
+        k_e = self.k_e
+        x = pos_array[0:N]
+        y = pos_array[N:]
+        dx = x.reshape((x.size, 1)) - x
+        dy = y.reshape((y.size, 1)) - y
+        rsep = np.sqrt(dx ** 2 + dy ** 2)
+
+        with np.errstate(divide='ignore'):
+            rsep3 = np.where(rsep != 0., rsep**(-3), 0)
+
+        A1 = np.diag((2 * q * self.Coeff[2] - k_e * q ** 2 * np.sum(rsep3, axis=0)))
+        A2 = k_e * q ** 2 * rsep3
+        A[:] = (A1 + A2) / m
+
+        eval, evect = np.linalg.eig(A)
+        eval = np.lib.scimath.sqrt(eval)
+        return eval, evect
+
     def calc_axial_modes(self, pos_array):
         """
         Calculate the modes of axial vibration for a crystal defined
@@ -744,8 +774,7 @@ class ModeAnalysis:
         newcrys = np.concatenate((xmod, ymod))
         return newcrys
 
-    @staticmethod
-    def nan_to_zero(my_array):
+    def nan_to_zero(self, my_array):
         """
         Converts all elements of an array which are np.inf or nan to 0.
 
@@ -755,8 +784,7 @@ class ModeAnalysis:
         my_array[np.isinf(my_array) | np.isnan(my_array)] = 0
         return my_array
 
-    @staticmethod
-    def save_positions(u):
+    def save_positions(self, u):
         """
         Takes a position vector and saves it as a text file.
         :param u: position vector to store.
@@ -764,14 +792,12 @@ class ModeAnalysis:
         """
         np.savetxt("py_u.csv", u, delimiter=",")
 
-    @staticmethod
-    def crystal_spacing_fit(r, offset, curvature):
+    def crystal_spacing_fit(self, r, offset, curvature):
         """
         """
         return np.sqrt(2 / (np.sqrt(3) * offset * np.sqrt(1 - (r * curvature) ** 2)))
 
-    @staticmethod
-    def find_radial_separation(pos_array):
+    def find_radial_separation(self, pos_array):
         """
         When given the position array of a crystal,
         returns 4 arrays:
@@ -798,8 +824,21 @@ class ModeAnalysis:
 
         return r, dx, dy, rsep
 
-    @staticmethod
-    def hex_lattice(shells=1, scale=1):
+class HexLattice():
+    """
+    Class defining methods relating to a perfect, closed 2D hexagonal lattice.
+    """
+    def __init__(self, shells, scale=1):
+        self.x, self.y = self.hex_lattice(shells, scale)
+
+    def get_vertices(self):
+        """Return coordinates of lattice vertices
+
+        :return: (x, y)
+        """
+        return self.x, self.y
+
+    def hex_lattice(self, shells=1, scale=1):
         """Generate closed shell hexagonal lattice with shells and scale spacing.
 
         :param scale: scales lattice
@@ -809,21 +848,20 @@ class ModeAnalysis:
         shellsx = []
         shellsy = []
         for s in range(0, shells + 1):
-            x, y = ModeAnalysis.hex_shell(s)
+            x, y = HexLattice.__hex_shell(s)
             shellsx.append(x)
             shellsy.append(y)
         return np.hstack(shellsx), np.hstack(shellsy)
 
     @staticmethod
-    def hex_shell(s):
-        """
-        A method used by generate_2d_hex_lattice to add the s-th hex shell to the 2d lattice.
-        Generates the sth shell.
-        :param s: the sth shell to be added to the lattice.
+    def __hex_shell(s):
+        """ Generates the sth shell of a 2-d hexagonal lattice.
 
-        :return: the position vector defining the ions in sth shell.
+        :param s: shell number
+
+        :return: (x, y) vertex coordinates
         """
-        if(s==0):
+        if s==0:
             x = np.array([0])
             y = np.array([0])
         else:
@@ -840,29 +878,29 @@ class ModeAnalysis:
 
             x = np.sqrt(3) / 2.0 * np.array(b)
             y = 0.5 * np.array(b) + np.array(a)
-
         return x, y
 
     @staticmethod
-    def n_hexagonal_lattice(nshells):
-        """Number of lattice sites for a fully fully filled hexagonal lattice
+    def get_nvert_from_nshells(nshells):
+        """Number of vertices for a fully filled hexagonal lattice
         with nshells. A single lattice site lies at the center.
 
         :param nshells: number of hexagonal shells
-        :return: number of lattice sites
+        :return: number of vertices
         """
         return 1 + 6 * np.sum(range(1, nshells + 1))
 
     @staticmethod
-    def s_hexagonal_lattice(nions):
-        """Number of lattice sites for fully filled hexagonal lattice
-        nearest to nions.
-        :param nshells: number of hexagonal shells
-        :return: number of lattice sites
+    def get_nshells_from_nvert(nvert):
+        """Minimum number of closed shells for hexagonal lattice
+        that contains at least nvert vertices.
+
+        :param nvert: number of vertices
+        :return: number of shells
         """
-        for s in range(0,10):
-            ntest = ModeAnalysis.n_hexagonal_lattice(s)
-            if nions < ntest:
+        for s in range(0, 20):
+            ntest = HexLattice.get_nvert_from_nshells(s)
+            if nvert < ntest:
                 return s-1
 
 ########################################################################################

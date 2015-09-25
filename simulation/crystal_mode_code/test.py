@@ -14,9 +14,11 @@ class TestHexLattice(unittest.TestCase):
         # confirm that a lattice with the right number of points is generated
         # by the hex_lattice() routine; compare with the analytic answer
         for s in range(0, 10):
-            xs, ys = mac.ModeAnalysis.hex_lattice(shells=s)
-            npoints = mac.ModeAnalysis.n_hexagonal_lattice(nshells=s)
-            self.assertTrue(len(xs) == npoints)
+            lat = mac.HexLattice(s)
+            xs, ys = lat.get_vertices()
+            self.assertTrue(len(xs) == len(ys))
+            nvert = mac.HexLattice.get_nvert_from_nshells(nshells=s)
+            self.assertTrue(len(xs) == nvert)
 
 
 # class TestCalculationConsistency(unittest.TestCase):
