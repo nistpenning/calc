@@ -17,19 +17,19 @@ from scicons import pi, hbar, m_Be, k_b
 import hfGUIdata
 importlib.reload(hfGUIdata)
        
-folders = hfGUIdata.get_immediate_subdirectories(os.getcwd())
+folders = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [-1]]
 
 #known inputs
 # 9 shells
-F12 = 2*pi*120.0e3  # per sec
+F12 = 2*pi*185.5e3  # per sec
 lACSS = 2*pi*20.3e3  # per sec
 uACSS = 2*pi*20.3e3  # per sec
 
-Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, 2*pi*1580.0*1e3)
+Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, 2*pi*1573.0*1e3)
 Gamma = Gamma
 wa_hold = False
 
-Nion = 240
+Nion = 150
 
 print("F0: {}".format(F0))
 print('Gamma: {}'.format(Gamma))  
@@ -46,7 +46,7 @@ def analysis():
     fz_str = 'raman%raman_fz'
     w_a = hfGUIdata.get_ionProp_value(fz_str)
     w_a = 2*pi*w_a*1e3
-    w_a = 2*pi*1580.8*1e3
+    w_a = 2*pi*1571.0*1e3
     
     #Fit guesses
     K0 = (F0/ sqrt(2.0))**2 / (hbar*2*m_Be*Nion*w_a) #sqrt(2) tries to account for DW factor
@@ -64,7 +64,7 @@ def analysis():
     hold = np.array([False, True, True, wa_hold])
 
     #plot labels
-    extent = [1570.0, 1590.0, 0.0, 0.60]
+    extent = [1564.0, 1580.0, 0.0, 0.60]
     l = ['Raman detuning [kHz]', 'Bright Fraction', '%s, $t_{a}$: %d us, $t_{pre}$: %d ms'%(file_name[-14:-8],arm_time*1e6,pre_time)]
 
     # print out relevant parameters

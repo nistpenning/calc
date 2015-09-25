@@ -7,7 +7,7 @@ Created on Thu Jul 23 14:42:25 2015
 
 import os, shutil, importlib
 import numpy as np
-from numpy import pi, sqrt
+from numpy import pi, sqrt, sin
 import matplotlib.pyplot as plt
 
 import hfGUIdata as hf
@@ -42,9 +42,9 @@ Ns = []
 names = []
 
 base_path = os.getcwd()
-fns = [os.listdir(base_path)[i] for i in [-1]]
-J1ks = (2316.0)*np.ones(np.shape(fns))
-Ncals = 0.85* np.ones(np.shape(fns))  # #photons per ion per ms
+fns = [os.listdir(base_path)[i] for i in [1]]
+J1ks = (1940.0)*np.ones(np.shape(fns))
+Ncals = 1.2 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #%%
 #_____________________________________________________________________
@@ -154,8 +154,11 @@ for i,name in enumerate(names):
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
+    R_add = R + 1.0*sin(psi)
     R_dB = 10*np.log10(R)
+    R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=cs[i])
+    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 
 if save is True:
