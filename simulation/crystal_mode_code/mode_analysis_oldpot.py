@@ -217,7 +217,7 @@ class ModeAnalysis():
         """Calculate Axial Mode Eigenvalues and Eigenvectors
 
         Assumes all ions same mass"""
-        # A = np.empty((self.Nion, self.Nion))
+        # A = np.empty((self.n, self.n))
 
         x = pos_array[0:self.Nion]
         y = pos_array[self.Nion:]
@@ -364,7 +364,7 @@ if __name__ == "__main__":
 #    print(np.min(Evals))
 #    plt.close()
 #    a.show_crystal(a.u)
-##    print(a.Nion)
+##    print(a.n)
 #    
 ##   get the data    
 #    r = np.zeros(np.shape(a.r))

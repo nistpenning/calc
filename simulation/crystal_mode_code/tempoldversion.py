@@ -460,7 +460,7 @@ if __name__ == "__main__":
         for w in np.linspace(185, 220, 10):
             a = ModeAnalysis(shells=s, Vtrap=[0.0, -1750.0, -2000.0], Ctrap=1.0, frot=w, Vwall=2.13, wall_order=2)
             a.run()
-            print(a.Nion)
+            print(a.n)
             Evals = a.Evals
             # print(Evals)
             print("Trying w=", w)
@@ -470,7 +470,7 @@ if __name__ == "__main__":
                 # else:
                 # print(Evals[0])
             if [x for x in Evals if np.imag(x) != 0] != []:
-                ions.append(a.Nion)
+                ions.append(a.n)
                 transistionfreq.append(w)
                 # print([x for x in Evals if np.imag(x) != 0])
                 break
@@ -518,7 +518,7 @@ if __name__ == "__main__":
     # #print(np.min(Evals))
     # #plt.close()
     # a.show_crystal(a.u)
-    # # print(a.Nion)
+    # # print(a.n)
     #
     # #   get the data
     # r = np.zeros(np.shape(a.r))
