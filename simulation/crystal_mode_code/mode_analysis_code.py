@@ -1,6 +1,7 @@
 import sys
 import time
 import subprocess
+from contracts import contract
 
 from scipy.constants import pi
 import numpy as np
@@ -23,21 +24,26 @@ code will make different crystals with the same potential energy. That is,
 crystal are degenerate when reflecting over the axes.
 """
 
+
 class HexLattice:
     """
     Class defining methods relating to a perfect, closed 2D hexagonal lattice.
     """
-    def __init__(self, shells, scale=1):
-        self.x, self.y = self.hex_lattice(shells, scale)
+    def __init__(self, shells: 'int,>=0', scale=1):
+        self._x, self._y = HexLattice.hex_lattice(shells, scale)
 
-    def get_vertices(self):
-        """Return coordinates of lattice vertices
+    @property
+    @contract(returns='tuple(array[N],array[N]),N>0')
+    def xy(self):
+        """coordinates of lattice vertices
 
         :return: (x, y)
         """
-        return self.x, self.y
+        return self._x, self._y
 
-    def hex_lattice(self, shells=1, scale=1):
+    @staticmethod
+    @contract(shells='int,>=0', scale='>0', returns='tuple(array[N],array[N]),N>0')
+    def hex_lattice(shells, scale=20e-5):
         """Generate closed shell hexagonal lattice with shells and scale spacing.
 
         :param scale: scales lattice
@@ -47,13 +53,14 @@ class HexLattice:
         shellsx = []
         shellsy = []
         for s in range(0, shells + 1):
-            x, y = HexLattice.__hex_shell(s)
+            x, y = HexLattice.hex_shell(s)
             shellsx.append(x)
             shellsy.append(y)
-        return np.hstack(shellsx), np.hstack(shellsy)
+        return np.hstack(shellsx)*scale, np.hstack(shellsy)*scale
 
     @staticmethod
-    def __hex_shell(s):
+    @contract(s='int,>=0', returns='tuple(array[N],array[N]),N>0')
+    def hex_shell(s: int):
         """ Generates the sth shell of a 2-d hexagonal lattice.
 
         :param s: shell number
@@ -80,6 +87,7 @@ class HexLattice:
         return x, y
 
     @staticmethod
+    @contract(nshells='int,>=0', returns='>=0')
     def get_nvert_from_nshells(nshells):
         """Number of vertices for a fully filled hexagonal lattice
         with nshells. A single lattice site lies at the center.
@@ -90,6 +98,7 @@ class HexLattice:
         return 1 + 6 * np.sum(range(1, nshells + 1))
 
     @staticmethod
+    @contract(nvert='int,>=0', returns='>=0')
     def get_nshells_from_nvert(nvert):
         """Minimum number of closed shells for hexagonal lattice
         that contains at least nvert vertices.
@@ -102,19 +111,23 @@ class HexLattice:
             if nvert < ntest:
                 return s-1
 
+
 class PenningTrap:
     """
     Penning trap configuration and potentials.
     """
-    c_v_default = [0, -1750, -2000]
+    _v_default = [0, -1750, -2000]
     # see Carson Teale's final paper
-    c_geom2014teal = [[0.0756, 0.5157, 0.4087],
+    _geom2014teal = [[0.0756, 0.5157, 0.4087],
                     [-0.0001, -0.005, 0.005],
                     [1.9197e3, 3.7467e3, -5.6663e3],
                     [0.6738e7, -5.3148e7, 4.641e7]]
 
-    def __init__(self, v=c_v_default, b=4.4588, geom=c_geom2014teal,
-               wall_f=180e3, wall_v=5, wall_r=0.01, wall_order=2, verbose=True):
+    def __init__(self,
+                 v: 'array[1x3]'=_v_default, b:'>0'=4.4588,
+                 geom: 'array[3x4]'=_geom2014teal,
+                 wall_f: '>0'=180e3, wall_v: '>=0'=5,
+                 wall_r: '>=0'=0.01, wall_order: 'int,>0,<4'=2):
         """
         :param v: [end cap, middle, center] potential on electrodes (Volts)
         :param b: magnetic field along z-axis (Tesla)
@@ -126,81 +139,169 @@ class PenningTrap:
         :param verbose: (bool)
         :return: none
         """
-        self.b = b
-        self.geom = np.array(geom) # formerly self.C
-        self.v = np.array(v)
+        self._b = b
+        self._geom = np.array(geom) # formerly self.C
+        self._v = np.array(v)
 
-        self.wall_v = wall_v
-        self.wall_f = wall_f
-        self.wall_order = wall_order
-        # wall order
-        if wall_order == 2:
-            self.wall_coef2 = self.q*self.wall_v*1612
-            self.wall_coef3 = 0
-        if wall_order == 3:
-            self.wall_coef2 = 0
-            self.wall_coef3 = self.q*self.wall_v*3e4
+        self._wall_v = wall_v
+        self._wall_f = wall_f
+        self._wall_order = wall_order
+        self._wall_r = wall_r
 
-        # potential at trap center
-        self.pot = np.dot(self.geom, self.v)  # formerly Coeff[2]
+    @property
+    def v(self) -> 'array[1x3]':
+        return self._v
 
-class PenningSingleIon:
-    c_amu = 1.66057e-27
-    c_q = 1.602176565E-19
-    c_m_Be = 9.012182 * c_amu
-    c_k_e = 8.9875517873681764E9
+    @property
+    def b(self) -> '>0':
+        return self._b
 
-    def __init__(self, trap, m=c_m_Be, q=c_q):
+    @property
+    def wall_v(self) -> '>0':
+        return self._wall_v
+
+    @property
+    def wall_f(self) -> '>0':
+        return self._wall_f
+
+    @property
+    def wall_order(self) -> 'int,>0,<4':
+        return self._wall_order
+
+    @property
+    def wall_r(self) -> '>0':
+        return self._wall_r
+
+    @property
+    def pot(self):
+        """potential at trap center
+        """
+        return np.dot(self.geom, self.v)  # formerly Coeff[2]
+
+    @property
+    def geom(self) -> 'array[3x4]':
+        return self._geom
+
+
+class Geonium(PenningTrap):
+    """
+    Single ion confined in a Penning trap.
+    """
+    _amu = 1.66057e-27
+    _q = 1.602176565E-19
+    _m_Be = 9.012182 * _amu
+    _k_e = 8.9875517873681764E9
+
+    @classmethod
+    def from_penning_trap(cls, penning_trap: PenningTrap,
+                          m: '>0'=_m_Be, q: '>0'=_q):
         """Physics related to a single isolated ion in Penning trap
 
-        :param trap: instance of class PenningTrap
+        :param t: instance of object PenningTrap
         :param m: ion mass (kilogram)
         :param q: ion charge (coulomb)
         :return: none
         """
-        self.trap = trap
-        self.m = m
-        self.q = q
-        self.cyc_f = q*trap.b/m/2/np.pi
-        self.ax_f = np.sqrt(2*q*self.trap.pot[2]/m)/2/np.pi
-        self.mag_f = \
+        # t is an instance of PenningTrap
+        t = penning_trap
+        return cls(t.v, t.b, t.geom, t.wall_f, t.wall_v, t.wall_r, t.wall_order,
+            m=cls.c_m_Be, q=cls.c_q)
+
+    def __init__(self,
+            v, b, geom, wall_f, wall_v, wall_r, wall_order,
+            m, q):
+        super().__init__(v, b, geom, wall_f, wall_v, wall_r, wall_order)
+        self._m = m
+        self._q = q
+        self._ax_f = np.sqrt(2*q*self.pot[2]/m)/2/np.pi
+        self._cyc_f = q*self.b/(2*np.pi*m)
+        self._mag_f = \
             0.5*(self.cyc_f - np.sqrt(self.cyc_f**2 - 2*self.ax_f ** 2))/2/np.pi
+
+        self.check_magnetron()
+
+        # wall order
+        if self.wall_order == 2:
+            self._wall_coef2 = self.q*self.wall_v*1612
+            self._wall_coef3 = 0
+        if wall_order == 3:
+            self._wall_coef2 = 0
+            self._wall_coef3 = self.q*self.wall_v*3e4
+
         # quadratic voltage at trap center
         self.V0 = (0.5*m*self.ax_f**2)/q/2/np.pi
 
+    @property
+    def m(self):
+        return self._m
 
-    def check_magnetron(ions):
+    @property
+    def q(self):
+        return self._q
+
+    @property
+    def cyc_f(self):
+        return self._cyc_f
+
+    @property
+    def ax_f(self):
+        return self._ax_f
+
+    @property
+    def mag_f(self):
+        return self._mag_f
+
+    @property
+    def wall_coef2(self):
+        return self._wall_coef2
+
+    @property
+    def wall_coef3(self):
+        return self._wall_coef3
+
+    def check_magnetron(self):
         """Penning does not trap for ion rotation frequency below magnetron freq.
 
         :param ions: ModeAnalysis object
         :return: bool
         """
-        if ions.wmag > ions.wrot:
+        if self.mag_f > self.wall_f:
             print("fmag ({:.0f}) > fwall ({:.0f})"
-                  .format(ions.wmag/2/np.pi, ions.wrot/2/np.pi))
+                  .format(self.mag_f, self.wall_f))
             return False
         else:
             return True
 
-    def get_theory_units(self):
-        """Calculate characteristic quantities and convert to a dimensionless
-        system
-        """
-        tu = {
-            # characteristic length
-            "l0": ((self.u_k_e * self.q**2)/(.5 * self.m * self.wz**2))**(1/3),
-            "t0": 1/self.wz,  # characteristic time
-            "v0": self.l0/self.t0,  # characteristic velocity
-            "E0": 0.5*self.m_Be*(self.wz**2)*self.l0**2, # characteristic energy
-            "wr": self.wrot/self.wz,  # dimensionless rotation
-            "wc": self.wcyc/self.wz,  # dimensionless cyclotron
-            "md": self.m/self.m_Be  # dimensionless mass
+    def __theory_unit_converter(self):
+        _length = ((self._k_e * self.q**2)/(.5 * self.m * (self.ax_f*2*np.pi)**2))**(1/3)
+        _time = 1/(2*np.pi*self.ax_f)
+        _velocity = _length/_time
+        _energy = .5*self.m*(self.ax_f*2*np.pi)**2*_length**2
+        _wall = self.wall_f/self.ax_f
+        _cyclotron = self.cyc_f/self.ax_f
+        _mass = 1
+        lookup = {
+            "length": _length,      # characteristic length
+            "time": _time,          # characteristic time
+            "velocity": _velocity,  # characteristic velocity
+            "energy": _energy,      # characteristic energy
+            "wall": _wall,          # dimensionless rotation
+            "cyclotron": _cyclotron,  # dimensionless cyclotron
+            "mass": _mass           # dimensionless mass
             }
-        return tu
+        return lookup
 
-    def pot_energy(self, x, y):
+    def to_theory_units(self, unit, value):
+        lookup = self.__theory_unit_converter()
+        return value/lookup[unit]
+
+    def to_si_units(self, unit, value):
+        lookup = self.__theory_unit_converter()
+        return value*lookup[unit]
+
+    def __pot_energy(self, x: 'array[M],M>0', y: 'array[M],M>0') -> 'float':
         """
-        Computes the potential energy of the ion crystal, taking into consideration:
+        Computes the potential energy of the single ion, taking into consideration:
         Coulomb repulsion
         qv x B forces
         Trapping potential
@@ -211,46 +312,97 @@ class PenningSingleIon:
         :return: potential energy (volts)
         """
         # Frequency of rotation, mass and the number of ions in the array
-        wr = self.wrot
+        wr = 2*np.pi*self.wall_f
         m = self.m
         q = self.q
-        B = self.b
-        k_e = self.k_e
-        wa2 = self.trap.wall_coef2
-        wa3 = self.trap.wall_coef3
-        mult=1e14 # mystery multiplicative factor
+        b = self.b
+        k_e = self.c_k_e
+        wa2 = self.wall_coef2
+        wa3 = self.wall_coef3
+        mult = 1e14 # mystery multiplicative factor
 
         # One half times the rotational force, the charge times the coeff,
-        potential = 0.5*(-m*wr**2 - q*self.trap.pot[2] + q*B*wr) * np.sum((x**2 + y**2)) \
-            - q*self.self.trap.pot[3] * np.sum((x**2 + y**2)**2) \
+        potential = 0.5*(-m*wr**2 - q*self.pot[2] + q*b*wr) * np.sum((x**2 + y**2)) \
+            - q*self.pot[3] * np.sum((x**2 + y**2)**2) \
             + np.sum(wa2*(x**2 - y**2)) \
             + np.sum(wa3*(x**3 - 3*x*y**2))
-        return mult * potential
+        return mult*potential
 
-class IonCrystal2d:
-    c_crystal_scale_fudge_factor = 20e-6
-    def __init__(self, trap, singleion, nion, quite=False, precision_solving=True):
+
+class IonCrystal2d(Geonium):
+    _crystal_scale_fudge_factor = 20e-6
+
+    @classmethod
+    def from_geonium(cls, geonium: Geonium,
+                     nion: 'int,>0'=27, perturb=True):
         """2-d array of ions confined in a Penning trap
         Assume all ions are the same mass
 
-        :param trap: instance of class PenningTrap
-        :param singleion: instance of class PenningSingleIon
-        :param nions: number of ions
+        :param geonium: instance of class Geonium
+        :param nion: number of ions
+        :param perturb: stochastic perturbation during crystal solution (bool)
         :return: none
         """
-        self.n = nion
-        self.singleion = singleion
-        self.x = np.empty(nion)
-        self.y = np.empty(nion)
+        g = geonium
+        return cls(g.v, g.b, g.geom, g.wall_f, g.wall_v, g.wall_r, g.wall_order,
+            m=cls._m_Be, q=cls._q, nion=nion, perturb=perturb)
 
-    def get_coordinates(self):
+    def __init__(self,
+                 v, b, geom, wall_f, wall_v, wall_r, wall_order,
+                 m, q,
+                 nion, perturb=True):
+        super().__init__(v, b, geom, wall_f, wall_v, wall_r, wall_order, m, q)
+        self._nion = nion
+        self._x = np.empty(nion)
+        self._y = np.empty(nion)
+        self._perturb = perturb
+        self._x, self._y = self.__solve_for_minimum_energy_crystal()
+
+    @property
+    def nion(self):
+        return self._nion
+
+    @property
+    def xy(self) -> 'tuple(array[N],array[N]),N>0':
         """Ion coordinates in lab frame
 
         :return: (x, y) (meters)
         """
-        return self.x, self.y
+        return self._x, self._y
 
-    def __solve_for_minimum_energy_crystal(self, perturb=False, timeout=1):
+    @property
+    def dij(self) -> 'tuple(array[N],array[N]),N>0':
+        """ion-ion separation
+
+        :return: dij (NxN)
+        """
+        x, y = self.xy
+        nion = self.nion
+        xrep = matlib.repmat(x, nion, 1)
+        yrep = matlib.repmat(y, nion, 1)
+        dij = np.sqrt((xrep-xrep.T)**2 + (yrep-yrep.T)**2)
+        return dij
+
+    @property
+    def dij_min(self) -> 'float':
+        dij = self.dij
+        nion = self.nion
+        # transform Jij and dij to 1D vectors for plotting
+        dij_row = np.squeeze(np.array(np.reshape(dij, (1, nion**2))))
+        dij_nonzero = [d if d>1e-9 else np.NaN for d in dij_row]
+        return np.nanmin(dij_nonzero)
+
+    @property
+    def dij_max(self) -> 'float':
+        dij = self.dij
+        nion = self.nion
+        # transform Jij and dij to 1D vectors for plotting
+        dij_row = np.squeeze(np.array(np.reshape(dij, (1, nion**2))))
+        dij_nonzero = [d if d>1e-9 else np.NaN for d in dij_row]
+        return np.nanmax(dij_nonzero)
+
+    def __solve_for_minimum_energy_crystal(self, perturb=False, timeout=1)\
+            -> 'tuple(array[N],array[N]),N>0':
         """
         :param perturb: re-solve for equilibrium after perturbing ions
         :param timeout: time permitted for solving (seconds)
@@ -258,12 +410,13 @@ class IonCrystal2d:
         """
         t00 = time.time()
         # is ion number compatible with filled lattice?
-        n_hex_shells = HexLattice.get_nshells_from_nvert(self.n)
-        if HexLattice.get_nvert_from_nshells(n_hex_shells) == self.n:
+        n_hex_shells = HexLattice.get_nshells_from_nvert(self.nion)
+        if HexLattice.get_nvert_from_nshells(n_hex_shells) == self.nion:
             lattice00 = HexLattice(n_hex_shells,
-                                  scale=self.c_crystal_scale_fudge_factor)
-            x00, y00 = lattice00.get_vertices()
-            pot00 = self.__pot_energy(x00, y00) # initial potential energy
+                                  scale=self._crystal_scale_fudge_factor)
+            x00, y00 = lattice00.xy
+            # initial potential energy
+            pot00 = self.__pot_energy(np.hstack((x00,y00)))
         else:
             x00, y00 = self.__generate_lattice_for_arbitrary_n(self.nion)
 
@@ -279,9 +432,9 @@ class IonCrystal2d:
             epsilon = 1e-6
             dpot = 1e10
             while time.time() - t00 < timeout:
-                px = np.dot(strength*np.random.randn(self.n), x)
-                py = np.dot(strength*np.random.randn(self.n), y)
-                x, y = self.__pot_minimize(px, py)
+                px = np.dot(strength*np.random.randn(self.nion), x)
+                py = np.dot(strength*np.random.randn(self.nion), y)
+                x, y = self.__pot_minimize(px)
                 pot = self.__pot_energy(x, y)
                 if pot < pot0:
                     x0 = x
@@ -292,38 +445,43 @@ class IonCrystal2d:
                     break
         return x, y
 
-    def __generate_lattice_for_arbitrary_n(self, n):
+    def __generate_lattice_for_arbitrary_n(self, nion: '>0')\
+            -> 'tuple(array[N],array[N]),N>0':
         """Generate lattice for an arbitrary number of ions.
+        Homogeneous mass.
 
-        :param n: number of ions in lattice
+        :param nion: number of ions in lattice
         :return: x, y coordinates of vertices
         """
         # number of closed shells
-        S = int((np.sqrt(9 - 12 * (1 - n)) - 3) / 6)
-        x0, y0 = self.hex_lattice(S)
-        N0 = x0.size
-        Nadd = n - N0  # Number of ions left to add
-        self.n = N0
+        s = int((np.sqrt(9 - 12 * (1 - nion)) - 3) / 6)
+        lattice0 = HexLattice(s)
+        x0, y0 = lattice0.xy
+        n0 = x0.size
+        n_add = nion - n0  # Number of ions left to add
+        self._nion = n0
 
-        pair = self.hex_shell(S + 1)  # generate next complete shell
+        pair = HexLattice.hex_shell(s + 1)  # generate next complete shell
         xadd = pair[0::2]
         yadd = pair[1::2]
 
-        for i in range(Nadd):
+        for i in range(n_add):
             # reset number of ions to do this calculation
-            n += 1
+            nion += 1
 
             # make masses all one (add defects later)
-            self.md = np.ones(n)
+            self.md = np.ones(nion)
 
-            V = []  # list to store potential energies from calculation
+            v = []  # list to store potential energies from calculation
 
             # for each ion left to add, calculate potential energy if that
             # ion is added
             for j in range(len(xadd)):
-                V.append(self.pot_energy(np.hstack((x0, xadd[j], y0,
-                                                    yadd[j]))))
-            ind = np.argmin(V)  # ion added with lowest increase in potential
+                v.append(self.__pot_energy(
+                    np.hstack((x0, xadd[j])),
+                    np.hstack((y0, yadd[j])))
+                )
+            ind = np.argmin(v)  # ion added with lowest increase in potential
 
             # permanently add to existing crystal
             x0 = np.append(x0, xadd[ind])
@@ -333,33 +491,36 @@ class IonCrystal2d:
             xadd = np.delete(xadd, ind)
             yadd = np.delete(yadd, ind)
 
-        # Restore mass array
-        self.md = self.m / self.m_Be  # dimensionless mass
         return x0, y0
 
-    def __pot_minimize(self, x0, y0, method="bfgs"):
+    def __pot_minimize(self, x0: 'array[N],N>0', y0: 'array[N],N>0',
+                       method="bfgs") -> 'tuple(array[N],array[N]),N>0':
         """Minimize ion crystal potential energy
 
-        :param u0: The position vector which defines the crystal.
+        :param x0: The position vector which defines the crystal.
+        :param y:
         :param method: {"bfgs", "newton"}
         :return: The equilibrium position vector.
         """
         newton_tolerance = 1e-34
         bfgs_tolerance = 1e-34
+        nion = self.nion
         u0 = np.hstack((x0, y0))
+
         if method is "newton":
-            xy = optimize.minimize(self.pot_energy, u0, method='Newton-CG',
-                jac=self.force, hess=self.hessian,
+            result = optimize.minimize(self.__pot_energy, u0, method='Newton-CG',
+                jac=self.__force, hess=self.__hessian,
                 options={'xtol': newton_tolerance, 'disp': not self.quiet})
         elif method is "bfgs":
-            xy = optimize.minimize(self.pot_energy, u0, method='BFGS',
-                jac=self.force,
+            result = optimize.minimize(self.__pot_energy, u0, method='BFGS',
+                jac=self.__force,
                 options={'gtol': bfgs_tolerance, 'disp': False})
         else:
             sys.exit(-2)
-        return xy[:self.n], xy[self.n:]
+        pos_array = result.x
+        return pos_array[:nion], pos_array[nion:]
 
-    def __pot_energy(self, x, y):
+    def __pot_energy(self, pos_array):
         """
         Computes the potential energy of a 2-d plane of ions,
         taking into consideration:
@@ -372,26 +533,31 @@ class IonCrystal2d:
         :param y: ion coordinates (meters)
         :return: potential energy (volts)
         """
+        nion = self.nion
+        x = pos_array[0:nion]
+        y = pos_array[nion:]
 
         dx = x.reshape((x.size, 1)) - x  # row vector
         dy = y.reshape((y.size, 1)) - y  # row vector
         dij = np.sqrt(dx ** 2 + dy ** 2)  # distance between ions
+        wr = self.to_theory_units('wall', self.wall_f)
+        wc = self.to_theory_units('cyclotron', self.cyc_f)
+        m = self.to_theory_units('mass', self.m)
+        q = self.q
+        wc2 = self.wall_coef2
+        wc3 = self.wall_coef3
+        b = self.b
+        k_e = self._k_e
+        # TODO: why aren't x and y converted to theory units?
 
         with np.errstate(divide='ignore'):
-            Vc = np.where(dij != 0., 1 / dij, 0)
+            vc = np.where(dij != 0., 1 / dij, 0)
 
-        """
-        #Deprecated version below which takes into account anharmonic effects, to be used later
-
-        pot = 0.5 * (-m * wr ** 2 - q * self.Coeff[2] + q * B * wr) * np.sum((x ** 2 + y ** 2)) \
-            - q * self.Coeff[3] * np.sum((x ** 2 + y ** 2) ** 2) \
-            + np.sum(self.Cw2 * (x ** 2 - y ** 2)) \
-            + np.sum(self.Cw3 * (x ** 3 - 3 * x * y ** 2)) \
-            + 0.5 * k_e * q ** 2 * np.sum(Vc)
-        """
-        pot = -np.sum((self.md * self.wr ** 2 + 0.5 * self.md - self.wr * self.wc) * (x ** 2 + y ** 2)) \
-            + np.sum(self.md * self.Cw * (x ** 2 - y ** 2)) + 0.5 * np.sum(Vc)
-
+        pot = 0.5*(-m*wr**2 - q*wc2 + q*b*wr) * np.sum((x**2 + y**2)) \
+            - q*wc3 * np.sum((x**2 + y**2)**2) \
+            + np.sum(wc2 * (x**2 - y**2)) \
+            + np.sum(wc3 * (x**3 - 3*x*y**2)) \
+            + 0.5 * k_e*q**2 * np.sum(vc)
         return pot
 
     def __hessian(self, pos_array):
@@ -408,25 +574,32 @@ class IonCrystal2d:
         dxsq = dx ** 2
         dysq = dy ** 2
 
+        wr = self.to_theory_units('wall', self.wall_f)
+        wc = self.to_theory_units('cyclotron', self.cyc_f)
+        m = self.to_theory_units('mass', self.m)
+        q = self.q
+        wc2 = self.wall_coef2
+        wc3 = self.wall_coef3
+        b = self.b
+        k_e = self._k_e
+
         # X derivatives, Y derivatives for alpha != beta
-        Hxx = np.mat((rsep ** 2 - 3 * dxsq) * rsep5)
-        Hyy = np.mat((rsep ** 2 - 3 * dysq) * rsep5)
+        hess_xx = np.mat((rsep ** 2 - 3 * dxsq) * rsep5)
+        hess_yy = np.mat((rsep ** 2 - 3 * dysq) * rsep5)
 
         # Above, for alpha == beta
-        Hxx += np.mat(np.diag(-2 * self.md * (self.wr ** 2 - self.wr * self.wc + .5 -
-                                              self.Cw) -
-                              np.sum((rsep ** 2 - 3 * dxsq) * rsep5, axis=0)))
-        Hyy += np.mat(np.diag(-2 * self.md * (self.wr ** 2 - self.wr * self.wc + .5 +
-                                              self.Cw) -
-                              np.sum((rsep ** 2 - 3 * dxsq) * rsep5, axis=0)))
+        hess_xx += np.mat(np.diag(-2*m*(wr**2 - wr*wc + .5 - wc2) -
+                              np.sum((rsep**2 - 3*dxsq)*rsep5, axis=0)))
+        hess_yy += np.mat(np.diag(-2*m*(wr**2 - wr*wc + .5 + wc2) -
+                              np.sum((rsep**2 - 3*dxsq)*rsep5, axis=0)))
 
         # Mixed derivatives
-        Hxy = np.mat(-3 * dx * dy * rsep5)
-        Hxy += np.mat(np.diag(3 * np.sum(dx * dy * rsep5, axis=0)))
+        hess_xy = np.mat(-3*dx*dy*rsep5)
+        hess_xy += np.mat(np.diag(3 * np.sum(dx*dy*rsep5, axis=0)))
 
-        H = np.bmat([[Hxx, Hxy], [Hxy, Hyy]])
-        H = np.asarray(H)
-        return H
+        hess = np.bmat([[hess_xx, hess_xy], [hess_xy, hess_yy]])
+        hess = np.asarray(hess)
+        return hess
 
     def __force(self, pos_array):
         """
@@ -437,77 +610,71 @@ class IonCrystal2d:
         :param pos_array: crystal to find forces of.
         :return: a vector of size 2N describing the x forces and y forces.
         """
-
-        x = pos_array[0:self.n]
-        y = pos_array[self.n:]
+        nion = self.nion
+        x = pos_array[0:nion]
+        y = pos_array[nion:]
 
         dx = x.reshape((x.size, 1)) - x
         dy = y.reshape((y.size, 1)) - y
         rsep = np.sqrt(dx ** 2 + dy ** 2)
 
+        wr = self.to_theory_units('wall', self.wall_f)
+        wc = self.to_theory_units('cyclotron', self.cyc_f)
+        m = self.to_theory_units('mass', self.m)
+        q = self.q
+        wc2 = self.wall_coef2
+        wc3 = self.wall_coef3
+        b = self.b
+        k_e = self._k_e
+
         # Calculate coulomb force on each ion
         with np.errstate(divide='ignore'):
-            Fc = np.where(rsep != 0., rsep ** (-2), 0)
+            fc = np.where(rsep != 0., rsep ** (-2), 0)
 
         with np.errstate(divide='ignore', invalid='ignore'):
-            fx = np.where(rsep != 0., np.float64((dx / rsep) * Fc), 0)
-            fy = np.where(rsep != 0., np.float64((dy / rsep) * Fc), 0)
+            fx = np.where(rsep != 0., np.float64((dx / rsep) * fc), 0)
+            fy = np.where(rsep != 0., np.float64((dy / rsep) * fc), 0)
 
         # total force on each ion
 
-        """ Deprecated version below which uses anharmonic trap potentials
-        Ftrapx = (-m * wr ** 2 - q * self.Coeff[2] + q * B * wr + 2 * self.Cw2) * x \
-            - 4 * q * self.Coeff[3] * (x ** 3 + x * y ** 2) + 3 * self.Cw3 * (x ** 2 - y ** 2)
-        Ftrapy = (-m * wr ** 2 - q * self.Coeff[2] + q * B * wr - 2 * self.Cw2) * y \
-            - 4 * q * self.Coeff[3] * (y ** 3 + y * x ** 2) - 6 * self.Cw3 * x * y
+        ftrapx = (-m*wr**2 - q*wc2 + q*b*wr + 2*wc) * x \
+            - 4*q*wc3 * (x**3 + x*y**2) + 3*wc3*(x**2 - y**2)
+        ftrapy = (-m*wr**2 - q*wc2 + q*b*wr - 2*wc2) * y \
+            - 4*q*wc3 * (y**3 + y*x**2) - 6*wc3*x*y
 
-        # Ftrap =  (m*w**2 + q*self.V0 - 2*q*self.Vw - q*self.B* w) * pos_array
-        """
-        Ftrapx = -2 * self.md * (self.wr ** 2 - self.wr * self.wc + 0.5 -
-                                 self.Cw) * x
-        Ftrapy = -2 * self.md * (self.wr ** 2 - self.wr * self.wc + 0.5 +
-                                 self.Cw) * y
+        fx = -np.sum(fx, axis=1) + ftrapx
+        fy = -np.sum(fy, axis=1) + ftrapy
 
-        Fx = -np.sum(fx, axis=1) + Ftrapx
-        Fy = -np.sum(fy, axis=1) + Ftrapy
+        return np.array([fx, fy]).flatten()
 
-        return np.array([Fx, Fy]).flatten()
-
-    @staticmethod
-    def get_dij_min(x, y):
-        dij, dij_row = IonCrystal2d.calc_dij(x, y)
-        dij_nonzero = [d if d>1e-9 else np.NaN for d in dij_row]
-        return np.nanmin(dij_nonzero)
-
-    @staticmethod
-    def get_dij(x, y):
-        """Calculate ion-ion separation
-
-        :param x: [N] list of ion x-coordinates (meters)
-        :param y: [N] list of ion y-coordinates (meters)
-        :return: dij (NxN), dij_row (N**2)
-        """
-        nion = len(x)
-        xrep = matlib.repmat(x, nion, 1)
-        yrep = matlib.repmat(y, nion, 1)
-        dij = np.sqrt((xrep-xrep.T)**2 + (yrep-yrep.T)**2)
-        # transform Jij and dij to 1D vectors for plotting
-        dij_row = np.squeeze(np.array(np.reshape(dij, (1, nion**2))))
-        return dij, dij_row
 
 class ModesTransverse:
-    def __init__(self):
+    """
+    Compute transverse modes.
+    """
+    def __init__(self, crystal: IonCrystal2d):
+        """
+
+        :param crystal: instance of class IonCrystal2d
+        :return:
+        """
+        self.crystal = crystal
         pass
 
+    def jij(self, odf_df):
+        evec = 0
+        eval = 0
+        return ModesTransverse.__spin_spin_jij(odf_df, evec, eval)
+
     @staticmethod
-    def spin_spin_jij(odf_df, evec, eval):
+    def __spin_spin_jij(odf_df, evec, eval):
         # mu is in rad/sec
         nions = len(eval)
-        J = np.zeros((nions, nions))
+        jij = np.zeros((nions, nions))
         for i in range(nions):
             for j in range(nions):
-                J[i,j] = np.sum(evec[:,i]*evec[:,j]/(odf_df**2-eval**2))
-        return np.matrix(J)
+                jij[i,j] = np.sum(evec[:,i]*evec[:,j]/(odf_df**2-eval**2))
+        return np.matrix(jij)
 
     @staticmethod
     def check_single_plane(eval):
@@ -622,7 +789,7 @@ class ModesTransverse:
 
         return True
 
-    def show_axial_Evals(self, experimentalunits=False, flatlines=False):
+    def show_axial_evals(self, experimentalunits=False, flatlines=False):
         """
         Plots the axial eigenvalues vs mode number.
         :param experimentalunits:
@@ -722,8 +889,19 @@ class ModesTransverse:
         return 0
 
 class ModesInPlane:
-    def __init__(self):
-        self.dimensionless()  # Make system dimensionless
+    """
+    Compute in-plane modes for 2-d crystal
+    """
+    def __init__(self,
+                 crystal: IonCrystal2d,
+                 axial: ModesTransverse):
+        """
+
+        :param crystal: instance of class IonCrystal2d
+        :param axial: instance of class ModesTransverse
+        :return:
+        """
+        self.crystal = crystal
 
         self.axialEvals = []  # Axial eigenvalues
         self.axialEvects = []  # Axial eigenvectors
@@ -786,18 +964,20 @@ class ModesInPlane:
         return Eval, Evect
 
 
-
 class Visualize:
-    def __init__(self, trap, singleion, crystal2d, mt, mip=None):
+    def __init__(self,
+                 crystal: IonCrystal2d,
+                 axialm: ModesTransverse,
+                 inplanem: ModesInPlane):
         """
-
-        :param trap: instance of class PenningTrap
-        :param singleion: instance of
-        :param crystal2d:
-        :param mt:
-        :param mip:
+        :param crystal: instance of class IonCrystal2d
+        :param axialm: instance of class ModesTransverse
+        :param inplanem: instance of class ModesInPlane
         :return:
         """
+        self.crystal = crystal
+        self.axialm = axialm
+        self.inplanem = inplanem
 
     def show_crystal(self, pos_vect):
         """
@@ -811,11 +991,6 @@ class Visualize:
         plt.axes().set_aspect('equal')
 
         plt.show()
-
-    @staticmethod
-    def get_git_revision_short_hash():
-        s = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-        return s.decode("utf-8").strip("\n")
 
     @staticmethod
     def get_git_revision_short_hash():
@@ -842,12 +1017,7 @@ class Visualize:
 
         fig.suptitle("mode_analysis_code.py visualize_ions", fontsize=12)
 
-        # calculate ion equilibrium positions
-        x0y0 = ions.generate_2D_hex_lattice(scale=2e-5)
-        xy = ions.find_eq_pos(x0y0)
-        num_ions = ions.Nion
-        x = xy[0:num_ions]
-        y = xy[num_ions:]
+        x, y = self.crystal.xy
 
         # ion image
         aximage.axvline(x=0, color="red")
@@ -862,7 +1032,7 @@ class Visualize:
         # calculate transverse modes
         ############################
         modes = ions.calc_axial_modes_simple(xy)
-        check_single_plane(modes[0])
+        crystal.check_single_plane(modes[0])
         f_mag = ions.wmag/2/np.pi
         f_com = modes[0][0]/2/np.pi
         f_modes = modes[0]/2/np.pi
@@ -991,4 +1161,6 @@ class Visualize:
                        header=s, fmt=fmts)
 
 if __name__ == "__main__":
-    pass
+    p = PenningTrap()
+    nion = HexLattice.get_nvert_from_nshells(4)
+    c = IonCrystal2d.from_geonium(p, nion=nion)
