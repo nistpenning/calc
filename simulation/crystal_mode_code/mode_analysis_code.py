@@ -29,8 +29,14 @@ class HexLattice:
     """
     Class defining methods relating to a perfect, closed 2D hexagonal lattice.
     """
-    def __init__(self, shells: 'int,>=0', scale=1):
-        self._x, self._y = HexLattice.hex_lattice(shells, scale)
+    def __init__(self, s: 'int,>=0', scale=1):
+        """
+
+        :param s: num of closed shells (int)
+        :param scale: target vertex-vertex spacing (float)
+        :return: none
+        """
+        self._x, self._y = HexLattice.hex_lattice(s, scale)
 
     @property
     @contract(returns='tuple(array[N],array[N]),N>0')
@@ -118,10 +124,13 @@ class PenningTrap:
     """
     _v_default = [0, -1750, -2000]
     # see Carson Teale's final paper
-    _geom2014teal = [[0.0756, 0.5157, 0.4087],
-                    [-0.0001, -0.005, 0.005],
-                    [1.9197e3, 3.7467e3, -5.6663e3],
-                    [0.6738e7, -5.3148e7, 4.641e7]]
+                   # [endcap,    mid,       center]
+    _geom2014teal = np.array(\
+                    [[0.0756,   0.5157,    0.4087],      # C0
+                    [-0.0001,  -0.005,     0.005],       # C1
+                    [ 1.9197e3, 3.7467e3, -5.6663e3],    # C2
+                    [ 0       , 0       ,  0       ],    # C3
+                    [ 0.6738e7,-5.3148e7,  4.641e7]])    # C4
 
     def __init__(self,
                  v: 'array[1x3]'=_v_default, b:'>0'=4.4588,
@@ -149,7 +158,7 @@ class PenningTrap:
         self._wall_r = wall_r
 
     @property
-    def v(self) -> 'array[1x3]':
+    def v(self) -> 'array[3]':
         return self._v
 
     @property
@@ -177,6 +186,18 @@ class PenningTrap:
         """potential at trap center
         """
         return np.dot(self.geom, self.v)  # formerly Coeff[2]
+
+    @staticmethod
+    def potzr(z: '>0', r: '>0', v: 'array[3]', geom: 'array[5x3]'):
+        # sum over contribution to each order of potential for each electrode
+        cn = np.dot(geom, v)
+        rpowp_leg = np.array([1,
+                              z,
+                              0.5*(-r**2+3*z**2),
+                              0.5*(-3*r**2*z+5*z**3),
+                              0.125*(3*r**4-30*r**2*z**2+35*z**4)])
+        v = cn*rpowp_leg
+        return v
 
     @property
     def geom(self) -> 'array[3x4]':
@@ -985,8 +1006,8 @@ class ModesInPlane:
 class Visualize:
     def __init__(self,
                  crystal: IonCrystal2d,
-                 axialm: ModesTransverse,
-                 inplanem: ModesInPlane):
+                 axialm: ModesTransverse=None,
+                 inplanem: ModesInPlane=None):
         """
         :param crystal: instance of class IonCrystal2d
         :param axialm: instance of class ModesTransverse
@@ -997,13 +1018,14 @@ class Visualize:
         self.axialm = axialm
         self.inplanem = inplanem
 
-    def show_crystal(self, pos_vect):
+    def show_crystal(self):
         """
         Makes a pretty plot of the crystal with a given position vector.
 
         :param pos_vect: The crystal position vector to be seen.
         """
-        plt.plot(pos_vect[0:self.n], pos_vect[self.n:], '.')
+        x, y = self.crystal.xy
+        plt.plot(x, y, '.')
         plt.xlabel('x (um)')
         plt.ylabel('y (um)')
         plt.axes().set_aspect('equal')
@@ -1045,6 +1067,8 @@ class Visualize:
         # ax4.set_ylabel('y position [um]')
         aximage.set_aspect('equal')
         aximage.axis([-300, 300, -300, 300])
+
+        return
 
         ############################
         # calculate transverse modes
