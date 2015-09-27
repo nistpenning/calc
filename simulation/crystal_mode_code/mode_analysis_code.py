@@ -122,25 +122,29 @@ class PenningTrap:
     """
     Penning trap configuration and potentials.
     """
-    _v_default = [0, -1750, -2000]
+    _electrodes_applied_v = [0, -1750, -2000]
     # see Carson Teale's final paper
                    # [endcap,    mid,       center]
-    _geom2014teal = np.array(\
+    _eerz_2013teal = np.array(\
                     [[0.0756,   0.5157,    0.4087],      # C0
                     [-0.0001,  -0.005,     0.005],       # C1
                     [ 1.9197e3, 3.7467e3, -5.6663e3],    # C2
                     [ 0       , 0       ,  0       ],    # C3
                     [ 0.6738e7,-5.3148e7,  4.641e7]])    # C4
-
-    def __init__(self,
-                 v: 'array[1x3]'=_v_default, b:'>0'=4.4588,
-                 geom: 'array[3x4]'=_geom2014teal,
-                 wall_f: '>0'=180e3, wall_v: '>=0'=5,
-                 wall_r: '>=0'=0.01, wall_order: 'int,>0,<4'=2):
+    _eerphi_wall_2013teale = {2: 1612, 3: 30010} # index is wall_order
+    def __init__(self, b:'>0'=4.4588,
+            electrodes_applied_v: 'array[1x3]'=_electrodes_applied_v,
+            electrodes_expansion_in_rz: 'array[3x4]'=_eerz_2014teal,
+            wall_f: '>0'=180e3, wall_v: '>=0'=5,
+            wall_r: '>=0'=0.01, wall_order: 'int,>0,<4'=2):
         """
-        :param v: [end cap, middle, center] potential on electrodes (Volts)
         :param b: magnetic field along z-axis (Tesla)
-        :param geom: trap electrode geometry
+        :param electrodes_applied_v: [end cap, middle, center]
+                potential on electrodes (Volts)
+        :param electrodes_expansion_in_rz: array containing
+                expansion (in cylindrical
+                coordinates) about z=0,r=0 of potential due to 1 V on each
+                electrode
         :param wall_f: rotating wall frequency (Hz)
         :param wall_v: rotating wall potential (V)
         :param wall_r: rotating wall distance to trap center (m)
@@ -149,17 +153,23 @@ class PenningTrap:
         :return: none
         """
         self._b = b
-        self._geom = np.array(geom) # formerly self.C
-        self._v = np.array(v)
+        self._electrodes_expansion_in_rz = \
+            np.array(electrodes_expansion_in_rz)
+        self._electrodes_applied_v = np.array(electrodes_applied_v)
 
         self._wall_v = wall_v
         self._wall_f = wall_f
         self._wall_order = wall_order
         self._wall_r = wall_r
 
-    @property
-    def v(self) -> 'array[3]':
-        return self._v
+    def __str__(self):
+        s = "b={} T\n".format(self.b)
+        s+= "electrodes_electrodes_expansion_in_rz={} V [end, mid, center]\n"\
+            .format(self.trap_v)
+        s+= "electrodes_applied_v={}\n".format(self.electrodes_applied_v)
+        s+= "wall_f={} kHz  wall_v={} V  wall_order={}  wall_r={} m"\
+            .format(self.wall_f/1e3, self.wall_v, self.wall_order, self.wall_r)
+        return s
 
     @property
     def b(self) -> '>0':
@@ -182,36 +192,68 @@ class PenningTrap:
         return self._wall_r
 
     @property
-    def pot(self):
-        """potential at trap center
+    def electrodes_expansion_in_rz(self):
+        """array containing expansion (in cylindrical
+        coordinates) about z=0,r=0 of potential due to 1 V on each
+        electrode
         """
-        return np.dot(self.geom, self.v)  # formerly Coeff[2]
+        return self._electrodes_expansion_in_rz
 
-    @staticmethod
-    def potzr(z: '>0', r: '>0', v: 'array[3]', geom: 'array[5x3]'):
-        # sum over contribution to each order of potential for each electrode
-        cn = np.dot(geom, v)
-        rpowp_leg = np.array([1,
+    @property
+    def electrodes_applied_v(self) -> 'array[3]':
+        return self._electrodes_applied_v
+
+    @property
+    def trap_pot_expansion_in_rz_coef(self):
+        """Expansion (in cylindrical coordinates) about z=0, r=0 of
+        potential at trap center. This is a sum over all
+        electrodes assuming self.trap_v is applied.
+        """
+        return np.dot(self.electrodes_expansion_in_rz,
+                      self.electrodes_applied_v)  # formerly Coeff[]
+
+    def trap_pot_at_zr(self, z, r):
+        """
+        Trap electronic potential at (r,z). Does not include rotating wall.
+        """
+        # rpowpleg is terms of r**n * Legendre(n, z/r)
+        rpowpleg = np.array([1,
                               z,
                               0.5*(-r**2+3*z**2),
                               0.5*(-3*r**2*z+5*z**3),
                               0.125*(3*r**4-30*r**2*z**2+35*z**4)])
-        v = cn*rpowp_leg
+        v = np.dot(self.trap_pot_expansion_in_rz_coef, rpowpleg)
         return v
 
-    @property
-    def geom(self) -> 'array[3x4]':
-        return self._geom
+    def plot_trap_pot_along_z(self):
+        # extract trap potential, pot
+        zs = np.linspace(-20, 20, 50)*1e-3
+        trap_pot = [g.trap.trap_pot_at_zr(z, 0) for z in zs]
+        # calculate potential for perfectly quadratic trap
+        c0 = self.trap_pot_expansion_in_rz_coef[0]
+        c2 = self.trap_pot_expansion_in_rz_coef[2]
+        r = 0
+        quad_pot = c0 + [c2*0.5*(-r**2+3*z**2) for z in zs]
+        # plot
+        plt.plot(zs, trap_pot)
+        plt.plot(zs, quad_pot)
 
-    def __str__(self):
-        s = "b={} T    v={} V [end, mid, center]\n".format(self.b, self.v)
-        s+= "geom={}\n".format(self.geom)
-        s+= "wall_f={} kHz  wall_v={} V  wall_order={}  wall_r={} m"\
-            .format(self.wall_f/1e3, self.wall_v, self.wall_order, self.wall_r)
-        return s
+    def plot_trap_pot_along_r(self):
+        # extract trap potential, pot
+        rs = np.linspace(-20, 20, 50)*1e-3
+        z = 0
+        trap_pot = [g.trap.trap_pot_at_zr(z, r) for r in rs]
+        # calculate potential for perfectly quadratic trap
+        c0 = self.trap_pot_expansion_in_rz_coef[0]
+        c2 = self.trap_pot_expansion_in_rz_coef[2]
+
+        quad_pot = c0 + [c2*0.5*(-r**2+3*z**2) for r in rs]
+        # plot
+        plt.plot(rs, trap_pot)
+        plt.plot(rs, quad_pot)
 
 
-class Geonium(PenningTrap):
+class Geonium():
     """
     Single ion confined in a Penning trap.
     """
@@ -220,41 +262,25 @@ class Geonium(PenningTrap):
     _m_Be = 9.012182 * _amu
     _k_e = 8.9875517873681764E9
 
-    @classmethod
-    def from_penning_trap(cls, penning_trap: PenningTrap,
+    def __init__(self, trap: PenningTrap,
                           m: '>0'=_m_Be, q: '>0'=_q):
         """Physics related to a single isolated ion in Penning trap
 
-        :param t: instance of object PenningTrap
+        :param trap: instance of object PenningTrap
         :param m: ion mass (kilogram)
         :param q: ion charge (coulomb)
         :return: none
         """
-        # t is an instance of PenningTrap
-        t = penning_trap
-        return cls(t.v, t.b, t.geom, t.wall_f, t.wall_v, t.wall_r, t.wall_order,
-            m=cls._m_Be, q=cls._q)
-
-    def __init__(self,
-            v, b, geom, wall_f, wall_v, wall_r, wall_order,
-            m, q):
-        super().__init__(v, b, geom, wall_f, wall_v, wall_r, wall_order)
+        self.trap = trap
         self._m = m
         self._q = q
-        self._ax_f = np.sqrt(2*q*self.pot[2]/m)/2/np.pi
-        self._cyc_f = q*self.b/(2*np.pi*m)
+        c = self.trap.trap_pot_expansion_in_rz_coef
+        self._ax_f = np.sqrt(2*q*c[2]/m)/2/np.pi
+        self._cyc_f = q*self.trap.b/(2*np.pi*m)
         self._mag_f = \
             0.5*(self.cyc_f - np.sqrt(self.cyc_f**2 - 2*self.ax_f ** 2))/2/np.pi
 
         self.check_magnetron()
-
-        # wall order
-        if self.wall_order == 2:
-            self._wall_coef2 = self.q*self.wall_v*1612
-            self._wall_coef3 = 0
-        if wall_order == 3:
-            self._wall_coef2 = 0
-            self._wall_coef3 = self.q*self.wall_v*3e4
 
         # quadratic voltage at trap center
         self.V0 = (0.5*m*self.ax_f**2)/q/2/np.pi
@@ -299,9 +325,9 @@ class Geonium(PenningTrap):
         :param ions: ModeAnalysis object
         :return: bool
         """
-        if self.mag_f > self.wall_f:
+        if self.mag_f > self.trap.wall_f:
             print("fmag ({:.0f}) > fwall ({:.0f})"
-                  .format(self.mag_f, self.wall_f))
+                  .format(self.mag_f, self.trap.wall_f))
             return False
         else:
             return True
@@ -311,7 +337,7 @@ class Geonium(PenningTrap):
         _time = 1/(2*np.pi*self.ax_f)
         _velocity = _length/_time
         _energy = .5*self.m*(self.ax_f*2*np.pi)**2*_length**2
-        _wall = self.wall_f/self.ax_f
+        _wall = self.trap.wall_f/self.ax_f
         _cyclotron = self.cyc_f/self.ax_f
         _mass = 1
         lookup = {
@@ -363,11 +389,10 @@ class Geonium(PenningTrap):
         return mult*potential
 
 
-class IonCrystal2d(Geonium):
+class IonCrystal2d():
     _crystal_scale_fudge_factor = 20e-6
 
-    @classmethod
-    def from_geonium(cls, geonium: Geonium,
+    def __init__(self, geonium: Geonium,
                      nion: 'int,>0'=27, perturb=True):
         """2-d array of ions confined in a Penning trap
         Assume all ions are the same mass
@@ -377,19 +402,12 @@ class IonCrystal2d(Geonium):
         :param perturb: stochastic perturbation during crystal solution (bool)
         :return: none
         """
-        g = geonium
-        return cls(g.v, g.b, g.geom, g.wall_f, g.wall_v, g.wall_r, g.wall_order,
-            m=cls._m_Be, q=cls._q, nion=nion, perturb=perturb)
-
-    def __init__(self,
-                 v, b, geom, wall_f, wall_v, wall_r, wall_order,
-                 m, q,
-                 nion, perturb=True):
-        super().__init__(v, b, geom, wall_f, wall_v, wall_r, wall_order, m, q)
+        self.geonium = geonium
         self._nion = nion
+        self._perturb = perturb
+
         self._x = np.empty(nion)
         self._y = np.empty(nion)
-        self._perturb = perturb
         self._x, self._y = self.__solve_for_minimum_energy_crystal()
 
     @property
@@ -579,14 +597,14 @@ class IonCrystal2d(Geonium):
         dx = x.reshape((x.size, 1)) - x  # row vector
         dy = y.reshape((y.size, 1)) - y  # row vector
         dij = np.sqrt(dx ** 2 + dy ** 2)  # distance between ions
-        wr = self.to_theory_units('wall', self.wall_f)
-        wc = self.to_theory_units('cyclotron', self.cyc_f)
-        m = self.to_theory_units('mass', self.m)
-        q = self.q
-        wc2 = self.wall_coef2
-        wc3 = self.wall_coef3
-        b = self.b
-        k_e = self._k_e
+        wr = self.geonium.to_theory_units('wall', self.geonium.trap.wall_f)
+        wc = self.geonium.to_theory_units('cyclotron', self.geonium.cyc_f)
+        m = self.geonium.to_theory_units('mass', self.geonium.m)
+        q = self.geonium.q
+        wc2 = self.geonium.wall_coef2
+        wc3 = self.geonium.wall_coef3
+        b = self.geonium.trap.b
+        k_e = self.geonium._k_e
         # TODO: why aren't x and y converted to theory units?
 
         with np.errstate(divide='ignore'):
@@ -657,14 +675,14 @@ class IonCrystal2d(Geonium):
         dy = y.reshape((y.size, 1)) - y
         rsep = np.sqrt(dx ** 2 + dy ** 2)
 
-        wr = self.to_theory_units('wall', self.wall_f)
-        wc = self.to_theory_units('cyclotron', self.cyc_f)
-        m = self.to_theory_units('mass', self.m)
-        q = self.q
-        wc2 = self.wall_coef2
-        wc3 = self.wall_coef3
-        b = self.b
-        k_e = self._k_e
+        wr = self.geonium.to_theory_units('wall', self.geonium.trap.wall_f)
+        wc = self.geonium.to_theory_units('cyclotron', self.geonium.cyc_f)
+        m = self.geonium.to_theory_units('mass', self.geonium.m)
+        q = self.geonium.q
+        wc2 = self.geonium.wall_coef2
+        wc3 = self.geonium.wall_coef3
+        b = self.geonium.trap.b
+        k_e = self.geonium._k_e
 
         # Calculate coulomb force on each ion
         with np.errstate(divide='ignore'):
@@ -1204,6 +1222,6 @@ class Visualize:
 
 if __name__ == "__main__":
     p = PenningTrap()
-    g = Geonium.from_penning_trap(p)
+    g = Geonium(trap=p)
     nion = HexLattice.get_nvert_from_nshells(4)
-    c = IonCrystal2d.from_geonium(g, nion=nion)
+    c = IonCrystal2d(geonium=g, nion=nion)
