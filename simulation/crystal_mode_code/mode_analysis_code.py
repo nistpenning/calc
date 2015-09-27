@@ -182,6 +182,13 @@ class PenningTrap:
     def geom(self) -> 'array[3x4]':
         return self._geom
 
+    def __str__(self):
+        s = "b={} T    v={} V [end, mid, center]\n".format(self.b, self.v)
+        s+= "geom={}\n".format(self.geom)
+        s+= "wall_f={} kHz  wall_v={} V  wall_order={}  wall_r={} m"\
+            .format(self.wall_f/1e3, self.wall_v, self.wall_order, self.wall_r)
+        return s
+
 
 class Geonium(PenningTrap):
     """
@@ -205,7 +212,7 @@ class Geonium(PenningTrap):
         # t is an instance of PenningTrap
         t = penning_trap
         return cls(t.v, t.b, t.geom, t.wall_f, t.wall_v, t.wall_r, t.wall_order,
-            m=cls.c_m_Be, q=cls.c_q)
+            m=cls._m_Be, q=cls._q)
 
     def __init__(self,
             v, b, geom, wall_f, wall_v, wall_r, wall_order,
@@ -258,6 +265,12 @@ class Geonium(PenningTrap):
     @property
     def wall_coef3(self):
         return self._wall_coef3
+
+    def __str__(self):
+        s = "m={:.2e} kg  q={:.2e}\n".format(self.m, self.q)
+        s+= "cyc_f={:.1f} MHz  ax_f={:.2f} MHz  mag_f={:.1f} kHz"\
+            .format(self.cyc_f/1e6, self.ax_f/1e6, self.mag_f/1e3)
+        return s
 
     def check_magnetron(self):
         """Penning does not trap for ion rotation frequency below magnetron freq.
@@ -319,7 +332,7 @@ class Geonium(PenningTrap):
         k_e = self.c_k_e
         wa2 = self.wall_coef2
         wa3 = self.wall_coef3
-        mult = 1e14 # mystery multiplicative factor
+        mult = 1e14  # mystery multiplicative factor
 
         # One half times the rotational force, the charge times the coeff,
         potential = 0.5*(-m*wr**2 - q*self.pot[2] + q*b*wr) * np.sum((x**2 + y**2)) \
@@ -400,6 +413,11 @@ class IonCrystal2d(Geonium):
         dij_row = np.squeeze(np.array(np.reshape(dij, (1, nion**2))))
         dij_nonzero = [d if d>1e-9 else np.NaN for d in dij_row]
         return np.nanmax(dij_nonzero)
+
+    def __str__(self):
+        s = "nion={}  dij_min={:.1f} um  dij_max={:.1f} um"\
+            .format(self.nion, self.dij_min*1e6, self.dij_max*1e6)
+        return s
 
     def __solve_for_minimum_energy_crystal(self, perturb=False, timeout=1)\
             -> 'tuple(array[N],array[N]),N>0':
@@ -1162,5 +1180,6 @@ class Visualize:
 
 if __name__ == "__main__":
     p = PenningTrap()
+    g = Geonium.from_penning_trap(p)
     nion = HexLattice.get_nvert_from_nshells(4)
-    c = IonCrystal2d.from_geonium(p, nion=nion)
+    c = IonCrystal2d.from_geonium(g, nion=nion)
