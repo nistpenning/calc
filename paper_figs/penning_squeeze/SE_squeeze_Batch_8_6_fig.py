@@ -82,6 +82,7 @@ for i,fn in enumerate(fns):
     #Load data messages
     print( "______________Data set: {}__________________".format(hf.n_slice(file_name)))
     print( "Ion number from loading calibration: {:.0f}".format(N))
+    print( "Photons detected: {:.4g}".format(cal_counts_avg))
     if verbose:
         print( "Meas. noise sig_cal_ob [Stdv PMT counts]: {:.3f}".format(sig_cal_ob))
         print( "Infer. proj. noise sqrt(cal_ob^2 - cal_sn^2):  {:.3f}".format(sqrt(sig_cal_ob**2 - sig_cal_sn**2)) )
