@@ -54,6 +54,39 @@ def set_rc(mode='qunat'):
             'figure.dpi': 400,
             'xtick.major.size': 0.0,
             'axes.facecolor': 'white', 'xtick.color': '.15'}
+    elif mode == 'PRL':
+        style = {
+            'figure.figsize': (3.375, 2.5), # PRL, column width is 3.375
+            'figure.autolayout': True,
+            'figure.dpi': 150,
+            'figure.facecolor': 'white',
+
+            'savefig.dpi': 600, # PRL requests 600 dpi
+
+            'font.family': ['serif'],
+            'font.size': 10.0,  # PRL, minimum is 7 pt
+
+            'lines.antialiased': True, 'lines.solid_capstyle': 'round',
+            'lines.linewidth': 1.0,  # PRL requires >= 0.5 pt
+
+            'axes.grid': True,
+            'axes.axisbelow': True,
+            'axes.linewidth': 1.0,
+            'axes.facecolor': 'white',
+
+            'grid.color': '0',
+            'grid.linestyle': '-',
+
+            'xtick.minor.size': 2, 'ytick.minor.size': 2,
+            'xtick.major.size': 4, 'ytick.major.size': 4,
+            'xtick.direction': 'in', 'ytick.direction': 'in',
+
+            'image.cmap': 'Greys',
+
+            'legend.numpoints': 1,
+            'legend.frameon': False,
+            'legend.scatterpoints': 1
+        }
     else:
         print('setrc() unknown mode')
         sys.exit(-1)
