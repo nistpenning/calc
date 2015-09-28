@@ -134,7 +134,7 @@ class PenningTrap:
     _eerphi_wall_2013teale = {2: 1612, 3: 30010} # index is wall_order
     def __init__(self, b:'>0'=4.4588,
             electrodes_applied_v: 'array[1x3]'=_electrodes_applied_v,
-            electrodes_expansion_in_rz: 'array[3x4]'=_eerz_2014teal,
+            electrodes_expansion_in_rz: 'array[3x4]'=_eerz_2013teal,
             wall_f: '>0'=180e3, wall_v: '>=0'=5,
             wall_r: '>=0'=0.01, wall_order: 'int,>0,<4'=2):
         """
@@ -225,6 +225,69 @@ class PenningTrap:
         v = np.dot(self.trap_pot_expansion_in_rz_coef, rpowpleg)
         return v
 
+    def wall_pot_expansion_in_rphi_coef(self, wall_order,
+                eerphi=_eerphi_wall_2013teale):
+        """Rotating wall potential can be expanded near the trap center
+        in terms of r, phi. Carson Teal obtained an approximate form for this
+        in 2013.  See Teale final report Aug 6, 2013.
+        Note that this assumes z=0.
+        """
+        if wall_order==2 or wall_order==3:
+            return eerphi[wall_order]
+        else:
+            # unsupported wall order
+            sys.exit(-225)
+
+    def wall_pot_at_zrphi(self, z, r, phi, wall_order, method='teale2013'):
+        """
+        Rotating wall electronic potential at (z,r,phi).
+
+        :param z: z coordinate (meters)
+        :param r: radial coordinate (meters)
+        :param phi: azimuthal angle (turns, 0:2*np.pi)
+        """
+        # The most complete representation of the wall potential would be to
+        # a) apply 1 V to one rotating wall electrode
+        # b) use BEM to compute the potential in volume near trap center
+        # c1) save these potentials for fully-general calculations later
+        # c2) in z=0 plane, use expansion V(r, phi) = sum A(l,m) r^l cos(m phi)
+        #     see John's note 2/19/2015 in Onenote
+        # c3) whatever Carson did
+        if method == 'full':
+            # this is c1 -- needs to be done!
+            sys.exit(-222)
+        elif method == 'bem_inplane':
+            # this is c2 -- needs to be done!
+            if z!= 0:
+                sys.exit(-223)
+            else:
+                sys.exit(-221)
+        elif method == 'teale2013':
+            alm = self.wall_pot_expansion_in_rphi_coef(wall_order)
+            x = r*np.cos(phi)
+            y = r*np.sin(phi)
+            if wall_order==2:
+                pot = alm*(x**2 - y**2)
+            if wall_order==3:
+                pot = (x**3 - 3*x*y**2)
+        else:
+            sys.exit(-220)
+        return pot
+
+    def plot_wall_pot_rphi(self, method='teale2013'):
+        r = np.linspace(0, 2, 50)*1e-3
+        phi = np.linspace(0, 2*np.pi, 360)
+        mr, mphi = np.meshgrid(r, phi)
+        ax1 = plt.subplot(1, 2, 1, projection="polar")
+        pot = self.wall_pot_at_zrphi(z=0, r=mr, phi=mphi,
+                                     wall_order=2, method=method)
+        ax1.pcolormesh(mphi, mr, pot, cmap=plt.cm.bwr)
+        ax2 = plt.subplot(1, 2, 2, projection="polar")
+        pot = self.wall_pot_at_zrphi(z=0, r=mr, phi=mphi,
+                                     wall_order=3, method=method)
+        ax2.pcolormesh(mphi, mr, pot, cmap=plt.cm.bwr)
+        plt.show()
+
     def plot_trap_pot_along_z(self):
         # extract trap potential, pot
         zs = np.linspace(-20, 20, 50)*1e-3
@@ -304,14 +367,6 @@ class Geonium():
     @property
     def mag_f(self):
         return self._mag_f
-
-    @property
-    def wall_coef2(self):
-        return self._wall_coef2
-
-    @property
-    def wall_coef3(self):
-        return self._wall_coef3
 
     def __str__(self):
         s = "m={:.2e} kg  q={:.2e}\n".format(self.m, self.q)
@@ -601,8 +656,9 @@ class IonCrystal2d():
         wc = self.geonium.to_theory_units('cyclotron', self.geonium.cyc_f)
         m = self.geonium.to_theory_units('mass', self.geonium.m)
         q = self.geonium.q
-        wc2 = self.geonium.wall_coef2
-        wc3 = self.geonium.wall_coef3
+        wall_order = self.geonium.trap.wall_order
+        wc2 = (wall_order==2)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(2)
+        wc3 = (wall_order==3)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(3)
         b = self.geonium.trap.b
         k_e = self.geonium._k_e
         # TODO: why aren't x and y converted to theory units?
@@ -635,8 +691,9 @@ class IonCrystal2d():
         wc = self.to_theory_units('cyclotron', self.cyc_f)
         m = self.to_theory_units('mass', self.m)
         q = self.q
-        wc2 = self.wall_coef2
-        wc3 = self.wall_coef3
+        wall_order = self.geonium.trap.wall_order
+        wc2 = (wall_order==2)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(2)
+        wc3 = (wall_order==3)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(3)
         b = self.b
         k_e = self._k_e
 
@@ -679,8 +736,9 @@ class IonCrystal2d():
         wc = self.geonium.to_theory_units('cyclotron', self.geonium.cyc_f)
         m = self.geonium.to_theory_units('mass', self.geonium.m)
         q = self.geonium.q
-        wc2 = self.geonium.wall_coef2
-        wc3 = self.geonium.wall_coef3
+        wall_order = self.geonium.trap.wall_order
+        wc2 = (wall_order==2)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(2)
+        wc3 = (wall_order==3)*q*self.geonium.trap.wall_pot_expansion_in_rphi_coef(3)
         b = self.geonium.trap.b
         k_e = self.geonium._k_e
 
@@ -1222,6 +1280,7 @@ class Visualize:
 
 if __name__ == "__main__":
     p = PenningTrap()
-    g = Geonium(trap=p)
-    nion = HexLattice.get_nvert_from_nshells(4)
-    c = IonCrystal2d(geonium=g, nion=nion)
+    p.plot_wall_pot_rphi()
+    #g = Geonium(trap=p)
+    #nion = HexLattice.get_nvert_from_nshells(4)
+    #c = IonCrystal2d(geonium=g, nion=nion)
