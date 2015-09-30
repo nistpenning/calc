@@ -28,9 +28,10 @@ G_ud =  10.07
 G_du =  7.10
 G_tot = 42.1
 #adjust for extra decohrence
-G_tot = 0.5*(67.10+17.1+38.6)
+G_add = 40.0
+G_tot = 0.5*(67.10+17.1+G_add)
 print(G_tot)
-G_el = 67.10 + 38.6
+G_el = 67.10 + G_add
 
 # containers for data sets
 ats=[]
@@ -45,7 +46,7 @@ hist = []
 base_path = os.getcwd()
 add_path = ""
 fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-1]]
-J1ks = (2316.0)*np.ones(np.shape(fns))
+J1ks = (1785.0)*np.ones(np.shape(fns))
 Ncals = 0.85 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________

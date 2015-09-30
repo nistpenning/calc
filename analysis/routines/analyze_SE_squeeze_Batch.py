@@ -19,9 +19,9 @@ import squeeze_func_time as squ
 verbose = True
 save = False
 img_name = "spinNoise_9_24"
-files_to_use = []
-J1k = 1938.0    
-Ncal = 1.0347
+files_to_use = [-1]
+J1k = 1785.0    
+Ncal = 0.85
 
 #theory calc info
 G_el =  67.10
@@ -29,13 +29,14 @@ G_ud =  10.07
 G_du =  7.10
 G_tot = 42.1
 #adjust for extra decohrence
-G_tot = 0.5*(67.10+17.1+ 30.06)
+G_add = 40.0
+G_tot = 0.5*(67.10 + 17.1 + G_add)
 print(G_tot)
-G_el = 67.10 + 38.0
+G_el = 67.10 + G_add
 
 #added noise from Jy noise fit
-A = 0.001859  # rad^2/ms^2
-B = 0.0 # rad^2/ms^4
+A = 0.002143  # rad^2/ms^2
+B = 0.0000 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -142,7 +143,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-10,15])
+plt.axis([-1,181,-10,18])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
