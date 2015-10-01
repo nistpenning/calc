@@ -5,10 +5,12 @@ from contracts import contract
 
 from scipy.constants import pi
 import numpy as np
+import scipy.constants as u
 import scipy.optimize as optimize
 import matplotlib.pyplot as plt
 import numpy.matlib as matlib
 import matplotlib.gridspec as gridspec
+
 
 """
 Contains the ModeAnalysis class, which can simulate the positions of ions in a crystal
@@ -36,7 +38,8 @@ class HexLattice:
         :param scale: target vertex-vertex spacing (float)
         :return: none
         """
-        self._x, self._y = HexLattice.hex_lattice(s, scale)
+        self._s = s
+        self._scale = scale
 
     @property
     @contract(returns='tuple(array[N],array[N]),N>0')
@@ -45,6 +48,7 @@ class HexLattice:
 
         :return: (x, y)
         """
+        self._x, self._y = HexLattice.hex_lattice(self._s, self._scale)
         return self._x, self._y
 
     @staticmethod
@@ -117,6 +121,17 @@ class HexLattice:
             if nvert < ntest:
                 return s-1
 
+    def plot(self):
+        plt.clf()
+        for si in range(self._s):
+            x, y = self.hex_shell(si)
+            x = np.hstack((x, x[0]))
+            y = np.hstack((y, y[0]))
+            plt.plot(x, y, 'k.', markersize=30)
+            plt.plot(x, y, 'b-')
+            plt.axis('equal')
+        plt.axis('off')
+        plt.show()
 
 class PenningTrap:
     """
@@ -1278,9 +1293,3 @@ class Visualize:
             np.savetxt(fname, Jij, delimiter=", ",
                        header=s, fmt=fmts)
 
-if __name__ == "__main__":
-    p = PenningTrap()
-    p.plot_wall_pot_rphi()
-    #g = Geonium(trap=p)
-    #nion = HexLattice.get_nvert_from_nshells(4)
-    #c = IonCrystal2d(geonium=g, nion=nion)
