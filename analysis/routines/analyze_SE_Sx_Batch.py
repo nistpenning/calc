@@ -23,15 +23,15 @@ if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
     
 #theory calc info
-G_el =  67.10
-G_ud =  10.07
-G_du =  7.10
-G_tot = 42.1
+G_el =  61.6
+G_ud =  9.24
+G_du =  6.52
+G_tot = 38.7
 #adjust for extra decohrence
-G_add = 40.0
-G_tot = 0.5*(67.10+17.1+G_add)
+G_add = 28.0
+G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
-G_el = 67.10 + G_add
+G_el = G_el + G_add
 
 # containers for data sets
 ats=[]
@@ -46,8 +46,8 @@ hist = []
 base_path = os.getcwd()
 add_path = ""
 fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-1]]
-J1ks = (1785.0)*np.ones(np.shape(fns))
-Ncals = 0.85 * np.ones(np.shape(fns))  # #photons per ion per ms
+J1ks = (2043.0)*np.ones(np.shape(fns))
+Ncals = 1.0 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 #_____________________________________________________________________
 # data processing here

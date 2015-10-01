@@ -19,6 +19,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 #inputs
 Ncal = 1.1
 files_to_use = [-1]
+t4term = False
 
 verbose = False
 save = False
@@ -127,7 +128,7 @@ def added_noise(tau, N, m, k, A, B):
 
 for i,data in enumerate(ats[0:3]):
     guess=np.array([Ns[i],np.mean(p_counts[i]),k,0.1,0.0])
-    hold=np.array([True,True,True,False,False])
+    hold=np.array([True,True,True,False,t4term])
     pl = ["Interaction time [ms]","Std Dev. photon count",'Extract added']
     pout,perr = pt.plot_fit(2e-3*ats[i],(sig_obs[i]),added_noise,guess,
                 yerr=sig_ob_errs[i],

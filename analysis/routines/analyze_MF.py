@@ -27,9 +27,9 @@ folders = get_immediate_subdirectories(os.getcwd())
 
 #Do the analysis on all the folders
 #define intial parameters
-Gamma = 41.2e-6
+Gamma = 57e-6
 w_a = 1573.0
-Jbar_1kHz = 1600
+Jbar_1kHz = 2000
 Jbar_guess = 1.0*Jbar_1kHz*1e-6
 
 fitguess = np.array([Jbar_guess, Gamma])
