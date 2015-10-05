@@ -18,6 +18,11 @@ import squeeze_func_time as squ
 verbose = True
 save = True
 img_name = "spinNoise_8_6"
+folder_name = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150806/Squeeze_186kHz/"
+
+#added noise from Jy noise fit
+A = 0.001700  # rad^2/ms^2
+B = 0.00000 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -28,7 +33,7 @@ sig_pns = []
 Ns = []
 names = []
 
-base_path = os.getcwd()
+base_path = os.path.normpath(folder_name)
 fns = [os.listdir(base_path)[i] for i in [0,1,2]]
 fns = [os.listdir(base_path)[i] for i in [6,5]]
 J1ks = (475.0*3.03)*np.ones(np.shape(fns))
@@ -110,11 +115,11 @@ for i,data in enumerate(sig_obs):
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
-    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
+    plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
 #plt.yscale('log')
-#plt.xscale('log')
-plt.axis([-1,181,-9,15])
+plt.xscale('log')
+plt.axis([2,181,-9,15])
 plt.xlabel(r"Tomography angle $\psi$ (deg)")
 plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)")
 plt.grid('off')
@@ -128,7 +133,7 @@ G_du =  6.19
 #include additional decoherence term
 G_el = G_el + 45.0
 
-psi = np.linspace(0.001,pi,num=100) # radians
+psi = np.linspace(0.001,pi,num=500) # radians
 
 
 for i,name in enumerate(names):
@@ -137,8 +142,11 @@ for i,name in enumerate(names):
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
+    R_add = R + (A*(its[i]*1e3)**2)*N * sin(psi) + (B*(its[i]*1e3)**4)*N * sin(psi) + (22.5/((1091.0+1085.0)/2.0))**2 / (1/Ns[i])
     R_dB = 10*np.log10(R)
-    plt.plot(psi*180/pi,R_dB,color=colors[i])
+    R_dB_add = 10*np.log10(R_add)
+    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i],linestyle='--')
+    plt.plot(np.abs(psi*180/pi -180),R_dB_add,color=colors[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 
 if save is True:
@@ -147,5 +155,5 @@ if save is True:
     shutil.copy(__file__, os.getcwd())
     #save figure in the dir with the script, since it is a figure maker
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)
