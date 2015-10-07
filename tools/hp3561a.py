@@ -255,5 +255,14 @@ class HP3561A:
         """
         return np.sqrt(2)*10**(dbv/20)
 
-
-
+    @staticmethod
+    def plot_vsd(f, dbv, bw, gain):
+            fig, ax1 = plt.subplots()
+            fig.set_figheight(2.0)
+            vsd = self.dbv_to_vsd(dbv, gain, bw)
+            plt.semilogy(f, vsd)
+            ax1.locator_params(axis='x', nbins=5)
+            plt.title("HP 3146A")
+            plt.ylabel("VSD ($V/sqrt(Hz)$)")
+            plt.xlabel("Freq ($Hz$)")
+            plt.show()
