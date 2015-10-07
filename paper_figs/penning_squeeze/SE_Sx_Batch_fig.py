@@ -19,7 +19,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = True
+save = False
 save_txt = False
 name = "SxVsN_fig.pdf"
 
@@ -146,8 +146,8 @@ G_r = G_ud + G_du
 
 
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
-#spem = np.exp(-G_tot*ti)
-#plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
+spem = np.exp(-60.0*ti)
+plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
 G_els = 57.1 + np.array([120.0,100.0,45.0])
 colors = ['k', ps.red, ps.blue, ps.purple]
 for j,Jbar1k in enumerate(J1ks):
