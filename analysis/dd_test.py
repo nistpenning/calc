@@ -38,13 +38,13 @@ class TestCalculatedCoherence(unittest.TestCase):
     """
     See dd_test.lyx for the approach used here.
     """
-    def constant_vsd(self, w, v0):
+    def constant_vsd(self, ws, v0):
         """Constant voltage spectral density
 
         :param v0: amplitude  (v)
         :return: voltage spectral density  (v/sqrt(rad/s))
         """
-        return v0
+        return np.array([v0 for w in ws])
 
     def coh_for_constant_vsd(self, t, eta, v0):
         """Expected coherence for VSD test_constant_vsd(). This is a
@@ -58,24 +58,27 @@ class TestCalculatedCoherence(unittest.TestCase):
 
     def test_coh(self):
         pi = np.pi
-        taus = np.linspace(1e-6, 1e-3, 100)
-        wmin = 1*2*pi
+        taus = np.linspace(1e-3, 0.1, 20)
+        wmin = 0.1*2*pi
         wmax = 1e3*2*pi
-        beta = lambda w: calc_wsd_from_vsd(w, vsd=self.constant_vsd(w=w, v0=1e-5), eta=1)**2
+        v0 = 5e-8
+        eta = 1
+        ws = np.linspace(wmin, wmax, 3000)
+        vsd = self.constant_vsd(ws=ws, v0=v0)
+        beta = psd_from_vsd_func(ws, vsd, eta=eta)
         coh = np.zeros(len(taus))
         for i, tau in enumerate(taus):
             ff_at_tau = lambda w: filter_function_udd_spin_echo(w, tau, t_pi=0)
             coh[i] = calc_coherence(tau, beta=beta, ff=ff_at_tau,
-                                wmin=1*2*pi, wmax=10e3*2*pi)
-        coh_expected = [self.coh_for_constant_vsd(tau, eta=1, v0=1e-5) for tau in taus]
+                                wmin=wmin, wmax=wmax)
+        coh_expected = [self.coh_for_constant_vsd(tau, eta=eta, v0=v0) for tau in taus]
         mean_residual = np.mean(coh_expected - coh)
-        self.assertTrue(mean_residual < 1e-3)
         if debug:
             plt.plot(taus, coh, 'k+')
             plt.plot(taus, coh_expected, 'r-')
             plt.ylim(-0.1, 1.1)
             plt.show()
-
+        self.assertTrue(mean_residual < 1e-3)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

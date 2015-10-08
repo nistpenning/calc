@@ -2,6 +2,7 @@ import scipy.constants as u
 import numpy as np
 import matplotlib.pylab as plt
 import scipy.integrate
+import scipy.interpolate
 
 
 """Functionality related to dynamical decoupling and noise."""
@@ -22,25 +23,28 @@ def filter_function_udd_spin_echo(w, tau, t_pi):
     return nz*np.abs(ftmp*np.conj(ftmp))
 
 
-def calc_wsd_from_vsd(w, vsd, eta):
-    """ Compute frequency spectral density from
-    voltage spectral density assuming a sensitivity of eta.
+def psd_from_vsd_func(w, vsd, eta):
+    """ Compute interpolating function for power spectral density of
+    of frequency fluctuations assuming a sensitivity of eta.
 
-    :param w: angular frequency
-    :param vsd: voltage spectral density on Z0 (V/sqrt(Hz))
-    :param eta: picku-up coil sensitivity: b=-v/(eta*w)  (m**2)
-    :return: frequency power spectral density   (rad/s)**2/(rad/s)
+    :param w: angular frequency  (rad/sec)
+    :param vsd: voltage spectral density  (V/sqrt(Hz))
+    :param eta: pick-up coil sensitivity: b=-v/(eta*w)  (m**2)
+    :return: interpf(w), an interpolating function for frequency power spectral
+        density at w (rad/s) in units of (rad/s)**2/(rad/s)
     """
     uB = u.value("Bohr magneton")
     pi = np.pi
     g = 2.002
     hbar = u.hbar
-    bsd = -vsd/(eta*w)  # magnetic field amplitude spectral density
+    bsd = -1*vsd/(eta*w)  # magnetic field amplitude spectral density
     wsd = g*uB/(2*pi*hbar)*bsd  # frequency spectral density
-    return wsd
+    psd = wsd**2
+    interpf = scipy.interpolate.interp1d(w, psd, kind=1)
+    return interpf
 
 
-def calc_coherence(tau, beta, ff, wmin=1*2*np.pi, wmax=10e3*2*np.pi):
+def calc_coherence(tau, beta, ff, wmin, wmax):
     """ Compute spin coherence after free precession interval tau.
     Assume use of dynamical decoupling during tau.
         Uys, H., PRL 103, 40501-40501 (2009)
@@ -55,7 +59,7 @@ def calc_coherence(tau, beta, ff, wmin=1*2*np.pi, wmax=10e3*2*np.pi):
     :param wmax: maximum angular frequency (rad/s)
     :return: spin coherence [0, 1]
     """
-    w = np.linspace(wmin, wmax, 1000)
-    integrand = beta(w)*ff(w)/w**2
-    chi = 2.0/np.pi * scipy.integrate.simps(integrand, w)
+    ws = np.linspace(wmin, wmax, 1000)
+    integrand = [beta(w)*ff(w)/w**2 for w in ws]
+    chi = 2.0/np.pi * scipy.integrate.simps(integrand, ws)
     return np.exp(-chi)
