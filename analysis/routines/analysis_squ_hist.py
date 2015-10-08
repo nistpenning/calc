@@ -1,107 +1,112 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 10 11:46:38 2015
+Created on Thu Aug 20 20:36:13 2015
 
-@author: justinbohnet
+@author: jgb
 """
 
-import os, csv, sys, importlib
+import os, shutil, importlib
 import numpy as np
-from numpy import sin, cos, pi, sqrt
-from scicons import hbar, m_Be, k_b
+from numpy import pi, sqrt
 import matplotlib.pyplot as plt
+import scipy.stats.mstats as mstats
 
-sys.path.append("..")
+import hfGUIdata as hf
+importlib.reload(hf)
+import plot_style as ps
+importlib.reload(ps)
 import squeeze_func_time as squ
-importlib.reload(squ)
 
-import hfGUIdata
-importlib.reload(hfGUIdata)
-import plot_model_fit as pt
-importlib.reload(pt)
-import scipy
-import scipy.stats
+#options
+verbose = True
+save = False
+files_to_use = [0,3,12]
+img_name = "transverse_hist.pdf"
+base_path = os.getcwd()
+data_path = '/Users/jgb/Data/20151002/squeeze_raw/170807'
+data_path = '/Users/jgb/Data/20151002/squeeze_raw/165546'
+#data_path = '/Users/jgb/Data/20151002/squeeze_raw/152643'
+os.chdir(data_path)
 
-#inputs to the analysis
-dataname = "1100us"
-csvname = dataname + "_summary.csv"
-N = 59.0
-N_err = 1.0
-Gamma = 59.0
-Jbar_1kHz = 1776 # 1/s, predicted from F0
-#w_a = hfGUIdata.get_ionProp_value('raman%raman_fz')
-#calibration mask range
-mask_range = 0  # [8,9]
-fitguess = np.array([N, 0.01, 0.02,])
-hold = np.array([True, False, False])
+# containers for data sets
+psis=[]
+its=[]
+sig_obs = []
+sig_ins = []
+sig_pns = []
+SE = []
+Ns = []
+names = []
 
-'''
-Use ACSS to predict Ising interaction and decoherence
-ACSS_u_pi = 2*pi*14.4e3
-ACSS_L_pi = 2*pi*15.1e3
-wz = 2*pi*1556.0e3
+fns = [os.listdir(data_path)[i] for i in files_to_use]
+J1ks = (475.0*3.03)*np.ones(np.shape(fns))
+Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
 
-Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(ACSS_u_pi, ACSS_L_pi, wz)
-'''
-folders = hfGUIdata.get_immediate_subdirectories(os.getcwd())
+for i,fn in enumerate(fns):
+    folder = os.path.join(data_path,fn)
+    os.chdir(folder)
+    files = os.listdir(os.getcwd())
+    print(folder)
 
-'''
-# Use data set of just a rotated Bloch vector for noise calibration
-os.chdir(folders[1])
-max_c, min_c, N, sigA, k0 = squ.cal_analysis(mask_range, hold=hold, Nguess=N)
-print('Ion number (fixed): {}'.format(N))
-# get data for contrast compare plot
-file_name, scandata, m_full, pmterr_full, trials, data = hfGUIdata.get_raw_counts()
-brightMean = hfGUIdata.get_ionProp_value('detection%det_brightMean')
-darkMean = hfGUIdata.get_ionProp_value('sf%fitParams%sf_fitParam_darkMean')
-pmterr_full = pmterr_full/sqrt(trials-1)
-phi_full = ((scandata/pi) * 180.0)  # degrees
-os.chdir('..')
-'''
+    max_c = hf.get_ionProp_value('detection%det_brightMean')
+    min_c = hf.get_ionProp_value('sf%fitParams%sf_fitParam_darkMean')
 
-# Squeezing data set
-os.chdir(folders[0])
-max_c = hfGUIdata.get_ionProp_value('detection%det_brightMean')
-min_c = hfGUIdata.get_ionProp_value('sf%fitParams%sf_fitParam_darkMean')
-#int_time, detuning, m, pmterr_min, theta, j_z_err, psi, stddevjz, RO = squ.sq_analysis(max_c, min_c, N, N_err, sigA ,k0, Jbar_1kHz)
-#squ.sq_figures(max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz, save=True, extent=[-5,350,-6.0,12.5])
-#counts_data, x_data = squ.data_point_histogram(10, max_c, min_c, N, N_err, sigA, k0, Jbar_1kHz)
-squ.hist_data_browser(max_c, min_c, 10)
-os.chdir('..')
+    file_name, scandata, counts_data, data = hf.get_raw_counts_hist()
 
-#%%
-#______________________________________________________________________
-os.chdir(folders[0])
-pn=0
-file_name, scandata, counts_data, data = hfGUIdata.get_raw_counts_hist()
-arm_time = np.mean(data['arm_t'])
-pi_time = np.mean(data['middle_t'])
-det_n = np.mean(data['det_n'])
-rot_time = np.mean(data['final_t']) * np.ones(np.size(scandata))
+    rot_time = np.mean(data['final_t'])
+    final_phase = np.mean(data['final_p'])
+    tau = np.mean(data['arm_t']) * 2e-3  # ms
 
-# Calculate derived quantities
-detune = det_n*1e3/(arm_time)  # kHz
-phi = (rot_time/pi_time*180.0)  # degrees
+    # Calculate derived quantities
+    #detune = det_n*1e3/(arm_time)  # kHz
+    #phi = (rot_time/pi_time*180.0)  # degrees
 
-z_data = (counts_data-min_c)/(max_c - min_c)
-z_data = z_data.flatten()
+    z_data = 2*(((counts_data-min_c)/(max_c - min_c)) - 0.5)
+    
+    num_bins = 25#sqrt(len(z_data))
+    bs = np.arange(-1.1,1.1,(2.2/num_bins))
+    
+    lab = r"$\psi$={0:.2f} deg".format(final_phase/pi*180)
+    plt.hist(z_data,bs,label=lab,alpha=0.6)
+    
+    k2,pval = mstats.normaltest(z_data)
+    print(lab)
+    print("# of trials: {}".format(len(z_data)))
+    print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
+    
+    os.chdir(base_path)
+#plt.legend(fontsize=11)
+plt.axis([-1.0,1.0,0,100])
+plt.xlabel(r"Transverse spin projection 2$S_\psi$/N")
+plt.ylabel("Experiments")
+if len(files_to_use) == 1:
+    plt.title(r"$\tau$: {0:.3g} ms, N: {1:.0f}, $\psi$: {2:.3g}".format(tau,N,final_phase*180/pi))
+        
+    plt.show()
+    plt.close()
+    plt.plot(z_data,'o')
+    #plt.axis([0,len(z_data),-1.1,1.1])
+    plt.xlabel("Trial number")
+    plt.ylabel(r"Transverse spin projection 2$S_\psi$/N" )
 
-plt.close()
-bin_width = 0.01
-bin_range = np.arange(min(z_data), max(z_data) + bin_width, bin_width)
-plt.hist(z_data,bins=bin_range)
 
-param = scipy.stats.norm.fit(z_data)
-pdf_x = np.linspace(0,1)
-pdf_fitted = (np.size(z_data)*bin_width) * scipy.stats.norm.pdf(pdf_x, loc=param[0], scale=param[1])
-plt.plot(pdf_x, pdf_fitted)
+print(base_path)
+"""
+data170name = "/Users/jgb/data170.csv"
+data170 = np.genfromtxt(data170name,dtype='float',delimiter=',')
+data90name = "/Users/jgb/data90.csv"
+data90 = np.genfromtxt(data90name,dtype='float',delimiter=',')
 
-plt.xlabel('Counts')
-plt.ylabel('Number of Instances')
-title = 'Angle:{0:.1f} deg, t_a: {1} us, #{2}'.format(phi[pn],arm_time,pn)
-plt.title(title)
-plt.axis([0,1.0,0,400.0])
+Sx170 = data170.T[0]
+trials170 = data170.T[1]
+Sx90 = data90.T[0]
+trials90 = data90.T[1]
 
-#___________________________________________________________________________
+plt.plot(Sx170,trials170,color='k')
+plt.plot(Sx90,trials90,color=ps.red)
+plt.grid('off')
+"""
 
-os.chdir('..')
+os.chdir(base_path)
+if save is True:
+    plt.savefig(img_name,bbox='tight',transparent=True)

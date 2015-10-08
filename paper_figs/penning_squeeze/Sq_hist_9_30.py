@@ -43,7 +43,6 @@ names = []
 fns = [os.listdir(data_path)[i] for i in files_to_use]
 J1ks = (475.0*3.03)*np.ones(np.shape(fns))
 Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
-bs = np.arange(-1.1,1.1,0.1)
 
 for i,fn in enumerate(fns):
     folder = os.path.join(data_path,fn)
@@ -66,11 +65,15 @@ for i,fn in enumerate(fns):
 
     z_data = 2*(((counts_data-min_c)/(max_c - min_c)) - 0.5)
     
+    num_bins = sqrt(len(z_data))
+    bs = np.arange(-1.1,1.1,(2.2/num_bins))
+    
     lab = r"$\psi$={0:.2f} deg".format(final_phase/pi*180)
     plt.hist(z_data,bs,label=lab,alpha=0.6)
     
     k2,pval = mstats.normaltest(z_data)
     print(lab)
+    print("# of trials: {}".format(len(z_data)))
     print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
     
     os.chdir(base_path)
