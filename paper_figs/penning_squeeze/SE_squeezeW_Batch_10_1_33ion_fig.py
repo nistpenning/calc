@@ -14,15 +14,18 @@ import hfGUIdata as hf
 import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
+import plot_style as ps
 
 #options
+colors = ['k', ps.red, ps.blue, ps.orange]
 verbose = True
-save = False
-img_name = "spinNoise_9_24"
-folder_name = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150930/Load331/squeeze/"
-files_to_use = [-1]
-J1k = 2100.0    
-Ncal = 0.98
+save = True
+img_name = "spinNoise_10_1_66ions"
+folder_name = "/Users/jgb/Data/20151001/Load333/squeeze"
+files_to_use = [3,1,2,4]
+J1k = 1776.0    
+Ncal = 1.1
+ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 
 #theory calc info
 G_el =  61.6
@@ -30,14 +33,15 @@ G_ud =  9.24
 G_du =  6.52
 G_tot = 38.7
 #adjust for extra decohrence
-G_add = 60.0
+
+G_add = 28.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.00177  # rad^2/ms^2
-B = 0.000018 # rad^2/ms^4
+A = 0.001763  # rad^2/ms^2
+B = 0.00004 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -68,7 +72,7 @@ for i,fn in enumerate(fns):
     bm = data_p['det_brightMean']
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
-    int_t = 4e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
+    int_t = ODF_seq*1e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
     #reps = data_p["reps"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
@@ -101,7 +105,7 @@ for i,fn in enumerate(fns):
     dB_squ_ob = 10*np.log10((sig_ob**2)/(sig_pn**2))
     
     # calc reduction in constrast (from model shown to represent data)
-    Jbar = J1ks[i] /(0.002/int_t)
+    Jbar = J1ks[i] /((ODF_seq * 0.001)/int_t)
     out = squ.OAT_decoh(0.0, int_t, Jbar, N, G_el, G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     csi_R2 = (sig_ob**2)/(sig_pn**2)/C_coherent_pred**2
@@ -140,22 +144,21 @@ for i,data in enumerate(sig_obs):
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
-    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l)
+    plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l,color=colors[i])
 
 #plt.yscale('log')
-#plt.xscale('log')
-plt.axis([-1,181,-10,18])
-plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
-plt.ylabel("Spin variance [dB]",fontsize=14)
+plt.xscale('log')
+plt.axis([4,181,-10,15])
+plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
+plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
 
 #________________________________________________________________________
 #add some theory curves
 
 psi = np.linspace(0.001,pi,num=100) # radians
-cs = ['b','g']
 for i,name in enumerate(names):
-    Jbar = J1ks[i]/(0.002/(its[i]/2))
+    Jbar = J1ks[i] /((ODF_seq * 0.001)/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
@@ -163,26 +166,30 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*N * sin(psi) + (B*(its[i]*1e3)**4)*N * sin(psi)
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
-    plt.plot(psi*180/pi,R_dB,color=cs[i])
-    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--',label="Jy_dephasing")
+    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i],linestyle='--')
+    plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
-plt.legend(loc=0,fontsize=10)
+#plt.legend(loc=0,fontsize=10)
+
 if len(names) is 1:
     plt.title(names[0])
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
+    os.chdir(base_path)
+    #save figure in the dir with the script, since it is a figure maker
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)
 
 plt.show()
 plt.close()
 int_times = np.array(its)*1e3
 plt.plot(int_times,SE,'o')
-plt.ylabel('Spectroscopic Enhancement [dB]')
-plt.xlabel('Interaction time [ms]')
+plt.ylabel('Spectroscopic Enhancement (dB)')
+plt.xlabel('Interaction time (ms)')
 plt.show()
