@@ -778,6 +778,24 @@ class IonCrystal2d():
         return np.array([fx, fy]).flatten()
 
 
+    @staticmethod
+    def lamb_dicke_confinement(evec, eval, temp):
+        """ calculate rms spread of ion's thermal spread considering all axial modes
+
+        :param evec: NxN array of eigenvectors (normalized to 1)
+        :param eval: N array of eigenvalues  (rad/s)
+        :param temp: temperature of axial modes (assumed all are equal) (K)
+        :return: N array rms spread for each ion (meters)
+        """
+        hbar = u.hbar
+        mbe = 8.94*u.proton_mass
+        nions = len(eval)
+        nbar = (temp*u.k)/(hbar*eval)
+        zrms = np.zeros(nions)
+        for n in range(nions):
+            zrms[n] = np.sqrt( np.sum(evec[n,:]**2*hbar/(2*mbe*eval)*(2*nbar+1)) )
+        return zrms
+
 class ModesTransverse:
     """
     Compute transverse modes.
