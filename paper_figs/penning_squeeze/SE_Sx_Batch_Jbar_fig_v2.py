@@ -19,24 +19,34 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
+save = True
 save_txt = False
 name = "SxVsN_Jbar_fig_v2.pdf"
+colors = ['k', ps.red, ps.blue, ps.purple]
+shapes = ['o','s','D','^']
 
 # containers for data sets
 ats=[]
 Cs = []
 Cerrs = []
 Ns = []
-J1ks = [1776,2316]
-Ncals = [1.1,0.85]
+#J1ks = [1440,1776,2316,1785]
+J1ks = [1440,1776,2316]
+
+#Ncals = [1.7425,1.1,0.85,0.8]
+Ncals = [1.7425,1.1,0.85]
+
+#G_add = np.array([120.0,37.6,46.6,50.0])
+G_add = np.array([120.0,37.6,46.6])
 names = []
 hist = []
 
 base_path = os.getcwd()
 #for the figure creation, point to the file folders that have the data sets we need
-fns = ["/Users/jgb/Data/20151001/Load333/Sx/2015-10-01--11.42.37.735",
+fns = ["/Users/jgb/Data/20150811/Load306/depolarization/2015-08-11--19.53.00.339",
+       "/Users/jgb/Data/20151001/Load333/Sx/2015-10-01--11.42.37.735",
        "/Users/jgb/Data/20150918/depolarization/AtDecouplings/2015-09-18--17.48.36.467"]
+       #"/Users/jgb/Data/20150929/Load330/depol/2015-09-29--17.34.44.654"]
 #store the parameters for the N value in the props file
 #J1ks = (475.24*3.03)*np.ones(np.shape(fns)) # per sec at 1 kHz detuning
 #Ncals = 1.4924 * np.ones(np.shape(fns))  # #photons per ion per ms
@@ -118,13 +128,12 @@ names.append("phaseflop_datasets_7_22_L296")
 # visualizing the experimental data
 #fig = plt.figure(figsize=(6.0,4.5))
 data_for_save = []
-shape = ['o','s','D']
 for i,data in enumerate(ats):
     l = "N: {:.0f}".format(Ns[i])
     Jbar = J1ks[i]/(0.002/(data*2e-6))
     Jt_opt = (24**(1/6.)*(Ns[i]/2)**(-2/3.))/4.*Ns[i]
     Jt = (Jbar*data*2e-6) #/ Jt_opt
-    plt.errorbar(Jt,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shape[i])
+    plt.errorbar(Jt,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],color=colors[i])
     if save_txt is True:
         data_for_save.append(2e-3*ats[i])
         data_for_save.append(Cs[i])
@@ -147,7 +156,6 @@ G_du =  6.52
 G_tot = 38.7
 #adjust for extra decohrence
 
-G_add = np.array([37.6,46.6])
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_els = G_el + G_add
@@ -158,7 +166,6 @@ spem = np.exp(-60.0*ti)
 Jbar_theory = np.mean(J1ks)/(0.002/ti)
 plt.plot(ti*Jbar_theory, spem,'--k',label='Spon. Emiss.')
 
-colors = ['k', ps.red, ps.blue, ps.purple]
 for j,Jbar1k in enumerate(J1ks):
     print("Total scattering rate: {0:0.3g}".format(0.5*(G_els[j] + G_r)))
     Jbar = Jbar1k/(0.002/ti)
@@ -173,6 +180,22 @@ for j,Jbar1k in enumerate(J1ks):
 plt.axis([0.,10.,0.0,1.05])
 plt.grid('off')
 #plt.xscale('log')
+
+if True:
+    # get decohernce data to use as comparion to depolarization
+    os.chdir("/Users/jgb/Data/20151001/Load333/decoh/2015-10-01--11.45.55.754")
+    fn, data = hfGUIdata.get_gen_csv('phase', skip_header=True)
+    arm_time = np.array(data.T[0][1:],dtype='float')
+    t0_ind = np.where(arm_time==10.0)
+    int_time = arm_time*(2e-3)
+    A = np.array(data.T[1][1:],dtype='float')
+    B = np.array(data.T[2][1:],dtype='float')
+    contrast = ((A - B)/(A[t0_ind]-B[t0_ind]))
+    #use Jbar from that data set
+    Jbar = 1776.0/(0.002/(int_time*1e-3))
+    Jt = Jbar*int_time*1e-3
+    plt.plot(Jt,contrast,'s',color='k',zorder = 1)
+    os.chdir(base_path)
 
 if save is True:
     plt.savefig(name,dpi=300,bbox='tight',transparent=True)

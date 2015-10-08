@@ -17,31 +17,31 @@ import squeeze_func_time as squ
 import plot_style as ps
 
 #options
-colors = ['k', ps.red, ps.blue, ps.orange]
+colors = ['k', ps.red, ps.blue, ps.orange,ps.purple]
 verbose = True
 save = True
-img_name = "spinNoise_9_18_149ions"
-folder_name = "/Users/jgb/Data/20150918/squeeze"
-files_to_use = [9,8,4]
-J1k = 2316.0    
+img_name = "spinNoise_9_29_230ions"
+folder_name = "/Users/jgb/Data/20150929/Load330/squeeze"
+files_to_use = [1,0,3,2]
+J1k = 1785.0    
 Ncal = 0.85
 ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 
 #theory calc info
-G_el =  61.6
-G_ud =  9.24
-G_du =  6.52
-G_tot = 38.7
+G_el =  62.3
+G_ud =  9.35
+G_du =  6.59
+G_tot = 39.1
 #adjust for extra decohrence
 
-G_add = 46.6
+G_add = 50.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.001859  # rad^2/ms^2
-B = 0.00007 # rad^2/ms^4
+A =  0.002143  # rad^2/ms^2
+B = 0#.0001607 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -148,7 +148,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([4,181,-10,15])
+plt.axis([2,181,-10,18])
 plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
 plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
