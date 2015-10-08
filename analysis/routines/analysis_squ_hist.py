@@ -5,7 +5,7 @@ Created on Sun May 10 11:46:38 2015
 @author: justinbohnet
 """
 
-import os, csv, sys
+import os, csv, sys, importlib
 import numpy as np
 from numpy import sin, cos, pi, sqrt
 from scicons import hbar, m_Be, k_b
@@ -13,23 +13,22 @@ import matplotlib.pyplot as plt
 
 sys.path.append("..")
 import squeeze_func_time as squ
-reload(squ)
+importlib.reload(squ)
 
 import hfGUIdata
-reload(hfGUIdata)
+importlib.reload(hfGUIdata)
 import plot_model_fit as pt
-reload(pt)
+importlib.reload(pt)
 import scipy
 import scipy.stats
 
 #inputs to the analysis
 dataname = "1100us"
 csvname = dataname + "_summary.csv"
-N = 74.0
-N_err = 4.0
-Gamma = 78.3-6
-confine_param = 0.8**2  # measured from coherent rotation
-Jbar_1kHz = 2700 * confine_param # 1/s, predicted from F0
+N = 59.0
+N_err = 1.0
+Gamma = 59.0
+Jbar_1kHz = 1776 # 1/s, predicted from F0
 #w_a = hfGUIdata.get_ionProp_value('raman%raman_fz')
 #calibration mask range
 mask_range = 0  # [8,9]
