@@ -19,7 +19,7 @@ import plot_style as ps
 #options
 colors = ['k', ps.red, ps.blue]
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_9_30_33ions"
 folder_name = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150930/Load331/squeeze/"
 files_to_use = [14,10,9]
