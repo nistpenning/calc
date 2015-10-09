@@ -29,20 +29,15 @@ os.chdir(data_path)
 
 #theory calc info
 N=33
-
+num_bins = 20
 # containers for data sets
 psis=[]
 its=[]
-sig_obs = []
-sig_ins = []
-sig_pns = []
 SE = []
 Ns = []
 names = []
 
 fns = [os.listdir(data_path)[i] for i in files_to_use]
-J1ks = (475.0*3.03)*np.ones(np.shape(fns))
-Ncals = 1.3999 * np.ones(np.shape(fns))  # #photons per ion per ms
 
 for i,fn in enumerate(fns):
     folder = os.path.join(data_path,fn)
@@ -51,7 +46,7 @@ for i,fn in enumerate(fns):
     print(folder)
 
     max_c = hf.get_ionProp_value('detection%det_brightMean')
-    min_c = hf.get_ionProp_value('sf%fitParams%sf_fitParam_darkMean')
+    min_c = hf.get_ionProp_value('detection%det_darkMean')
 
     file_name, scandata, counts_data, data = hf.get_raw_counts_hist()
 
@@ -65,7 +60,6 @@ for i,fn in enumerate(fns):
 
     z_data = 2*(((counts_data-min_c)/(max_c - min_c)) - 0.5)
     
-    num_bins = sqrt(len(z_data))
     bs = np.arange(-1.1,1.1,(2.2/num_bins))
     
     lab = r"$\psi$={0:.2f} deg".format(final_phase/pi*180)
