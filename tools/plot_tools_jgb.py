@@ -51,7 +51,8 @@ def plot_fit(x,y,fitfunc,fitguess,
             show=True,
             fmt_data='o',
             fmt_fit='-',
-            mplrc_mode='default'):
+            mplrc_mode='default',
+            alpha=1):
     """Plot & fit with supplied model.
 
     :param x: numpy.array
@@ -67,6 +68,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     :param fmt_data: matplotlib plot format string; default 'o'
     :param fmt_fit: matplotlib plot format string; default '-'
     :param mplrc_mode: matplotlib RC mode
+    :param alpha: plot alpha (transparency, [0,1])
     :return: [[fit_param], [fit_error]]
         fit_param is vector of fit coefficients of length N
         fit_error sqrt of the diagonals of the covariance matrix (1 sigma confidence interval)
@@ -129,8 +131,8 @@ def plot_fit(x,y,fitfunc,fitguess,
         elif axis == 'auto':
             axis = auto_extent(x,y)
         plt.axis(axis)
-        plt.errorbar(x,y,yerr=yerr,fmt=fmt_data)
-        plt.plot(x_curve,curve_fit,fmt_fit)
+        plt.errorbar(x,y,yerr=yerr,fmt=fmt_data,alpha=alpha)
+        plt.plot(x_curve,curve_fit,fmt_fit,alpha=alpha)
 
         # labels
         plt.xlabel(labels[0])
