@@ -279,7 +279,7 @@ def plot_polyfit(x,y, fitguess,
     fit_message = fit_message + fit_mess2
 
     if show is True:
-        #build figure
+#build figure
         plt.close()
 
         if axis == 'default':
@@ -295,6 +295,8 @@ def plot_polyfit(x,y, fitguess,
         plt.plot(x_curve,curve_fit,'-')
 
         #labels
+        plt.xlabel=labels[0]
+        plt.ylabel=labels[1]
         plt.figtext(0.0, -0.05, fit_message, fontsize=10)
 
         name = fitfunc.__name__
