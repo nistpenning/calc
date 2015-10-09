@@ -19,7 +19,7 @@ import plot_model_fit as pf
 importlib.reload(pf)
 
 #options
-save = True
+save = False
 base_path = os.getcwd()
 save_file_name = "9_30_counts_data"
 data_path = '/Users/jgb/Data/20151002/squeeze_raw/165546'
