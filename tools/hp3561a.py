@@ -234,15 +234,14 @@ class HP3561A:
 
     @staticmethod
     def dbv_to_vsd(dbv, gain, bw):
-        """ Regardless UNITS mode on HP3146A, the output to file is always
-        in dBv/Hz.
+        """
 
         :param dbv: 'dbv' value from display of HP3146A.
         :param gain: gain from other instruments
-        :param bw: bandwidth of measurement (see last line of data file)
-        :return: dbV (V^2/Hz)
+        :param bw: bandwidth of measurement (Hz) (see last line of data file)
+        :return: dbV (V/sqrt(Hz))
         """
-        return (np.sqrt(2)*10**(dbv/20)/np.sqrt(bw)/gain)**2
+        return np.sqrt(2)*10**(dbv/20)/np.sqrt(bw)/gain
 
     @staticmethod
     def dbv_to_v(dbv):
