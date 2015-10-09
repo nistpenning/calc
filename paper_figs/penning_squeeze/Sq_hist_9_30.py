@@ -29,7 +29,7 @@ os.chdir(data_path)
 
 #theory calc info
 N=33
-num_bins = 20
+num_bins = 15
 # containers for data sets
 psis=[]
 its=[]
