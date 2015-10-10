@@ -18,6 +18,7 @@ importlib.reload(ps)
 base = os.getcwd()
 
 path = "/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150813"
+path = "/Users/jgb/Data/20150813"
 
 os.chdir(path)
 data = np.genfromtxt("PNvsN_corr.csv",delimiter=',',names=True)
