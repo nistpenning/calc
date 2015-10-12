@@ -5,7 +5,7 @@ Created on Thu Aug 13 11:24:06 2015
 @author: jgb
 """
 
-import os,importlib
+import os,importlib, shutil
 import numpy as np
 from numpy import sqrt
 import matplotlib.pyplot as plt
@@ -16,7 +16,10 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-base = os.getcwd()
+save = False
+img_name = "spec_enh"
+
+base_path = os.getcwd()
 
 #first look into the parameter database needed for each data set
 db_path = "/Users/jgb/calc/paper_figs/penning_squeeze/sq_data_paramdb.csv"
@@ -76,7 +79,7 @@ for i,fn in enumerate(folders[1:]):
     sig_PN_fulls.append(sig_full)  
     sig_PN_fulls_errs.append(sig_full_err)
     data_names.append(file_name)
-    os.chdir(base)
+    os.chdir(base_path)
 
 # now get CSS projection noise from calibration data
 data_path = "/Users/jgb/Data/20150813/Collect_PNvsN_data"
@@ -124,7 +127,7 @@ for i,fn in enumerate(folders[1:]):
     sig_PN_fulls.append(sig_cal_ob)  
     sig_PN_fulls_errs.append(sig_cal_ob_err)
     data_names.append(file_name)
-    os.chdir(base)
+    os.chdir(base_path)
 
 fig, ax = plt.subplots(figsize=(5.0,3.7)) 
 Nround = np.array([round(n) for n in Ns])
@@ -204,7 +207,7 @@ for i,fn in enumerate(folders[1:]):
     N_SEs.append(N)  
     sig_SE_fulls.append(sig_full)  
     sig_SE_fulls_errs.append(sig_full_err)
-    os.chdir(base)
+    os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
 plt.errorbar(NSEround, np.array(sig_SE_fulls), fmt='s',color=ps.blue)
@@ -225,8 +228,22 @@ ax.yaxis.set_major_locator(majorLocatorY)
 ax.yaxis.set_major_formatter(majorFormatterY)
 
 dephase_est = 0.002143  # for interaction time of 1ms, from 9/29
-x = np.linspace(0,300,num=10)
-plt.plot(x,dephase_est*np.ones(np.shape(x)),'k--' )
+x = np.linspace(10,300,num=10)
+heisenberg = 1/x**2
+plt.plot(x,dephase_est*np.ones(np.shape(x)),'r--' )
+plt.plot(x,heisenberg,'k')
+
+if save is True:
+    os.chdir('..')
+    # make a copy of the analysis at the folder
+    shutil.copy(__file__, os.path.normpath("/Users/jgb/Data/20150813"))
+    os.chdir(base_path)
+    #save figure in the dir with the script, since it is a figure maker
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.tight_layout()
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
+    os.chdir(base_path)
+
 
 plt.show()
 
