@@ -21,7 +21,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 raw = False
 save = False
 save_txt = False
-name = "SxVsN_Jbar_fig_v2.pdf"
+name = "SxVsN_Jbar_fig_collapse.pdf"
 colors = ['k', ps.red, ps.blue, ps.purple]
 shapes = ['o','s','D','^']
 
@@ -36,8 +36,7 @@ J1ks = [1440,1776,2316]
 #Ncals = [1.7425,1.1,0.85,0.8]
 Ncals = [1.7425,1.1,0.85]
 
-#G_add = np.array([120.0,37.6,46.6,50.0])
-G_add = np.array([120.0,37.6,46.6])
+G_add = np.array([120.0,37.6,46.6,50])
 names = []
 hist = []
 
@@ -164,7 +163,6 @@ G_els = G_el + G_add
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 spem = np.exp(-60.0*ti)
 Jbar_theory = np.mean(J1ks)/(0.002/ti)
-plt.plot(ti*Jbar_theory, spem,'--k',label='Spon. Emiss.')
 
 for j,Jbar1k in enumerate(J1ks):
     print("Total scattering rate: {0:0.3g}".format(0.5*(G_els[j] + (G_ud+G_du) )))
@@ -172,16 +170,17 @@ for j,Jbar1k in enumerate(J1ks):
     Jt_opt = (24**(1/6.)*(Ns[j]/2)**(-2/3.))/4.*Ns[j]
     Jt = Jbar*ti # / Jt_opt
     out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_els[j], G_ud, G_du)
+    #out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], 0.0, 0.0, 0.0)
     C_coherent_pred = np.real(out[1])
     #plt.plot(ti*1e3,C_coherent_pred,c=colors[j])
     plt.plot(Jt/Jt_opt,C_coherent_pred,color=colors[j])
 
 
-plt.axis([0.,10.,0.0,1.05])
+plt.axis([0.,5.,0.0,1.05])
 plt.grid('off')
 #plt.xscale('log')
 
-if True:
+if False:
     # get decohernce data to use as comparion to depolarization
     os.chdir("/Users/jgb/Data/20151001/Load333/decoh/2015-10-01--11.45.55.754")
     fn, data = hf.get_gen_csv('phase', skip_header=True)
