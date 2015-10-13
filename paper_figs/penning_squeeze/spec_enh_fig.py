@@ -16,7 +16,7 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-save = False
+save = True
 img_name = "spec_enh"
 
 base_path = os.getcwd()
@@ -214,7 +214,7 @@ plt.errorbar(NSEround, np.array(sig_SE_fulls), fmt='s',color=ps.blue)
 plt.yscale('log')
 plt.xscale('log')
 plt.axis([18,250, 0.001,0.06])
-plt.ylabel(r'Spin variance $(\Delta S_z/\langle{S_x}\rangle)^2$')
+plt.ylabel(r'Spin variance $(\Delta S_z/\langle|\vec{S}|\rangle)^2$')
 plt.xlabel('Ion number N')
 plt.grid('off')
 

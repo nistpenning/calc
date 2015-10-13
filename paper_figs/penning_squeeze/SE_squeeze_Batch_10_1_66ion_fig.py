@@ -22,7 +22,7 @@ verbose = True
 save = True
 img_name = "spinNoise_10_1_66ions"
 folder_name = "/Users/jgb/Data/20151001/Load333/squeeze"
-files_to_use = [3,1,2,4]
+files_to_use = [3,1,4]
 J1k = 1776.0    
 Ncal = 1.1
 ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
@@ -141,6 +141,7 @@ for i,fn in enumerate(fns):
 
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
+    l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_dB = 10*np.log10(spin_noise)
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
@@ -148,7 +149,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([4,181,-10,15])
+plt.axis([4,181,-11,15])
 plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
 plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
@@ -171,7 +172,7 @@ for i,name in enumerate(names):
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
-#plt.legend(loc=0,fontsize=10)
+plt.legend(loc=0,fontsize=10)
 
 if len(names) is 1:
     plt.title(names[0])

@@ -21,7 +21,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 raw = False
 save = False
 save_txt = False
-name = "SxVsN_fig_v2.pdf"
+name = "SxVsN_N_fig_v2.pdf"
 colors = ['k', ps.red, ps.blue, ps.purple]
 shapes = ['o','s','D','^']
 
@@ -110,7 +110,7 @@ for i,data in enumerate(ats):
     Jbar = J1ks[i]/(0.002/(data*2e-6))
     Jt_opt = (24**(1/6.)*(Ns[i]/2)**(-2/3.))/4.*Ns[i]
     Jt = (Jbar*data*2e-6) #/ Jt_opt
-    plt.errorbar(data*2e-3,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],color=colors[i])
+    plt.errorbar(sqrt(Ns[i])*data*2e-3,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],color=colors[i])
     if save_txt is True:
         data_for_save.append(2e-3*ats[i])
         data_for_save.append(Cs[i])
@@ -151,10 +151,10 @@ for j,Jbar1k in enumerate(J1ks):
     out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_els[j], G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     #plt.plot(ti*1e3,C_coherent_pred,c=colors[j])
-    plt.plot(ti*1e3,C_coherent_pred,color=colors[j])
+    plt.plot(ti*1e3*Ns[i],C_coherent_pred,color=colors[j])
 
 
-plt.axis([0.,4.,0.0,1.05])
+plt.axis([0.,1000.,0.0,1.05])
 plt.grid('off')
 #plt.xscale('log')
 
