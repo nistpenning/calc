@@ -17,7 +17,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 #inputs
-Ncal = 1.1
+Ncal = 1.22
 files_to_use = [-1]
 t4term = False
 
@@ -61,6 +61,7 @@ for i,fn in enumerate(fns):
     det_t = data_p["det_t"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
+    print("Number of ions: {:.4g}".format(N))
 
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -123,23 +124,30 @@ if verbose is True:
     plt.close()
 
 def added_noise(tau, N, m, k, A, B):
-    sig_tot_2 = m + (k**2/4.0/N) + A*tau**2 + B*tau**4
+    sig_tot_2 = m + (k**2/4.0/N) + A*tau**2 + B*tau**4 
     return sqrt(sig_tot_2)
+    
 
 for i,data in enumerate(ats[0:3]):
+    #sort the data
+    sort_ind = data.argsort()
+    ats_s = data[sort_ind]
+    sig_dephs_s = sig_dephs[i][sort_ind]
+    sig_ob_errs_s = sig_ob_errs[i][sort_ind]
     guess=np.array([Ns[i],np.mean(p_counts[i]),k,0.1,0.0])
     hold=np.array([True,True,True,False,t4term])
     pl = ["Interaction time [ms]","Std Dev. photon count",'Extract added']
-    pout,perr = pt.plot_fit(2e-3*ats[i],(sig_obs[i]),added_noise,guess,
-                yerr=sig_ob_errs[i],
+    pout,perr = pt.plot_fit((2e-3*ats_s)[:],(sig_dephs_s[:]),added_noise,guess,
+                yerr=sig_ob_errs_s[:],
                 hold=hold,
                 labels=pl)
     pout_deg = sqrt(pout)/np.mean(p_counts[i])*180/pi
     pout_var_rad = pout/np.mean(p_counts[i])**2
     plt.show()
+
 print("Added std dev (degrees): {0:.4g} t^2, {1:.4g} t^4)".format(pout_deg[0],pout_deg[1]))
 print("Added var (rad^2/ms): {0:.4g} t^2, {1:.4g} t^4)".format(pout_var_rad[0],pout_var_rad[1]))
-                
+               
 """
 #________________________________________________________________________
 #add some theory curves

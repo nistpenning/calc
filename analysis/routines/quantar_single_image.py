@@ -16,24 +16,28 @@ importlib.reload(quantar_image)
 from skimage.feature import peak_local_max
 
 #%%
-x0 = 42.5
-y0 = -21.5
-num_img = 26
-wrot = 185e3
-data_num = 9380
+x0 = 48.25
+y0 = -13.5
+num_img = 20
+wrot = 187e3
+data_num = 1080
 
 fdir = os.getcwd()
 
 qi = quantar_image.QuantarImage(x0=x0,y0=y0,fwall=wrot)
 xyt = qi.read_file_range(fdir, data_num, num_img)
 xytr = qi.rot_frame(xyt)
-xyt_bg = qi.read_file_range(fdir, 9540, num_img)
+xyt_bg = qi.read_file_range(fdir, 1210, num_img)
 xytr_bg = qi.rot_frame(xyt_bg)
 
 #%%
 #img = qi.make_image(xytr, gfilter=0.2,
               #im_range=quantar_image.im_extent(100), cmap=quantar_image.bluehot_cmap)
-img = qi.make_image(xytr, gfilter=0.2,im_range=quantar_image.im_extent(110))
+
+#img = qi.make_image(xytr, gfilter=0.2,im_range=quantar_image.im_extent(110))
+                    
+img = qi.make_image(xytr, bck=xytr_bg, gfilter=0.2,im_range=quantar_image.im_extent(110),
+                    int_range=[8.0,100.0])
 if False:
     img = qi.make_image(xytr, bck=xytr_bg, gfilter=0.2,
                         im_range=quantar_image.im_extent(110),
