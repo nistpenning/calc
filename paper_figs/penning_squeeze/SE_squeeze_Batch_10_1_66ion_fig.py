@@ -24,7 +24,7 @@ img_name = "spinNoise_10_1_66ions"
 folder_name = "/Users/jgb/Data/20151001/Load333/squeeze"
 files_to_use = [3,1,4]
 J1k = 1776.0    
-Ncal = 1.1
+Ncal = 1.0
 ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 
 #theory calc info

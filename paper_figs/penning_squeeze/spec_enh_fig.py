@@ -16,7 +16,7 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-save = True
+save = False
 img_name = "spec_enh"
 
 base_path = os.getcwd()
@@ -26,10 +26,13 @@ db_path = "/Users/jgb/calc/paper_figs/penning_squeeze/sq_data_paramdb.csv"
 datadb = np.genfromtxt(db_path, delimiter=",", names=True, dtype=None)
 
 Ns = []
+N_errs = []
 data_names = []
 dataSE_names = []
 N_SEs =[]
+N_SE_errs = []
 sig_PN_subs = []
+sig_PN_subs_errs = []
 sig_PN_fulls = []
 sig_PN_fulls_errs = []
 sig_SE_fulls = []
@@ -59,6 +62,11 @@ for i,fn in enumerate(folders[1:]):
     Ncal = data_p['pho_ion_ms']
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncal
+    date = file_name[:10]
+    match = np.array([i.decode('ascii')==date for i in datadb['data_set']])
+    row = datadb[match]
+    N_frac_err = float(row['N_frac_err'])
+    N_err = N * N_frac_err
 
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -69,13 +77,19 @@ for i,fn in enumerate(folders[1:]):
     pmterr = np.array(data.T[2][0:],dtype='float')
     pmterr_err = pmterr/np.sqrt(2*reps)
     m_len = avg_pmt_counts-dm
+    m_len_frac_err = 1/sqrt(avg_pmt_counts+dm)
     
     sig_sub = np.mean(sqrt(pmterr**2 - avg_pmt_counts)/m_len)
+    sig_sub_err = np.mean((pmterr**2 - avg_pmt_counts)/m_len)/sqrt(2*np.size(avg_pmt_counts))
+    sig_sub_err = sig_sub*m_len_frac_err
     sig_full = np.mean(pmterr/m_len)
-    sig_full_err = np.std((pmterr/m_len))/sqrt(2*np.size(avg_pmt_counts))
+    sig_full_err = np.mean((pmterr**2/m_len))/sqrt(2*np.size(avg_pmt_counts))
+    #print(sig_full_err/sig_full)
     
     Ns.append(N)  
+    N_errs.append(N_err)
     sig_PN_subs.append(sig_sub)
+    sig_PN_subs_errs.append(sig_sub_err)
     sig_PN_fulls.append(sig_full)  
     sig_PN_fulls_errs.append(sig_full_err)
     data_names.append(file_name)
@@ -110,6 +124,11 @@ for i,fn in enumerate(folders[1:]):
     Ncal = float(row['Ncal'])
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncal
+    date = file_name[:10]
+    match = np.array([i.decode('ascii')==date for i in datadb['data_set']])
+    row = datadb[match]
+    N_frac_err = float(row['N_frac_err'])
+    N_err = N * N_frac_err
     
 #load calibration data
     cal_name = [x for x in files if "_cal.csv" in x][0]
@@ -119,11 +138,14 @@ for i,fn in enumerate(folders[1:]):
     cal_counts_avg = np.mean(data.T[1])
     m_len = (cal_counts_avg-dm)
     sig_cal_ob = np.mean(data.T[2])/m_len
-    sig_cal_ob_err = sqrt(sig_cal_ob**2/sqrt(2*reps))
-    sig_cal_pn = sqrt((np.mean(data.T[2])**2 - cal_counts_avg))/m_len
+    sig_cal_ob_err = sig_cal_ob**2/sqrt(2*reps)
+    sig_cal_sub = sqrt((np.mean(data.T[2])**2 - cal_counts_avg))/m_len
+    sig_cal_sub_err = sig_cal_sub**2/sqrt(2*reps)
     
-    Ns.append(N)  
-    sig_PN_subs.append(sig_cal_pn)
+    Ns.append(N)
+    N_errs.append(N_err)
+    sig_PN_subs.append(sig_cal_sub)
+    sig_PN_subs_errs.append(sig_cal_sub_err)
     sig_PN_fulls.append(sig_cal_ob)  
     sig_PN_fulls_errs.append(sig_cal_ob_err)
     data_names.append(file_name)
@@ -131,8 +153,10 @@ for i,fn in enumerate(folders[1:]):
 
 fig, ax = plt.subplots(figsize=(5.0,3.7)) 
 Nround = np.array([round(n) for n in Ns])
-plt.errorbar(Nround, np.array(sig_PN_subs)**2, fmt='o')
-plt.errorbar(Nround, np.array(sig_PN_fulls)**2, fmt='d')
+plt.errorbar(Nround, np.array(sig_PN_subs)**2, 
+             yerr=sig_PN_subs_errs, xerr=N_errs, fmt='o')
+plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
+             yerr=sig_PN_fulls_errs, xerr=N_errs,fmt='d')
 N_pred = np.linspace(18,250)
 plt.plot(N_pred,1/np.array(N_pred),'-')
 
@@ -177,6 +201,8 @@ for i,fn in enumerate(folders[1:]):
     row = datadb[match]
     Ncal = float(row['Ncal'])
     N = k/(det_t*1e-3)/Ncal
+    N_frac_err = float(row['N_frac_err'])
+    N_err = N * N_frac_err
     J1k = row['J1k']
     walsh_number = row['walsh_num']
     G_el = row['Gel'] + row['Gadd']
@@ -205,12 +231,13 @@ for i,fn in enumerate(folders[1:]):
     
     dataSE_names.append(file_name)
     N_SEs.append(N)  
+    N_SE_errs.append(N_err)
     sig_SE_fulls.append(sig_full)  
     sig_SE_fulls_errs.append(sig_full_err)
     os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
-plt.errorbar(NSEround, np.array(sig_SE_fulls), fmt='s',color=ps.blue)
+plt.errorbar(NSEround, np.array(sig_SE_fulls), xerr=N_SE_errs, fmt='s',color=ps.blue)
 plt.yscale('log')
 plt.xscale('log')
 plt.axis([18,250, 0.001,0.06])

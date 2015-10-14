@@ -19,12 +19,12 @@ import plot_style as ps
 #options
 colors = ['k', ps.red, ps.blue]
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_9_30_33ions"
 folder_name = "/Users/jgb/Data/20150930/Load331/squeeze/"
-files_to_use = [14,9,10]
+files_to_use = [15,10,11]
 J1k = 2043.0    
-Ncal = 1.1
+Ncal = 1.0
 
 #theory calc info
 G_el =  62.84

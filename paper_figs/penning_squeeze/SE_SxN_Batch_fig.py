@@ -19,9 +19,9 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
+save = True
 save_txt = False
-name = "SxVsN_N_fig_v2.pdf"
+name = "SxVsN_collapsed.pdf"
 colors = ['k', ps.red, ps.blue, ps.purple]
 shapes = ['o','s','D','^']
 
@@ -104,24 +104,28 @@ for i,fn in enumerate(fns):
 #________________________________________________________________________
 # visualizing the experimental data
 #fig = plt.figure(figsize=(6.0,4.5))
+plt.figure(figsize=(3.5, 3.5))
 data_for_save = []
 for i,data in enumerate(ats):
     l = "N: {:.0f}".format(Ns[i])
     Jbar = J1ks[i]/(0.002/(data*2e-6))
     Jt_opt = (24**(1/6.)*(Ns[i]/2)**(-2/3.))/4.*Ns[i]
     Jt = (Jbar*data*2e-6) #/ Jt_opt
-    plt.errorbar(sqrt(Ns[i])*data*2e-3,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],color=colors[i])
+    x = 2*data*2e-6*Jbar/Ns[i]*sqrt(Ns[i]-1)
+    plt.errorbar(x,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],
+                 color=colors[i])
     if save_txt is True:
         data_for_save.append(2e-3*ats[i])
         data_for_save.append(Cs[i])
         data_for_save.append(Cerrs[i])
+
 if save_txt is True:
     names = "t_ms_21, Sx_21, Sx_err_21, t_ms_66, Sx_66, Sx_err_66, t_ms_100, Sx_100, Sx_err_100"
     pt.save_data_txt("Sx_data.txt",data_for_save, col_names=names)
         
 #plt.legend(loc=3, fontsize=10)
-plt.xlabel(r"Interaction time $\tau$ (ms)")
-plt.ylabel(r"Contrast  2$\left \langle |\vec{S}| \right \rangle$/N")
+plt.xlabel(r"$\bar{J}\tau \frac{\sqrt{N-1}}{N/2}$")
+#plt.ylabel(r"Contrast  2$\left \langle |\vec{S}| \right \rangle$/N")
 
 
 #________________________________________________________________________
@@ -140,25 +144,24 @@ G_els = G_el + G_add
 
 ti = np.linspace(1e-6,4.0e-3,num=100)  # seconds
 spem = np.exp(-60.0*ti)
-Jbar_theory = np.mean(J1ks)/(0.002/ti)
-plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
+#plt.plot(ti*1e3, spem,'--k',label='Spon. Emiss.')
 
 for j,Jbar1k in enumerate(J1ks):
     print("Total scattering rate: {0:0.3g}".format(0.5*(G_els[j] + (G_ud+G_du) )))
     Jbar = Jbar1k/(0.002/ti)
     Jt_opt = (24**(1/6.)*(Ns[j]/2)**(-2/3.))/4.*Ns[j]
     Jt = Jbar*ti # / Jt_opt
+    x = 2*ti*Jbar/Ns[j]*sqrt(Ns[j]-1)
     out = squ.OAT_decoh(0.0, ti, Jbar, Ns[j], G_els[j], G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     #plt.plot(ti*1e3,C_coherent_pred,c=colors[j])
-    plt.plot(ti*1e3*Ns[i],C_coherent_pred,color=colors[j])
+    plt.plot(x,C_coherent_pred,color=colors[j])
 
-
-plt.axis([0.,1000.,0.0,1.05])
+plt.axis([0.,3.,0.0,1.05])
 plt.grid('off')
 #plt.xscale('log')
 
-if True:
+if False:
     # get decohernce data to use as comparion to depolarization
     os.chdir("/Users/jgb/Data/20151001/Load333/decoh/2015-10-01--11.45.55.754")
     fn, data = hf.get_gen_csv('phase', skip_header=True)
@@ -175,6 +178,7 @@ if True:
     os.chdir(base_path)
 
 if save is True:
+    plt.tight_layout()
     plt.savefig(name,dpi=300,bbox='tight',transparent=True)
 
 plt.show()
