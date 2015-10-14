@@ -229,7 +229,7 @@ As a Unit Test for the software that calculates
 \end_inset
 
  where 
-\begin_inset Formula $c_{1}=\frac{2}{\pi}\left(\frac{g\mu_{B}}{2\pi\hbar\eta}\right)^{2}\frac{\pi}{192}$
+\begin_inset Formula $c_{1}=-\frac{2}{\pi}\left(\frac{g\mu_{B}}{2\pi\hbar\eta}\right)^{2}\frac{\pi}{192}$
 \end_inset
 
 .
