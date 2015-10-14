@@ -11,7 +11,7 @@ from datetime import datetime as dt
 """
 Created on Wed Jun 11 16:38:51 2014
 
-@author: Justin Bohnet
+@author: Justin Bohnet, Joe Britton
 
 hp3561a.py is a script designed to pull off the current MAGNITUDE trace
 off the hp signal analyzer and process the data for analysis and display
