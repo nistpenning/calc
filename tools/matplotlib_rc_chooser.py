@@ -85,7 +85,8 @@ def set_rc(mode='qunat'):
 
             'legend.numpoints': 1,
             'legend.frameon': False,
-            'legend.scatterpoints': 1
+            'legend.scatterpoints': 1,
+            'legend.fontsize': 'medium'
         }
     else:
         print('setrc() unknown mode')
