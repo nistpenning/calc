@@ -15,7 +15,6 @@ import hfGUIdata as hf
 importlib.reload(hf)
 import plot_style as ps
 importlib.reload(ps)
-import squeeze_func_time as squ
 
 def parse_raw_counts(array):
     bad = 0
@@ -40,7 +39,7 @@ def parse_raw_counts(array):
 Ncal = 1.22
 verbose = True
 save = False
-files_to_use = [-4]
+files_to_use = [0]
 img_name = "batch_hist.pdf"
 num_bins = 26#sqrt(len(z_data))
 base_path = os.getcwd()
@@ -86,7 +85,7 @@ for i,fn in enumerate(fns):
     #load batch data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    arm_time = np.array(data.T[0][0:],dtype='float')
+    scan_data = np.array(data.T[0][0:],dtype='float')
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
     
     for i,row in enumerate(hdata):
@@ -98,7 +97,7 @@ for i,fn in enumerate(fns):
     
         bs = np.arange(-1.1,1.1,(2.2/num_bins))
     
-        lab = r"Arm_time = {0:.4g} us".format(arm_time[i])
+        lab = r"Scan data = {0:.4g}".format(scan_data[i])
         plt.hist(datas[i],bs,label=lab,alpha=0.6)#, align='right')
         plt.show()
         plt.close()
