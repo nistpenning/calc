@@ -37,7 +37,7 @@ def psd_from_vsd_func(w, vsd, eta):
     g = 2.002
     hbar = u.hbar
     bsd = -1*vsd/(eta*w)  # magnetic field amplitude spectral density
-    wsd = g*uB/(2*pi*hbar)*bsd  # frequency spectral density
+    wsd = g*uB/hbar*bsd  # frequency spectral density
     psd = wsd**2
     interpf = scipy.interpolate.interp1d(w, psd, kind=1)
     return interpf
