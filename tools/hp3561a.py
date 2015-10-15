@@ -241,7 +241,7 @@ class HP3561A:
         :param bw: bandwidth of measurement (Hz) (see last line of data file)
         :return: dbV (V/sqrt(Hz))
         """
-        return np.sqrt(2)*10**(dbv/20)/np.sqrt(bw)/gain
+        return 10**(dbv/20)/np.sqrt(bw)/gain
 
     @staticmethod
     def dbv_to_v(dbv):
