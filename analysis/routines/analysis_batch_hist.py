@@ -40,9 +40,12 @@ def parse_raw_counts(array):
 Ncal = 1.22
 verbose = True
 save = False
-files_to_use = [-4]
+ymax = 350
+files_to_use = [-2]
+hist_to_use = [0,2,10]
 img_name = "batch_hist.pdf"
-num_bins = 26#sqrt(len(z_data))
+text_name = "batch_hist"
+num_bins = 45#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -62,6 +65,7 @@ fns = [os.listdir(data_path)[i] for i in files_to_use]
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
 for i,fn in enumerate(fns):
+    print("_________________________________________")
     folder = os.path.join(data_path,fn)
     os.chdir(folder)
     files = os.listdir(os.getcwd())
@@ -86,29 +90,39 @@ for i,fn in enumerate(fns):
     #load batch data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    arm_time = np.array(data.T[0][0:],dtype='float')
+    scan_data = np.array(data.T[0][0:],dtype='float')
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
     
-    for i,row in enumerate(hdata):
+    hdata_to_use = np.array([hdata[i] for i in hist_to_use])    
+    for i,row in enumerate(hdata_to_use):
+        print("_________________________________________")
         det_array = np.copy(row)
         counts_data = parse_raw_counts(det_array)
     
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5)
         datas.append(Sz_data)
     
-        bs = np.arange(-1.1,1.1,(2.2/num_bins))
+        bs = np.arange(-1.01,1.01,(2.02/num_bins))
     
-        lab = r"Arm_time = {0:.4g} us".format(arm_time[i])
+        lab = r"Scan value = {0:.4g}".format(scan_data[hist_to_use[i]])
         plt.hist(datas[i],bs,label=lab,alpha=0.6)#, align='right')
+        plt.axis([-1.1,1.1,0,ymax])
+        plt.xlabel(r"Spin projection 2$S_\psi$/N")
+        plt.ylabel("Trials")
+        
         plt.show()
         plt.close()
         
         k2,pval = mstats.normaltest(datas[i])
         print(lab)
         print("# of trials: {}".format(len(datas[i])))
+        print("Mean: {0:.3g}, Median: {1:.3g}, Min: {2:.3g}, Max {3:.3g}".format(np.mean(datas[i]),np.median(datas[i]),np.min(datas[i]),np.max(datas[i])))
+        print("Std Dev: {0:3g}, Variance: {1:.3g}".format(np.std(datas[i]),np.var(datas[i])))        
         print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
+if save is True:    
+    ps.save_data_txt(text_name+".txt",datas)
 
 """
 #plt.legend(fontsize=11)
