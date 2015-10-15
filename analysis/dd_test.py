@@ -21,7 +21,7 @@ class TestFilterFunction(unittest.TestCase):
         fd = np.linspace(0, 5000, 100)
         filter = filter_function_udd_spin_echo(w=2*np.pi*fd, tau=2*arm_t+t_pi,
                                                t_pi=t_pi)
-        analytic = (np.sin(2*np.pi*fd*2*arm_t/4))**4
+        analytic = 16*(np.sin(2*np.pi*fd*2*arm_t/4))**4
         if debug:
             plt.clf()
             plt.plot(fd, filter, 'y-', alpha=0.5)
@@ -31,7 +31,7 @@ class TestFilterFunction(unittest.TestCase):
             plt.xlabel("Freq [Hz]")
             plt.show()
         residual = analytic-filter
-        self.assertTrue(sum(residual) < 1e-6)
+        self.assertTrue(sum(residual) < 1e-3)
 
 
 class TestCalculatedCoherence(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestCalculatedCoherence(unittest.TestCase):
         pi = np.pi
         hbar = u.hbar
         uB = u.value("Bohr magneton")
-        c1 = (2/pi)*(2*uB/(2*pi*u.hbar*eta))**2*(pi/192)
+        c1 = (2/pi)*(2*uB/(2*pi*u.hbar*eta))**2*(pi*16/192)
         return np.exp(-1*c1*v0**2*t**3)
 
     def test_coh(self):
@@ -78,7 +78,7 @@ class TestCalculatedCoherence(unittest.TestCase):
             plt.plot(taus, coh_expected, 'r-')
             plt.ylim(-0.1, 1.1)
             plt.show()
-        self.assertTrue(mean_residual < 1e-3)
+        self.assertTrue(mean_residual < 1e-6)
 
 if __name__ == '__main__':
     unittest.main(exit=False)

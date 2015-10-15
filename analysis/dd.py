@@ -17,10 +17,9 @@ def filter_function_udd_spin_echo(w, tau, t_pi):
     :param t_pi: pi-time  (s)
     :return: filter function value at t, w in range [0,1]
     """
-    nz = 1/16  # normalization
     ftmp = (1 + np.exp(1j*w*tau) -
                2*np.exp(1j*w*tau/2.0)*np.cos(w*t_pi/2.0) )
-    return nz*np.abs(ftmp*np.conj(ftmp))
+    return np.abs(ftmp*np.conj(ftmp))
 
 
 def psd_from_vsd_func(w, vsd, eta):
