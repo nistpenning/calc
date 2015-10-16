@@ -39,7 +39,7 @@ def parse_raw_counts(array):
 #options
 verbose = True
 save = False
-files_to_use = [0]
+files_to_use = [-1]
 img_name = "transverse_hist.pdf"
 base_path = os.getcwd()
 data_path = '/Users/jgb/Data/20151002/FisherW/2015-10-02--17.15.08.249'

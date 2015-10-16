@@ -18,10 +18,10 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = False
-img_name = "spinNoise_9_24"
-files_to_use = [-1]
-J1k = 2100.0    
-Ncal = 0.98
+img_name = "spinNoise_10_16"
+files_to_use = [0,1,2,3,4,5]
+J1k = 2098.0    
+Ncal = 1.2
 
 #theory calc info
 G_el =  61.6
@@ -29,7 +29,7 @@ G_ud =  9.24
 G_du =  6.52
 G_tot = 38.7
 #adjust for extra decohrence
-G_add = 60.0
+G_add = 110.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
@@ -47,6 +47,7 @@ sig_pns = []
 SE = []
 Ns = []
 names = []
+cs = ['b','g','r','k','m','c','y']
 
 base_path = os.getcwd()
 fns = [os.listdir(base_path)[i] for i in files_to_use]
@@ -152,7 +153,6 @@ plt.grid('off')
 #add some theory curves
 
 psi = np.linspace(0.001,pi,num=100) # radians
-cs = ['b','g']
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
@@ -163,7 +163,7 @@ for i,name in enumerate(names):
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=cs[i])
-    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--',label="Jy_dephasing")
+    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 

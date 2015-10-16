@@ -192,7 +192,7 @@ def get_raw_counts_hist():
 def bright_fraction(counts, err=False):
     #Convert counts into fraction of ions bright, from IonProp Brightmean
     max_count = get_ionProp_value("detection%det_brightMean")
-    min_count = get_ionProp_value("sf%fitParams%sf_fitParam_darkMean")
+    min_count = get_ionProp_value("detection%det_darkMean")
     b_prob = (counts - min_count)/(float(max_count - min_count))
     if err is False:
         return b_prob
