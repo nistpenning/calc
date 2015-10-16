@@ -48,7 +48,7 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-2]]
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-1]]
 J1ks = (J1k)*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
