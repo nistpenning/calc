@@ -16,34 +16,15 @@ importlib.reload(hf)
 import plot_style as ps
 importlib.reload(ps)
 
-def parse_raw_counts(array):
-    bad = 0
-    for x in np.nditer(array, op_flags=['readwrite']):
-        if x == -1:
-            print('Found bad data point')
-            bad += 1
-            x[...] = -1
-        elif np.isnan(x) == True:
-            print('Found bad data point Nan')
-            bad += 1
-            x[...] = -1
-        else:
-            x[...] = int(x) & 0x1fff
-    if bad > 0:
-        print("# of bad points: {}".format(bad))
-        print("removing all bad points in return value")
-        array = array[array!=-1]
-    return array
-
 #options
 Ncal = 1.22
 verbose = True
-save = False
+save = True
 ymax = 350
-files_to_use = [-1]
-hist_to_use = [0,2,5]
-img_name = "batch_hist.pdf"
-text_name = "batch_hist"
+files_to_use = [-4]
+hist_to_use = [0,1,2,3,4,5,6]
+text_name = "batch_hist_1016_wODF_tau3000.pdf"
+img_name = "batch_hist_img_1016"
 num_bins = 37#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
@@ -82,6 +63,7 @@ for i,fn in enumerate(fns):
     bm = data_p['det_brightMean']
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
+    int_time = 2*data_p["squeeze_arm_t"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals
     print(N)
@@ -91,20 +73,21 @@ for i,fn in enumerate(fns):
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
     scan_data = np.array(data.T[0][0:],dtype='float')
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
+
     
     hdata_to_use = np.array([hdata[i] for i in hist_to_use])    
     for i,row in enumerate(hdata_to_use):
         print("_________________________________________")
         det_array = np.copy(row)
-        counts_data = parse_raw_counts(det_array)
+        counts_data = hf.parse_raw_counts(det_array)
     
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5)
         datas.append(Sz_data)
     
         bs = np.arange(-1.01,1.01,(2.02/num_bins))
 
-        lab = r"Scan data = {0:.4g}".format(scan_data[i])
-        lab = r"Scan value = {0:.4g}".format(scan_data[hist_to_use[i]])
+        lab = r"Scan data = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[i], int_time)
+        lab = r"Scan value = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[hist_to_use[i]], int_time)
 
         plt.hist(datas[i],bs,label=lab,alpha=0.6)#, align='right')
         plt.axis([-1.1,1.1,0,ymax])
@@ -119,7 +102,7 @@ for i,fn in enumerate(fns):
         print("# of trials: {}".format(len(datas[i])))
         print("Mean: {0:.3g}, Median: {1:.3g}, Min: {2:.3g}, Max {3:.3g}".format(np.mean(datas[i]),np.median(datas[i]),np.min(datas[i]),np.max(datas[i])))
         print("Std Dev: {0:3g}, Variance: {1:.3g}".format(np.std(datas[i]),np.var(datas[i])))        
-        print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
+        #print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
 if save is True:    
