@@ -16,10 +16,10 @@ import plot_style as ps
 import plot_model_fit as pt
 importlib.reload(pt)
 
-samples = 2000
-num_bins = 50.0
+samples = 10000
+num_bins = 53.0
 num_tip = 25
-N = 100.0
+N = 106.0
 std_dev=1/sqrt(N)
 z_fluc = N/2.0*sin(std_dev)
 
@@ -33,7 +33,7 @@ plt.show()
 plt.close()
 
 #create fake data
-tipping_angle = np.linspace(1.0,3.5,num=num_tip)
+tipping_angle = np.linspace(0.1,2.1,num=num_tip)
 data = np.array([rand.normal(loc= (N/2.0*sin(i/180*pi)), scale=z_fluc, size=samples) for i in tipping_angle])
 
 data_hist = []
@@ -51,8 +51,8 @@ fit_res = pt.plot_polyfit(tipping_angle*pi/180.0, h_dist,np.array([0,0,1]),hold=
                           labels=l)
 plt.show()
 plt.close(0)
-"""
+
 for row in diff_hist:
     plt.plot(bins[:-1],row)
-"""
+
 print("F = 8*k2, and then F/N is {:.3g}".format(fit_res[0][0]*8/N) )
