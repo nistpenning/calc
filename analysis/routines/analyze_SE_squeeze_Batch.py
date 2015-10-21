@@ -19,7 +19,7 @@ import squeeze_func_time as squ
 verbose = True
 save = False
 img_name = "spinNoise_10_16"
-files_to_use = [0,1,2,3,4,5]
+files_to_use = [6]
 J1k = 2098.0    
 Ncal = 1.2
 
