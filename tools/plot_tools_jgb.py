@@ -45,7 +45,9 @@ def save_data_txt(filename, out_list):
 def plot_fit(x,y,fitfunc,fitguess,
             yerr=None,
             hold=[],
-            labels=['X','Y','default'],
+            axis_labels=['X','Y','default'],
+            data_label=None,
+            fit_label=None,
             axis=None,
             save=False,
             show=True,
@@ -61,7 +63,7 @@ def plot_fit(x,y,fitfunc,fitguess,
     :param fitguess: guess for each kN [guess_k0, guess_k1, ..., guess_kN]
     :param yerr: error for y [numpy.array]
     :param hold: model parameters to hold fixed [b1, b2, ..., bN]; 'none'; 'all'
-    :param labels: ["xlabel", "ylabel", "plot title"]
+    :param axis_labels: ["xlabel", "ylabel", "plot title"]
     :param axis: axis extent [xmin, xmax, ymin, ymax]; 'auto'
     :param save: save as .png, True or False
     :param show: show data and fit on plot, True or False
@@ -131,12 +133,12 @@ def plot_fit(x,y,fitfunc,fitguess,
         elif axis == 'auto':
             axis = auto_extent(x,y)
         plt.axis(axis)
-        plt.errorbar(x,y,yerr=yerr,fmt=fmt_data,alpha=alpha)
-        plt.plot(x_curve,curve_fit,fmt_fit,alpha=alpha)
+        plt.errorbar(x,y,yerr=yerr,fmt=fmt_data,alpha=alpha, label=data_label)
+        plt.plot(x_curve,curve_fit,fmt_fit,alpha=alpha, label=fit_label)
 
         # labels
-        plt.xlabel(labels[0])
-        plt.ylabel(labels[1])
+        plt.xlabel(axis_labels[0])
+        plt.ylabel(axis_labels[1])
 
         # fit message on plot
         ym = axis[-2]
@@ -154,10 +156,10 @@ def plot_fit(x,y,fitfunc,fitguess,
             plt.savefig('sinusoid_spin_echo.png', format='png', dpi=600,
                         transparent=True, bbox='tight')
 
-        if labels[2]=='default':
+        if axis_labels[2]=='default':
             plt.title(name)
         else:
-            plt.title(labels[2])
+            plt.title(axis_labels[2])
 
     else:
         print(fit_message)
