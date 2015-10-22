@@ -16,8 +16,8 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-save = False
-img_name = "Ramsey_squeeze"
+save = True
+img_name = "Ramsey_squeeze_param"
 
 base_path = os.getcwd()
 
@@ -31,6 +31,11 @@ data_names = []
 dataSE_names = []
 N_SEs =[]
 N_SE_errs = []
+xi2_PN_subs = []
+xi2_PN_subs_errs = []
+xi2_PN_fulls = []
+xi2_PN_fulls_errs = []
+
 sig_PN_subs = []
 sig_PN_subs_errs = []
 sig_PN_fulls = []
@@ -88,9 +93,9 @@ for i,fn in enumerate(folders[1:]):
     
     Ns.append(N)  
     N_errs.append(N_err)
-    sig_PN_subs.append(sig_sub**2)
+    xi2_PN_subs.append(sig_sub**2 * N)
     sig_PN_subs_errs.append(sig_sub_err)
-    sig_PN_fulls.append(sig_full)  
+    xi2_PN_fulls.append(sig_full**2 * N)  
     sig_PN_fulls_errs.append(sig_full_err)
     data_names.append(file_name)
     os.chdir(base_path)
@@ -144,24 +149,24 @@ for i,fn in enumerate(folders[1:]):
     
     Ns.append(N)
     N_errs.append(N_err)
-    sig_PN_subs.append(sig_cal_sub**2)
+    xi2_PN_subs.append(sig_cal_sub**2 * N)
     sig_PN_subs_errs.append(sig_cal_sub_err)
-    sig_PN_fulls.append(sig_cal_ob)  
+    xi2_PN_fulls.append(sig_cal_ob**2 * N)  
     sig_PN_fulls_errs.append(sig_cal_ob_err)
     data_names.append(file_name)
     os.chdir(base_path)
 
-fig, ax = plt.subplots(figsize=(5.0,3.7)) 
+#fig, ax = plt.subplots(figsize=(5.0,3.7)) 
+fig, ax = plt.subplots() 
 Nround = np.array([round(n) for n in Ns])
-
-#plt.errorbar(Nround, np.array(sig_PN_subs), 
-#             yerr=np.array(sig_PN_subs_errs), fmt='o')
-plt.plot(Nround, sig_PN_subs, 'o')
-print("DEBUG")
-plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
-             yerr=sig_PN_fulls_errs, fmt='d')
-N_pred = np.linspace(18,250)
-plt.plot(N_pred,1/np.array(N_pred),'-')
+#plt.errorbar(Nround, np.array(sig_PN_subs), yerr=np.array(sig_PN_subs_errs), 
+#    fmt='o')
+plt.plot(Nround, xi2_PN_subs, 'o')
+#plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
+#             yerr=sig_PN_fulls_errs, fmt='d')
+#plt.plot(Nround, xi2_PN_fulls,'d')
+N_pred = np.linspace(0.1,250)
+plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color=ps.red)
 
 #sfe = 2* np.array(sig_fulls) * np.array(sig_fulls_errs)
 
@@ -235,19 +240,21 @@ for i,fn in enumerate(folders[1:]):
     dataSE_names.append(file_name)
     N_SEs.append(N)  
     N_SE_errs.append(N_err)
-    sig_SE_fulls.append(sig_full)  
+    sig_SE_fulls.append(sig_full[0])  
     sig_SE_fulls_errs.append(sig_full_err)
     os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
-plt.errorbar(NSEround, np.array(sig_SE_fulls), xerr=N_SE_errs, fmt='s',color=ps.blue)
-plt.yscale('log')
-plt.xscale('log')
-plt.axis([18,250, 0.001,0.06])
-plt.ylabel(r'Spin variance $(\Delta S_z/\langle|\vec{S}|\rangle)^2$')
+xi2_min = np.multiply(NSEround,np.array(sig_SE_fulls))
+plt.plot(NSEround, xi2_min, 's',color=ps.blue)
+#plt.yscale('log')
+#plt.xscale('log')
+plt.axis([0,250, 0.0,1.1])
+plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
 plt.grid('off')
 
+"""
 majorLocator = FixedLocator([20,50,100,200])
 majorFormatter = FormatStrFormatter('%d')
 majorLocatorY = FixedLocator([0.001,0.01,0.06])
@@ -256,12 +263,13 @@ ax.xaxis.set_major_locator(majorLocator)
 ax.xaxis.set_major_formatter(majorFormatter)
 ax.yaxis.set_major_locator(majorLocatorY)
 ax.yaxis.set_major_formatter(majorFormatterY)
+"""
 
 dephase_est = 0.002143  # for interaction time of 1ms, from 9/29
-x = np.linspace(10,300,num=10)
-heisenberg = 1/x**2
-plt.plot(x,dephase_est*np.ones(np.shape(x)),'r--' )
-plt.plot(x,heisenberg,'k')
+x = np.linspace(.1,300,num=500)
+heisenberg = 1/x
+plt.plot(x,dephase_est*x,'--',color=ps.purple )
+#plt.plot(x,heisenberg,'k')
 
 if save is True:
     os.chdir('..')
