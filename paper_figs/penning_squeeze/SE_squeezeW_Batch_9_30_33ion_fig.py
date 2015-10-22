@@ -15,6 +15,7 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 import plot_style as ps
+from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
 colors = ['k', ps.red, ps.blue]
@@ -136,7 +137,7 @@ for i,fn in enumerate(fns):
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
-
+fig, ax = plt.subplots() 
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
@@ -149,8 +150,15 @@ for i,data in enumerate(sig_obs):
 plt.xscale('log')
 plt.axis([3,185,-11,15])
 plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
-plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
+plt.ylabel(r"Spin variance $(\Delta S'_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
+
+#plt.minorticks_off()
+
+majorLocator = FixedLocator([5,50,180])
+majorFormatter = FormatStrFormatter('%d')
+ax.xaxis.set_major_locator(majorLocator)
+ax.xaxis.set_major_formatter(majorFormatter)
 
 #________________________________________________________________________
 #add some theory curves
