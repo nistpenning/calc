@@ -19,7 +19,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = True
+save = False
 save_txt = False
 name = "SxVsN_collapsed.pdf"
 colors = ['k', ps.red, ps.blue, ps.purple]
