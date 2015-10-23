@@ -83,7 +83,8 @@ for i,fn in enumerate(fns):
     os.chdir(data_path)
 
 #define scale
-bin_def = np.arange(-N/2.0,N/2.0,(N/num_bins))
+#bin_def = np.arange(-N/2.0,N/2.0,(N/num_bins))
+bin_def = np.arange(-N/2.0,N/2.0,2)  #found from Strobel this was optimum
 
 data_ref = datas[0]
 vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=True)
@@ -102,6 +103,7 @@ plt.close()
 
 l=['Tip angle (rad)', 'dh^2','Extract Fisher Info']
 to_use = 8
+#note: tipping angle starts at 1 because 0 corresponds to the reference
 fit_res = pt.plot_polyfit(tipping_angles[0][1:to_use], h_dist[0:(to_use-1)],np.array([0,0,1]),
                           hold=np.array([True,True,False]),
                           labels=l)
