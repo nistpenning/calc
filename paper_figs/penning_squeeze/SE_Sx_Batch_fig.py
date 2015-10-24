@@ -18,7 +18,7 @@ import squeeze_func_time as squ
 
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
-raw = False
+raw = True
 save = False
 save_txt = False
 name = "SxVsN_fig_v2.pdf"
@@ -90,7 +90,19 @@ for i,fn in enumerate(fns):
         data_name = [x for x in files if "_raw.csv" in x][0]
         hdata = np.genfromtxt(data_name, delimiter=",", dtype='float')
         print(np.shape(hdata))
-        hist.append(hdata)
+        
+        raw_mean = np.zeros(np.size(hdata, axis=0))
+        for i,row in enumerate(hdata):
+            det_array = np.copy(row)
+            counts_data = hf.parse_raw_counts(det_array)
+       
+            Sz_data = ( 1-2*((counts_data-dm)/k))
+            raw_mean[i] = np.mean(Sz_data)
+            raw_var
+            
+            n = np.size(Sz_data)
+            jack_means = np.array([(1/(n-1))*np.sum(np.concatenate((Sz_data[:i],Sz_data[i+1:]))) for i in range(n)])
+            
 
     ats.append(arm_time)
     Cs.append(contrast_est)

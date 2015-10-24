@@ -19,7 +19,7 @@ importlib.reload(ps)
 #options
 Ncal = 1.22
 verbose = True
-save = True
+save = False
 ymax = 350
 files_to_use = [-4]
 hist_to_use = [0,1,2,3,4,5,6]
