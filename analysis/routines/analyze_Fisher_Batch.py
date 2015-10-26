@@ -14,12 +14,14 @@ import matplotlib.pyplot as plt
 import hfGUIdata as hf
 import plot_style as ps
 import plot_model_fit as pt
-importlib.reload(pt)
 
+#run script in the with "Fisher_batch# as the working directory
+#inputs for loading data and histograms
 files_to_use = [3]
 h_to_use = [0,1,2,3,4,5,6,7]
 Ncal = 1.22
-num_bins = 53.0 #sqrt(len(z_data))
+bin_width = 2  # found from Strobel this was optimum
+h = 50  #block size for resampling
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -30,7 +32,6 @@ its = []
 Ns = []
 names = []
 datas=[]
-
 fns = [os.listdir(data_path)[i] for i in files_to_use]
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
@@ -41,7 +42,7 @@ for i,fn in enumerate(fns):
     files = os.listdir(os.getcwd())
     print(folder)
    
-    # Load histgram
+    # Load histgram data
     files = os.listdir(os.getcwd())
     data_name = [x for x in files if "_raw.csv" in x][0]
     hdata = np.genfromtxt(data_name, delimiter=",", dtype='float')
@@ -70,6 +71,7 @@ for i,fn in enumerate(fns):
     lab = r"Squeeze time = {0:.4g}".format(int_time)
     print(lab)
  
+    # parse histogram raw data
     for i,row in enumerate(hdata):
         det_array = np.copy(row)
         counts_data = hf.parse_raw_counts(det_array)
@@ -83,20 +85,21 @@ for i,fn in enumerate(fns):
     os.chdir(data_path)
 
 #define scale
-#bin_def = np.arange(-N/2.0,N/2.0,(N/num_bins))
-bin_def = np.arange(-N/2.0,N/2.0,2)  #found from Strobel this was optimum
+bin_def = np.arange(-N/2.0,N/2.0,bin_width)  
 
+#calculate reference histogram
 data_ref = datas[0]
 vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=True)
 
+#remove the reference data from the rest
 datas = datas[1:]
 
+#containers
 data_hist = []
 data_hist_jacks = []
 data_hist_jack_errs = []
 n_bin_fills = []
 samps = []
-h = 10  #block size for resampling
 for row in datas:
     vals = plt.hist(row, bin_def,normed=True)[0]
     h_dist = np.sum((sqrt(vals_ref) - sqrt(vals))**2)
@@ -113,7 +116,7 @@ for row in datas:
         re_vals = plt.hist(re_row, bin_def,normed=True)[0]
         re_h_dist = np.sum((sqrt(vals_ref) - sqrt(re_vals))**2)
         re_hds.append(re_h_dist)
-    h_dist_jack = g*h_dist - ((g-1)/g)*np.sum(re_hds)
+    h_dist_jack = g*h_dist - ((g-1)/float(g)* np.sum(re_hds))
     h_dist_jack_err = np.sqrt(np.var(re_hds))
 
     
@@ -127,6 +130,7 @@ l=['Tip angle (rad)', 'dh^2','Extract Fisher Info']
 to_use = 8
 #note: tipping angle starts at 1 because 0 corresponds to the reference
 fit_res = pt.plot_polyfit(tipping_angles[0][1:to_use], data_hist_jacks[0:(to_use-1)],np.array([0,0,1]),
+                          yerr = h_dist_jack_err,
                           hold=np.array([False,True,False]),
                           labels=l)
 k2 = fit_res[0][1]
@@ -136,7 +140,6 @@ print("number of samples is {:.3g}".format(np.mean(samps)))
 
 nonCx = np.linspace(0,0.02,num=100)
 nonCy = nonCx**2 * N[0]/8.0
-
 plt.show()
 plt.close(0)
 """
@@ -147,4 +150,5 @@ plt.show()
 plt.close()
 """
 plt.plot(nonCx,nonCy,'b-')
-plt.plot(tipping_angles[0][1:to_use], data_hist_jacks[0:(to_use-1)],'o')
+plt.errorbar(tipping_angles[0][1:to_use], data_hist_jacks[0:(to_use-1)],yerr=data_hist_jack_errs[0:(to_use-1)],fmt='o')
+plt.title("Data wrt entanglement witness")
