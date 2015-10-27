@@ -23,10 +23,12 @@ t4term = False
 
 verbose = False
 save = False
-name = "Jy_noise_batch"
+name = "Jy_noise_batch_9_29.pdf"
 # make a copy of the analysis at the folder
+"""
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
+"""
 
 # containers for data sets
 ats=[]
@@ -40,7 +42,8 @@ Ns = []
 Ncals = []
 names = []
 
-base_path = os.getcwd()
+
+base_path = os.path.normpath("/Users/jgb/Data/20150929/Load330/Jy")
 add_path = ""
 fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in files_to_use]
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
@@ -73,7 +76,7 @@ for i,fn in enumerate(fns):
     sig_ob = data.T[2]
     sig_in = sqrt(sig_ob**2 - sig_sn**2)  # subtract poissonian shot noise
     sig_ob_err = sig_ob * 1/sqrt(2*reps)
-    sig_in_err= sig_in * 1/sqrt(2*reps)
+    sig_in_err= sig_in * sqrt(2)/sqrt(2*reps)  #sqrt(2) accounts for uncertainty in subtraction
     
     sig_pn = sqrt(k**2/4.0/N)
     
@@ -132,13 +135,14 @@ for i,data in enumerate(ats[0:3]):
     #sort the data
     sort_ind = data.argsort()
     ats_s = data[sort_ind]
-    sig_dephs_s = sig_dephs[i][sort_ind]
-    sig_ob_errs_s = sig_ob_errs[i][sort_ind]
+    lpt = 13
+    sig_dephs_s = np.array(sig_dephs[i][sort_ind])
+    sig_deph_errs_s = np.array(sig_deph_errs[i][sort_ind])
     guess=np.array([Ns[i],np.mean(p_counts[i]),k,0.1,0.0])
     hold=np.array([True,True,True,False,t4term])
     pl = ["Interaction time [ms]","Std Dev. photon count",'Extract added']
-    pout,perr = pt.plot_fit((2e-3*ats_s)[:],(sig_dephs_s[:]),added_noise,guess,
-                yerr=sig_ob_errs_s[:],
+    pout,perr = pt.plot_fit((2e-3*ats_s)[:lpt],(sig_dephs_s[:lpt]),added_noise,guess,
+                yerr=sig_deph_errs_s[:lpt],
                 hold=hold,
                 labels=pl)
     pout_deg = sqrt(pout)/np.mean(p_counts[i])*180/pi
@@ -147,6 +151,22 @@ for i,data in enumerate(ats[0:3]):
 
 print("Added std dev (degrees): {0:.4g} t^2, {1:.4g} t^4)".format(pout_deg[0],pout_deg[1]))
 print("Added var (rad^2/ms): {0:.4g} t^2, {1:.4g} t^4)".format(pout_var_rad[0],pout_var_rad[1]))
+
+plt.close()
+
+#plot for figure
+
+plt.errorbar((2e-3*ats_s)[:lpt],(sig_dephs_s[:lpt]), yerr=sig_deph_errs_s[:lpt], fmt='o')
+tau = np.linspace(0.0,4.1,num=200)
+y_fit = added_noise(tau,Ns[0],np.mean(p_counts[0]),k,pout[0],pout[1])
+plt.plot(tau,y_fit)
+plt.ylabel(r"Detction noise $\Delta m$ (photons)")
+plt.xlabel(r"Interaction time $\tau$ (ms)")
+plt.axis([0,4.1,0,500])
+plt.grid('off')
+
+if save is True:
+    plt.savefig(name,dpi=300,bbox='tight',transparent=True)
                
 """
 #________________________________________________________________________

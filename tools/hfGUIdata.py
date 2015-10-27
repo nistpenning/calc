@@ -90,6 +90,24 @@ def get_ionProp_dict(keys, where='props'):
             os.chdir('..')
         return val_dict
 
+def parse_raw_counts(array):
+    bad = 0
+    for x in np.nditer(array, op_flags=['readwrite']):
+        if x == -1:
+            print('Found bad data point')
+            bad += 1
+            x[...] = -1
+        elif np.isnan(x) == True:
+            print('Found bad data point Nan')
+            bad += 1
+            x[...] = -1
+        else:
+            x[...] = int(x) & 0x1fff
+    if bad > 0:
+        print("# of bad points: {}".format(bad))
+        print("removing all bad points in return value")
+        array = array[array!=-1]
+    return array
 
 def parse_raw_counts_data(file_name):
     #Get data from the file

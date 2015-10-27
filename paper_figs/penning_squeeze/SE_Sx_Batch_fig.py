@@ -9,6 +9,7 @@ import numpy as np
 from numpy import pi, sin, cos, sqrt
 import matplotlib.pyplot as plt
 
+import resample_tools as re
 import hfGUIdata as hf
 importlib.reload(hf)
 import plot_style as ps
@@ -18,7 +19,7 @@ import squeeze_func_time as squ
 
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
-raw = False
+raw = True
 save = False
 save_txt = False
 name = "SxVsN_fig_v2.pdf"
@@ -28,7 +29,9 @@ shapes = ['o','s','D','^']
 # containers for data sets
 ats=[]
 Cs = []
+Craws = []
 Cerrs = []
+Crerrs = []
 Ns = []
 #J1ks = [1440,1776,2316,1785]
 J1ks = [1440,1776,2316]
@@ -90,11 +93,22 @@ for i,fn in enumerate(fns):
         data_name = [x for x in files if "_raw.csv" in x][0]
         hdata = np.genfromtxt(data_name, delimiter=",", dtype='float')
         print(np.shape(hdata))
-        hist.append(hdata)
+        
+        raw_mean = np.zeros(np.size(hdata, axis=0))
+        raw_mean_err = np.zeros(np.size(hdata, axis=0))
+        for i,row in enumerate(hdata):
+            det_array = np.copy(row)
+            counts_data = hf.parse_raw_counts(det_array)
+       
+            Sz_data = (1-2*((counts_data-dm)/k))
+            raw_mean[i],raw_mean_err[i] = re.jackknife_est(Sz_data, np.mean)
+            
 
     ats.append(arm_time)
     Cs.append(contrast_est)
+    Craws.append(raw_mean)
     Cerrs.append(contrast_est_err)
+    Crerrs.append(raw_mean_err)
     Ns.append(N)
     names.append(hf.n_slice(fn))
 
