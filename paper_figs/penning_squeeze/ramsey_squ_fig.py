@@ -18,6 +18,7 @@ import squeeze_func_time as squ
 
 save = True
 img_name = "Ramsey_squeeze_param"
+plot_axis_extent = [0,230, 0.0,1.2]
 
 base_path = os.getcwd()
 
@@ -40,8 +41,8 @@ sig_PN_subs = []
 sig_PN_subs_errs = []
 sig_PN_fulls = []
 sig_PN_fulls_errs = []
-sig_SE_fulls = []
-sig_SE_fulls_errs = []
+xi2_SE_fulls = []
+xi2_SE_fulls_errs = []
 
 #first, just get data sets that were just measuring projection noise of CSS
 data_path = "/Users/jgb/Data/20150813/Collect_justPN_data"
@@ -67,13 +68,14 @@ for i,fn in enumerate(folders[1:]):
     Ncal = data_p['pho_ion_ms']
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncal
+#get data base entry
     date = file_name[:10]
     match = np.array([i.decode('ascii')==date for i in datadb['data_set']])
     row = datadb[match]
     N_frac_err = float(row['N_frac_err'])
     N_err = N * N_frac_err
 
-    # load experiment data
+# load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
     if reps_flag == 1:
@@ -81,22 +83,24 @@ for i,fn in enumerate(folders[1:]):
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
     pmterr = np.array(data.T[2][0:],dtype='float')
     pmterr_err = pmterr/np.sqrt(2*reps)
-    m_len = avg_pmt_counts-dm
-    m_len_frac_err = 1/sqrt(avg_pmt_counts+dm)
+    m_len = k/2.0
+    m_len_frac_err = 1/sqrt(bm+dm)
     
+    #calc values and uncertainties, assuming the m_determinination is largest error
     sig_sub = np.mean(sqrt(pmterr**2 - avg_pmt_counts)/m_len)
-    sig_sub_err = np.mean((pmterr**2 - avg_pmt_counts)/m_len)/sqrt(2*np.size(avg_pmt_counts))
     sig_sub_err = sig_sub*m_len_frac_err
     sig_full = np.mean(pmterr/m_len)
-    sig_full_err = np.mean((pmterr**2/m_len))/sqrt(2*np.size(avg_pmt_counts))
-    #print(sig_full_err/sig_full)
+    sig_full_err = sig_full*m_len_frac_err
     
+    xi2_s = sig_sub**2 * N
+    xi2_s_err =sqrt( (2*sig_sub*N*sig_sub_err)**2 + (sig_sub**2 * N_err)**2 )
+
     Ns.append(N)  
     N_errs.append(N_err)
-    xi2_PN_subs.append(sig_sub**2 * N)
-    sig_PN_subs_errs.append(sig_sub_err)
+    xi2_PN_subs.append(xi2_s)
+    xi2_PN_subs_errs.append(xi2_s_err)
     xi2_PN_fulls.append(sig_full**2 * N)  
-    sig_PN_fulls_errs.append(sig_full_err)
+    xi2_PN_fulls_errs.append(sig_full_err)
     data_names.append(file_name)
     os.chdir(base_path)
 
@@ -122,7 +126,7 @@ for i,fn in enumerate(folders[1:]):
     except ValueError:
         print(file_name+" no reps in props, look in data")
         reps_flag = 1
-    #get data base entry
+#get data base entry
     date = file_name[:10]
     match = np.array([i.decode('ascii')==date for i in datadb['data_set']])
     row = datadb[match]
@@ -141,27 +145,36 @@ for i,fn in enumerate(folders[1:]):
     if reps_flag == 1:
         reps = np.mean(data.T[3])
     cal_counts_avg = np.mean(data.T[1])
-    m_len = (cal_counts_avg-dm)
+    m_len = (k/2.0)
+    m_len_frac_err = 1/sqrt(bm+dm)
+    
     sig_cal_ob = np.mean(data.T[2])/m_len
     sig_cal_ob_err = sig_cal_ob**2/sqrt(2*reps)
     sig_cal_sub = sqrt((np.mean(data.T[2])**2 - cal_counts_avg))/m_len
-    sig_cal_sub_err = sig_cal_sub**2/sqrt(2*reps)
+    sig_cal_sub_err = sig_cal_sub*m_len_frac_err
+    
+    xi2_s = sig_cal_sub**2 * N
+    xi2_s_err =sqrt( (2*sig_cal_sub*N*sig_cal_sub_err)**2 + (sig_cal_sub**2 * N_err)**2 )
     
     Ns.append(N)
     N_errs.append(N_err)
-    xi2_PN_subs.append(sig_cal_sub**2 * N)
-    sig_PN_subs_errs.append(sig_cal_sub_err)
+    xi2_PN_subs.append(xi2_s)
+    xi2_PN_subs_errs.append(xi2_s_err)
     xi2_PN_fulls.append(sig_cal_ob**2 * N)  
     sig_PN_fulls_errs.append(sig_cal_ob_err)
     data_names.append(file_name)
     os.chdir(base_path)
 
 #fig, ax = plt.subplots(figsize=(5.0,3.7)) 
-fig, ax = plt.subplots() 
+fig, ax = plt.subplots(figsize=(5.0,3.8)) 
 Nround = np.array([round(n) for n in Ns])
 #plt.errorbar(Nround, np.array(sig_PN_subs), yerr=np.array(sig_PN_subs_errs), 
 #    fmt='o')
-plt.plot(Nround, xi2_PN_subs, 'o')
+
+####################################
+#here make a choice to display all the unertianty in N as uncertainty in 
+#y, as it directly multiplies (correlated error)
+plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o')
 #plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
 #             yerr=sig_PN_fulls_errs, fmt='d')
 #plt.plot(Nround, xi2_PN_fulls,'d')
@@ -234,22 +247,24 @@ for i,fn in enumerate(folders[1:]):
     m_len = avg_pmt_counts-dm
     
     sig_sub = np.min(pmterr**2 - avg_pmt_counts)**2/C_coherent_pred**2
-    sig_full = np.min(pmterr)**2/C_coherent_pred**2
-    sig_full_err = sig_full/sqrt(2*reps)
+    sig2_full = np.min(pmterr)**2/C_coherent_pred[0]**2
+    sig_full_err = sqrt(sig2_full)/sqrt(2*reps)
+    
+    xi2 = sig2_full * N
+    xi2_err = sqrt( (2*sqrt(sig2_full)*N*sig_full_err)**2 + (sig2_full * N_err)**2 )
     
     dataSE_names.append(file_name)
     N_SEs.append(N)  
     N_SE_errs.append(N_err)
-    sig_SE_fulls.append(sig_full[0])  
-    sig_SE_fulls_errs.append(sig_full_err)
+    xi2_SE_fulls.append(xi2)  
+    xi2_SE_fulls_errs.append(xi2_err)
     os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
-xi2_min = np.multiply(NSEround,np.array(sig_SE_fulls))
-plt.plot(NSEround, xi2_min, 's',color=ps.blue)
-#plt.yscale('log')
-#plt.xscale('log')
-plt.axis([0,250, 0.0,1.1])
+
+plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blue)
+
+plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
 plt.grid('off')
@@ -265,7 +280,7 @@ ax.yaxis.set_major_locator(majorLocatorY)
 ax.yaxis.set_major_formatter(majorFormatterY)
 """
 
-dephase_est = 0.002143  # for interaction time of 1ms, from 9/29
+dephase_est = 0.002143 + 0.0001607  # for interaction time of 1ms, from 9/29
 x = np.linspace(.1,300,num=500)
 heisenberg = 1/x
 plt.plot(x,dephase_est*x,'--',color=ps.purple )
