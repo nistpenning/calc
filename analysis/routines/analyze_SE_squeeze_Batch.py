@@ -20,10 +20,10 @@ import resample_tools as re
 raw = False
 verbose = True
 save = False
-img_name = "spinNoise_10_16"
+img_name = "spinNoise_10_27"
 files_to_use = [-1]
-J1k = 2098.0    
-Ncal = 1.2
+J1k = 1773.0    
+Ncal = 1.32
 
 #theory calc info
 G_el =  61.6
@@ -31,14 +31,14 @@ G_ud =  9.24
 G_du =  6.52
 G_tot = 38.7
 #adjust for extra decohrence
-G_add = 110.0
+G_add = 70.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.00177  # rad^2/ms^2
-B = 0.000018 # rad^2/ms^4
+A = 0.00165  # rad^2/ms^2
+B = 0.00002 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -204,12 +204,13 @@ plt.show()
 plt.close()
 
 if verbose is True:
-    """
+    
     int_times = np.array(its)*1e3
     plt.plot(int_times,SE,'o')
     plt.ylabel('Spectroscopic Enhancement [dB]')
     plt.xlabel('Interaction time [ms]')
     plt.show()
-    """
+    
     #comparing different error estimates
+elif raw is True:
     plt.plot(sig_ob_errs[0], sig_rob_errs[0])

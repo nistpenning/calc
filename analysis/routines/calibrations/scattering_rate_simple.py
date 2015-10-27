@@ -13,14 +13,13 @@ import hfGUIdata
 import plot_model_fit as pt
 import squeeze_func_time as squ
 
-
 ats = []
 cons = []
 file_to_use = [-1]
 
 fns = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in file_to_use]
 # fit guess values
-g = np.array([40.0])
+g = np.array([60.0])
 
 def expdecay(t,G):
     return np.exp(-G*t*1e-3)
