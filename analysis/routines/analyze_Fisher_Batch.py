@@ -97,7 +97,6 @@ datas = datas[1:]
 #containers
 data_hist = []
 data_hist_jacks = []
-data_hist_jack_errs = []
 n_bin_fills = []
 samps = []
 for row in datas:

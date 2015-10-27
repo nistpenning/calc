@@ -14,8 +14,10 @@ import hfGUIdata as hf
 import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
+import resample_tools as re
 
 #options
+raw = False
 verbose = True
 save = False
 img_name = "spinNoise_10_16"
@@ -42,6 +44,9 @@ B = 0.000018 # rad^2/ms^4
 psis=[]
 its=[]
 sig_obs = []
+sig_ob_errs = []
+sig_robs = []
+sig_rob_errs = []
 sig_ins = []
 sig_pns = []
 SE = []
@@ -79,7 +84,7 @@ for i,fn in enumerate(fns):
     cal_counts_avg = np.mean(data.T[1])
     sig_cal_ob = np.mean(data.T[2])
     sig_cal_sn = sqrt(cal_counts_avg)
-
+    
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
@@ -107,6 +112,22 @@ for i,fn in enumerate(fns):
     csi_R2 = (sig_ob**2)/(sig_pn**2)/C_coherent_pred**2
     dB_csi_R2 = 10*np.log10(csi_R2)
     
+    if raw is True:
+    # Load histgram
+        files = os.listdir(os.getcwd())
+        data_name = [x for x in files if "_raw.csv" in x][0]
+        hdata = np.genfromtxt(data_name, delimiter=",", dtype='float')
+        print(np.shape(hdata))
+        
+        jack_sig = np.zeros(np.size(sig_ob))
+        jack_err_on_sig = np.zeros(np.size(sig_ob))
+        for i,row in enumerate(hdata):
+            counts = hf.parse_raw_counts(row)
+            jack_sig[i], jack_err_on_sig[i] = re.jackknife_est(counts,np.std)
+            
+        sig_robs.append(jack_sig)
+        sig_rob_errs.append(jack_err_on_sig)
+
 
     #Load data messages
     print( "______________Data set: {}__________________".format(hf.n_slice(file_name)))
@@ -124,6 +145,7 @@ for i,fn in enumerate(fns):
     psis.append(psi_deg)
     its.append(int_t)
     sig_obs.append(sig_ob)
+    sig_ob_errs.append(sig_ob_err)
     sig_ins.append(sig_in)
     sig_pns.append(sig_pn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
@@ -180,8 +202,14 @@ if save is True:
 
 plt.show()
 plt.close()
-int_times = np.array(its)*1e3
-plt.plot(int_times,SE,'o')
-plt.ylabel('Spectroscopic Enhancement [dB]')
-plt.xlabel('Interaction time [ms]')
-plt.show()
+
+if verbose is True:
+    """
+    int_times = np.array(its)*1e3
+    plt.plot(int_times,SE,'o')
+    plt.ylabel('Spectroscopic Enhancement [dB]')
+    plt.xlabel('Interaction time [ms]')
+    plt.show()
+    """
+    #comparing different error estimates
+    plt.plot(sig_ob_errs[0], sig_rob_errs[0])
