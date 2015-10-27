@@ -22,7 +22,7 @@ files_to_use = [-1]
 t4term = False
 
 verbose = False
-save = True
+save = False
 name = "Jy_noise_batch_9_29.pdf"
 # make a copy of the analysis at the folder
 """
