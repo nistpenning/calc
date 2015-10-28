@@ -27,8 +27,8 @@ folders = get_immediate_subdirectories(os.getcwd())
 
 #Do the analysis on all the folders
 #define intial parameters
-Gamma = 90e-6
-w_a = 1576.0
+Gamma = 80e-6
+w_a = 1579.0
 Jbar_1kHz = 2000
 Jbar_guess = 1.0*Jbar_1kHz*1e-6
 
