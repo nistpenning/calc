@@ -21,24 +21,24 @@ raw = False
 verbose = True
 save = False
 img_name = "spinNoise_10_16"
-files_to_use = [-1]
-J1k = 2098.0    
+files_to_use = [0,1,2,4,5]
+J1k = 1956.0    
 Ncal = 1.2
 
 #theory calc info
-G_el =  61.6
-G_ud =  9.24
-G_du =  6.52
-G_tot = 38.7
+G_el =  67.4
+G_ud =  10.1
+G_du =  7.1
+
 #adjust for extra decohrence
-G_add = 110.0
+G_add = 100.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.00177  # rad^2/ms^2
-B = 0.000018 # rad^2/ms^4
+A = 0.0016  # rad^2/ms^2
+B = 0.00002 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -212,4 +212,5 @@ if verbose is True:
     plt.show()
     """
     #comparing different error estimates
-    plt.plot(sig_ob_errs[0], sig_rob_errs[0])
+    if raw is True:
+        plt.plot(sig_ob_errs[0], sig_rob_errs[0])

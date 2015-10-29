@@ -17,15 +17,15 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.22
+Ncal = 1.32
 verbose = True
 save = False
-ymax = 350
-files_to_use = [-4]
-hist_to_use = [0,1,2,3,4,5,6]
+ymax = 50
+files_to_use = [0]
+hist_to_use = [0,3,4,5,6,7,10,11,12,13,14]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
-num_bins = 37#sqrt(len(z_data))
+num_bins = 21#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)

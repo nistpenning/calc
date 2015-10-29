@@ -17,11 +17,11 @@ import plot_model_fit as pt
 
 #run script in the with "Fisher_batch# as the working directory
 #inputs for loading data and histograms
-files_to_use = [3]
+files_to_use = [5]
 h_to_use = [0,1,2,3,4,5,6,7]
-Ncal = 1.22
+Ncal = 1.15
 bin_width = 2  # found from Strobel this was optimum
-h = 50  #block size for resampling
+h = 20  #block size for resampling
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -97,6 +97,7 @@ datas = datas[1:]
 #containers
 data_hist = []
 data_hist_jacks = []
+data_hist_jack_errs = []
 n_bin_fills = []
 samps = []
 for row in datas:
@@ -126,7 +127,7 @@ for row in datas:
     samps.append(samp)
 
 l=['Tip angle (rad)', 'dh^2','Extract Fisher Info']
-to_use = 8
+to_use = 12
 #note: tipping angle starts at 1 because 0 corresponds to the reference
 fit_res = pt.plot_polyfit(tipping_angles[0][1:to_use], data_hist_jacks[0:(to_use-1)],np.array([0,0,1]),
                           yerr = h_dist_jack_err,
@@ -137,7 +138,7 @@ NormF = k2/N[0]/( (1/8.0) ) #dont' need the 1/M term from teh estimate
 print("F = 8*k2, and then F/N is {:.3g}".format(NormF))
 print("number of samples is {:.3g}".format(np.mean(samps)))
 
-nonCx = np.linspace(0,0.02,num=100)
+nonCx = np.linspace(0,0.8,num=200)
 nonCy = nonCx**2 * N[0]/8.0
 plt.show()
 plt.close(0)
