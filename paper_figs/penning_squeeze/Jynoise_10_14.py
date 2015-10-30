@@ -23,10 +23,12 @@ t4term = False
 
 verbose = False
 save = False
-name = "Jy_noise_batch"
+name = "Jy_noise_batch_10_14.pdf"
 # make a copy of the analysis at the folder
+"""
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
+"""
 
 # containers for data sets
 ats=[]
@@ -40,6 +42,11 @@ Ns = []
 Ncals = []
 names = []
 
+var_adds = []
+var_add_errs = []
+
+
+#base_path = os.path.normpath("/Users/jgb/Data/20150929/Load330/Jy")
 base_path = os.getcwd()
 add_path = ""
 fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in files_to_use]
@@ -73,9 +80,12 @@ for i,fn in enumerate(fns):
     sig_ob = data.T[2]
     sig_in = sqrt(sig_ob**2 - sig_sn**2)  # subtract poissonian shot noise
     sig_ob_err = sig_ob * 1/sqrt(2*reps)
-    sig_in_err= sig_in * 1/sqrt(2*reps)
+    sig_in_err= sig_in * sqrt(2)/sqrt(2*reps)  #sqrt(2) accounts for uncertainty in subtraction
     
     sig_pn = sqrt(k**2/4.0/N)
+    
+    var_add = (sig_ob**2 - sig_sn**2 - sig_pn**2) / (k/2)**2
+    var_add_err = var_add *0.05  #I know this is the fracitonal uncertainty here
     
     ats.append(arm_t)
     p_counts.append(count_avg)
@@ -86,6 +96,8 @@ for i,fn in enumerate(fns):
     sig_deph_errs.append(sig_in_err)
     Ns.append(N)
     names.append((fn))
+    var_adds.append(var_add)
+    var_add_errs.append(var_add_err)
 
     os.chdir(base_path)
 
@@ -124,21 +136,22 @@ if verbose is True:
     plt.close()
 
 def added_noise(tau, N, m, k, A, B):
-    sig_tot_2 = m + (k**2/4.0/N) + A*tau + B*tau**4 
-    return sqrt(sig_tot_2)
+    sig_tot_2 = A*tau**2 + B*tau**4 
+    return sig_tot_2
     
 
 for i,data in enumerate(ats[0:3]):
     #sort the data
     sort_ind = data.argsort()
     ats_s = data[sort_ind]
-    sig_dephs_s = sig_dephs[i][sort_ind]
-    sig_ob_errs_s = sig_ob_errs[i][sort_ind]
+    lpt = 13
+    var_adds_s = np.array(var_adds[i][sort_ind])
+    var_add_errs_s = np.array(var_add_errs[i][sort_ind])
     guess=np.array([Ns[i],np.mean(p_counts[i]),k,0.1,0.0])
     hold=np.array([True,True,True,False,t4term])
-    pl = ["Free Precession Time (ms)","Std Dev. photon count",'Extract added']
-    pout,perr = pt.plot_fit((2e-3*ats_s)[:-1],(sig_dephs_s[:-1]),added_noise,guess,
-                yerr=sig_ob_errs_s[:-1],
+    pl = ["Interaction time [ms]","Std Dev. photon count",'Extract added']
+    pout,perr = pt.plot_fit((2e-3*ats_s)[:lpt],(var_adds_s[:lpt]),added_noise,guess,
+                yerr=var_add_errs_s[:lpt],
                 hold=hold,
                 labels=pl)
     pout_deg = sqrt(pout)/np.mean(p_counts[i])*180/pi
@@ -146,7 +159,23 @@ for i,data in enumerate(ats[0:3]):
     plt.show()
 
 print("Added std dev (degrees): {0:.4g} t^2, {1:.4g} t^4)".format(pout_deg[0],pout_deg[1]))
-print("Added var (rad^2/ms): {0:.4g} t^2, {1:.4g} t^4)".format(pout_var_rad[0],pout_var_rad[1]))
+print("Added var (rad^2/ms): {0:.4g} t^2, {1:.4g} t^4)".format(pout[0],pout[1]))
+
+plt.close()
+
+#plot for figure
+
+plt.errorbar((2e-3*ats_s)[:lpt],(var_adds_s[:lpt]), yerr=var_add_errs_s[:lpt], fmt='o')
+tau = np.linspace(0.0,5.1,num=200)
+y_fit = added_noise(tau,Ns[0],np.mean(p_counts[0]),k,pout[0],pout[1])
+plt.plot(tau,y_fit)
+plt.ylabel(r"Dephasing $(\Delta \phi_{rms})^2$ (radians$^2$)")
+plt.xlabel(r"Free Precession Time $\tau$ (ms)")
+plt.axis([0,5.1,0,0.165])
+plt.grid('off')
+
+if save is True:
+    plt.savefig(name,dpi=300,bbox='tight',transparent=True)
                
 """
 #________________________________________________________________________
