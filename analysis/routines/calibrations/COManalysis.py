@@ -17,19 +17,23 @@ from scicons import pi, hbar, m_Be, k_b
 import hfGUIdata
 importlib.reload(hfGUIdata)
        
-folders = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [-1]]
+folders = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [0,1,2,3]]
 
 #known inputs
 # 9 shells
-F12 = 2*pi*185.5e3  # per sec
-lACSS = 2*pi*20.3e3  # per sec
-uACSS = 2*pi*20.3e3  # per sec
+F12 = 2*pi*180.0e3  # per sec
+lACSS = 2*pi*19.1e3  # per sec
+uACSS = 2*pi*20.8e3  # per sec
+wa_guess = 2*pi*1580.5*1e3
+pre_t_lim = 0.002  # time, in ms, to restrict the heating rate fit
 
-Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, 2*pi*1573.0*1e3)
-Gamma = Gamma
+Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, wa_guess)
+Gamma = Gamma + 20
+Jbar_1kHz = 1750.0  # per s, measured for this data set
+F0 = sqrt(Jbar_1kHz * (4*hbar*m_Be*wa_guess*(2*pi*1.0*1e3)))
 wa_hold = False
 
-Nion = 150
+Nion = 400
 
 print("F0: {}".format(F0))
 print('Gamma: {}'.format(Gamma))  
@@ -45,12 +49,11 @@ def analysis():
     #get values from ion properties
     fz_str = 'raman%raman_fz'
     w_a = hfGUIdata.get_ionProp_value(fz_str)
-    w_a = 2*pi*w_a*1e3
-    w_a = 2*pi*1571.0*1e3
+    w_a = wa_guess
     
     #Fit guesses
     K0 = (F0/ sqrt(2.0))**2 / (hbar*2*m_Be*Nion*w_a) #sqrt(2) tries to account for DW factor
-    n = 10.0 
+    n = 3.0 
 
     arm_time = np.mean(data['arm_t'])*1e-6
     pi_time = np.mean(data['middle_t'])*1e-6
@@ -64,7 +67,7 @@ def analysis():
     hold = np.array([False, True, True, wa_hold])
 
     #plot labels
-    extent = [1564.0, 1580.0, 0.0, 0.60]
+    extent = [1573.5, 1586.5, 0.0, 0.60]
     l = ['Raman detuning [kHz]', 'Bright Fraction', '%s, $t_{a}$: %d us, $t_{pre}$: %d ms'%(file_name[-14:-8],arm_time*1e6,pre_time)]
 
     # print out relevant parameters
@@ -87,10 +90,6 @@ def analysis():
                             (w_a**2 - m**2)*cos(w_a*tau)*sin(m*tau)*sin(phi) +
                             2*m*w_a*sin(m*tau)*sin(w_a*tau)))
             
-            alpha =  w_a*(1-cos(phi)) + 1j*m*sin(phi) - \
-                        (np.exp(1j*w_a*tau) * 
-                        (w_a*(cos(m*tau)-cos(m*tau+phi)) -  1j*(sin(m*tau)-sin(m*tau+phi))))
-            #asq = alpha*alpha.conj()/((m**2-w_a**2)**2)
             res = np.append(res, asq)
         res = np.abs(res)
         return 0.5*(1 - np.exp(-G*2*tau)*np.exp(-2*K0*res*(2*nm+1)))        
@@ -124,7 +123,7 @@ for folder in folders:
         t = res[0]*hbar*res[1]/k_b
         t_err = res_err[0] * hbar*res[1]/k_b  # assume most error in n, not w_a
     else:
-        w = 2*pi*1487.6*1e3
+        w = wa_guess
         w_a = np.append(w_a, w)
         t = res[0]*hbar*w/k_b
         t_err = res_err[0] * hbar*w/k_b  # assume most error in n, not w_a
@@ -152,7 +151,7 @@ def lin(x,y0,m):
     return y0+m*x
 
 l = ['Heating time [ms]', 'nbar', 'Extract heating rate']
-pt.plot_fit(pre_t[pre_t<4], nbar[pre_t<4], lin, np.array([5.0,500.0]),
+pt.plot_fit(pre_t[pre_t>pre_t_lim], nbar[pre_t>pre_t_lim], lin, np.array([5.0,500.0]),
             hold=np.array([False, False]),
-            yerr=nbar_err[pre_t<4],
+            yerr=nbar_err[pre_t>pre_t_lim],
             labels=l)               

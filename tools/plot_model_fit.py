@@ -176,8 +176,8 @@ def plot_fit(x,y,fitfunc,fitguess,
 
     return popt, perr
 
-def plot_polyfit(x,y, fitguess,
-            yerr=None,
+def plot_polyfit(x, y, fitguess,
+                 yerr=None,
             hold=[],
             labels=['X','Y','default'],
             axis='default',
@@ -280,8 +280,6 @@ def plot_polyfit(x,y, fitguess,
 
     if show is True:
 #build figure
-        plt.close()
-
         if axis == 'default':
             axis = [0.0, 1.1*np.max(x), 0.0,  1.1*np.max(y)]
         elif axis == 'auto':
@@ -295,8 +293,8 @@ def plot_polyfit(x,y, fitguess,
         plt.plot(x_curve,curve_fit,'-')
 
         #labels
-        plt.xlabel=labels[0]
-        plt.ylabel=labels[1]
+        plt.xlabel(labels[0])
+        plt.ylabel(labels[1])
         plt.figtext(0.0, -0.05, fit_message, fontsize=10)
 
         name = fitfunc.__name__

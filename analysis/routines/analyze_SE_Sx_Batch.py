@@ -22,16 +22,25 @@ name = "SE_Sx_batch_analysis"
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
     
+<<<<<<< HEAD
 J1k = 2100.0    
 Ncal = 1.23
+=======
+J1k = 1956.0    
+Ncal = 1.2
+>>>>>>> origin/jgb
 
 #theory calc info
-G_el =  61.6
-G_ud =  9.24
-G_du =  6.52
-G_tot = 38.7
+G_el =  67.4
+G_ud =  10.1
+G_du =  7.1
+
 #adjust for extra decohrence
+<<<<<<< HEAD
 G_add = 82.0
+=======
+G_add = 100.0
+>>>>>>> origin/jgb
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add

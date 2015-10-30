@@ -16,7 +16,7 @@ import plot_model_fit as pt
 importlib.reload(pt)
 
 # make a copy of the analysis at the folder
-if True:
+if False:
     shutil.copy(__file__, os.getcwd())
 
 def get_immediate_subdirectories(a_dir):
