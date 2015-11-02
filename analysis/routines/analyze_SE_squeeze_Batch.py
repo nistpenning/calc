@@ -21,9 +21,9 @@ raw = False
 verbose = True
 save = False
 img_name = "spinNoise_10_28"
-files_to_use = [0]
-J1k = 2619.0    
-Ncal = 1.25
+files_to_use = [2]
+J1k = 2300.0    
+Ncal = 1.19
 
 #theory calc info
 G_el =  67.4
@@ -37,8 +37,8 @@ print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.00068  # rad^2/ms^2
-B = 0.0002323 # rad^2/ms^4
+A = 0.001763 # rad^2/ms^2
+B = 0.0000423 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -49,6 +49,7 @@ sig_robs = []
 sig_rob_errs = []
 sig_ins = []
 sig_pns = []
+sig_psns = []
 SE = []
 Ns = []
 names = []
@@ -137,6 +138,7 @@ for i,fn in enumerate(fns):
         print( "Infer. proj. noise sqrt(cal_ob^2 - cal_sn^2):  {:.3f}".format(sqrt(sig_cal_ob**2 - sig_cal_sn**2)) )
         print( "Pred. proj. noise sig_pn = sqrt(k**2/4.0/N): {:.3f}".format(sig_pn) )
         print( "Est. added noise sqrt((cal_ob^2 - cal_sn^2)-pn^2): {:.3f}, or {:.3f} deg".format(sig_a,sig_a_deg))
+        print( "Est. added noise (ratio of var to photon shot noise: {:.3f}".format(sig_a**2/np.mean(sig_sn)**2))
     print( "Minimum inferred spin variance: {:.3f} dB".format(np.min(dB_squ_in))) 
     print( "Minimum observed spin variance: {:.3f} dB".format(np.min(dB_squ_ob)))
     print( r"Minimum observed $\csi_R^2$: {:.3f} dB".format(np.min(dB_csi_R2)))
@@ -148,6 +150,7 @@ for i,fn in enumerate(fns):
     sig_ob_errs.append(sig_ob_err)
     sig_ins.append(sig_in)
     sig_pns.append(sig_pn)
+    sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
     Ns.append(N)
     names.append(hf.n_slice(file_name))
@@ -180,12 +183,18 @@ for i,name in enumerate(names):
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
+    C = np.exp(-G_tot*its[i])  # reduction in contrast from spontaneous emission
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
-    R_add = R + (A*(its[i]*1e3)**2)*N * sin(psi) + (B*(its[i]*1e3)**4)*N * sin(psi)
+    R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=cs[i])
     plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
+    
+    #where is the limit just due to technical noise?
+    tech_limit = 10*np.log10((0.5*sig_psns[i]**2)/(sig_pns[i]**2))
+    plt.plot(psis[i],tech_limit,color=cs[i+1],linestyle='--')
+    
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
