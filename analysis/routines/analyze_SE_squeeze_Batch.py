@@ -48,6 +48,7 @@ sig_ob_errs = []
 sig_robs = []
 sig_rob_errs = []
 sig_ins = []
+sig_2_in_err = []
 sig_pns = []
 sig_psns = []
 SE = []
@@ -93,10 +94,11 @@ for i,fn in enumerate(fns):
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])
+    sig_sn_2_err = sig_sn**2 * sqrt(2/reps)
     sig_ob = data.T[2]
     sig_in = sqrt(sig_ob**2 - sig_sn**2)  # subtract poissonian shot noise
-    sig_ob_err = sig_ob * 1/sqrt(2*reps)
-    sig_in_err= sig_in * 1/sqrt(2*reps)
+    sig_ob_2_err = sig_ob**2 * sqrt(2/reps)
+    sig_in_2_err= sqrt( (sig_ob_2_err)**2  + (sig_sn_2_err)**2)
 
     sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
 
@@ -147,8 +149,9 @@ for i,fn in enumerate(fns):
     psis.append(psi_deg)
     its.append(int_t)
     sig_obs.append(sig_ob)
-    sig_ob_errs.append(sig_ob_err)
+    sig_ob_errs.append(sqrt(sig_ob_2_err))
     sig_ins.append(sig_in)
+    sig_2_in_err.append(sig_in_2_err)
     sig_pns.append(sig_pn)
     sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
@@ -163,13 +166,16 @@ for i,fn in enumerate(fns):
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
+    spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
+    spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
     spin_noise_dB = 10*np.log10(spin_noise)
-    spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
+    #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
+    spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
     plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l)
 
 #plt.yscale('log')
 #plt.xscale('log')
-plt.axis([-1,181,-10,18])
+plt.axis([-1,181,-10,17])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
