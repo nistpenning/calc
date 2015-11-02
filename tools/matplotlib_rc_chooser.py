@@ -60,6 +60,8 @@ def set_rc(mode='qunat'):
             'figure.autolayout': True,
             'figure.dpi': 150,
             'figure.facecolor': 'white',
+            'figure.subplot.wspace': 0,
+            'figure.subplot.hspace': 0,
 
             'savefig.dpi': 600, # PRL requests 600 dpi
 
@@ -73,6 +75,7 @@ def set_rc(mode='qunat'):
             'axes.axisbelow': True,
             'axes.linewidth': 1.0,
             'axes.facecolor': 'white',
+            'axes.labelsize': 10,
 
             'grid.color': '0',
             'grid.linestyle': '-',
@@ -80,13 +83,18 @@ def set_rc(mode='qunat'):
             'xtick.minor.size': 2, 'ytick.minor.size': 2,
             'xtick.major.size': 4, 'ytick.major.size': 4,
             'xtick.direction': 'in', 'ytick.direction': 'in',
+            'xtick.labelsize': 8, 'ytick.labelsize': 8,
 
             'image.cmap': 'Greys',
 
             'legend.numpoints': 1,
             'legend.frameon': False,
             'legend.scatterpoints': 1,
-            'legend.fontsize': 'medium'
+            'legend.fontsize': 8,
+            'legend.labelspacing': 0.05,
+            'legend.frameon': True,
+            'legend.borderaxespad': 0,
+            'legend.handlelength': 1.1
         }
     else:
         print('setrc() unknown mode')
