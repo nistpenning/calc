@@ -17,8 +17,8 @@ import plot_model_fit as pt
 #run script in the with "Fisher_batch# as the working directory
 #inputs for loading data and histograms
 
-files_to_use = [2]
-Ncal = 1.32
+files_to_use = [1]
+Ncal = 1.16
 
 bin_width = 2  # found from Strobel this was optimum
 h = 20  #block size for resampling
@@ -132,6 +132,7 @@ for row in datas:
 l=['Tip angle (rad)', 'dh^2','Extract Fisher Info']
 
 to_use = 12
+plt.close()
 
 #note: tipping angle starts at 1 because 0 corresponds to the reference
 fit_res = pt.plot_polyfit(tipping_angles[0],data_hist_jacks,np.array([0,0,1]),

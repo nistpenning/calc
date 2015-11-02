@@ -17,15 +17,15 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.32
+Ncal = 1.2011
 verbose = True
 save = False
-ymax = 50
-files_to_use = [0]
-hist_to_use = [0,3,4,5,6,7,10,11,12,13,14]
+ymax = 250
+files_to_use = [-1]
+hist_to_use = [0,1,2]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
-num_bins = 21#sqrt(len(z_data))
+num_bins = 57#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -105,6 +105,7 @@ for i,fn in enumerate(fns):
         #print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
+    
 if save is True:    
     ps.save_data_txt(text_name+".txt",datas)
 
