@@ -171,8 +171,9 @@ for i,name in enumerate(names):
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
     out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
+    C = np.exp(-G_tot*its[i])  # reduction in contrast from spontaneous emission
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
-    R_add = R + (A*(its[i]*1e3)**2)*N * sin(psi) + (B*(its[i]*1e3)**4)*N * sin(psi)
+    R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i],linestyle='--')
