@@ -182,7 +182,7 @@ plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o')
 #             yerr=sig_PN_fulls_errs, fmt='d')
 #plt.plot(Nround, xi2_PN_fulls,'d')
 N_pred = np.linspace(0.1,250)
-plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color=ps.red)
+plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='k')
 
 #sfe = 2* np.array(sig_fulls) * np.array(sig_fulls_errs)
 
@@ -270,14 +270,18 @@ NSEround = np.array([round(n) for n in N_SEs])
 
 plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blue)
 
+## calcuate the best possible Xi for OAT with no decoherence not accounting for 
+## decoupling times
+Ns = np.linspace(2,260)
 J0  = 2000.
-tau_opt = np.array(tau_opt)
-Jbar_here = J0/0.001*tau_opt/2.0
-out_p = squ.OAT_decoh(0.0, tau_opt, Jbar_here, NSEround, G_el[0], G_ud[0], G_du[0])
-out = squ.OAT_decoh(-np.real(out_p[2]), tau_opt, Jbar_here, NSEround, G_el[0], G_ud[0], G_du[0])
-xi2_max = (4/NSEround) *(np.real(out[0])**2/np.real(out[1])**2)
+tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
+tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
 
-plt.plot(NSEround,xi2_max,'--',color=ps.purple)
+out_p = squ.OAT_decoh(0.0, tau_opt, J0, Ns, 0, 0, 0)
+out = squ.OAT_decoh(-np.real(out_p[2]), tau_opt, J0, Ns, 0, 0, 0)
+xi2_max = (4/Ns) *(np.real(out[0])**2/np.real(out[1])**2)
+
+plt.plot(Ns,xi2_max,'-',color=ps.red)
 
 plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
@@ -294,12 +298,6 @@ ax.xaxis.set_major_formatter(majorFormatter)
 ax.yaxis.set_major_locator(majorLocatorY)
 ax.yaxis.set_major_formatter(majorFormatterY)
 """
-
-dephase_est = 0.002143 + 0.0001607  # for interaction time of 1ms, from 9/29
-x = np.linspace(.1,300,num=500)
-heisenberg = 1/x
-plt.plot(x,dephase_est*x,'--',color=ps.purple )
-#plt.plot(x,heisenberg,'k')
 
 if save is True:
     os.chdir('..')
