@@ -49,6 +49,7 @@ psis=[]
 its=[]
 sig_obs = []
 sig_ins = []
+sig_2_in_err = []
 sig_pns = []
 SE = []
 Ns = []
@@ -92,10 +93,11 @@ for i,fn in enumerate(fns):
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])
+    sig_sn_2_err = sig_sn**2 * sqrt(2/reps)
     sig_ob = data.T[2]
     sig_in = sqrt(sig_ob**2 - sig_sn**2)  # subtract poissonian shot noise
-    sig_ob_err = sig_ob * 1/sqrt(2*reps)
-    sig_in_err= sig_in * 1/sqrt(2*reps)
+    sig_ob_2_err = sig_ob**2 * sqrt(2/reps)
+    sig_in_2_err= sqrt( (sig_ob_2_err)**2  + (sig_sn_2_err)**2)
 
     sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
 
@@ -130,6 +132,7 @@ for i,fn in enumerate(fns):
     its.append(int_t)
     sig_obs.append(sig_ob)
     sig_ins.append(sig_in)
+    sig_2_in_err.append(sig_in_2_err)
     sig_pns.append(sig_pn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
     Ns.append(N)
@@ -144,8 +147,9 @@ for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
+    spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
     spin_noise_dB = 10*np.log10(spin_noise)
-    spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
+    spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
     plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l,color=colors[i])
 
 #plt.yscale('log')
@@ -163,7 +167,7 @@ ax.xaxis.set_major_formatter(majorFormatter)
 #________________________________________________________________________
 #add some theory curves
 
-psi = np.linspace(0.001,pi,num=100) # radians
+psi = np.linspace(0.001,pi,num=500) # radians
 for i,name in enumerate(names):
     Jbar = J1ks[i] /((ODF_seq * 0.001)/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
