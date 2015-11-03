@@ -75,7 +75,7 @@ def set_rc(mode='qunat'):
             'axes.axisbelow': True,
             'axes.linewidth': 1.0,
             'axes.facecolor': 'white',
-            'axes.labelsize': 10,
+            'axes.labelsize': 9,
 
             'grid.color': '0',
             'grid.linestyle': '-',
