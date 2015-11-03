@@ -18,7 +18,7 @@ import squeeze_func_time as squ
 
 save = False
 img_name = "Ramsey_squeeze_param"
-plot_axis_extent = [0,230, 0.0,2.5]
+plot_axis_extent = [0,230, 0.0,1.2]
 
 base_path = os.getcwd()
 
@@ -43,6 +43,9 @@ sig_PN_fulls = []
 sig_PN_fulls_errs = []
 xi2_SE_fulls = []
 xi2_SE_fulls_errs = []
+
+xi2_maxs = []
+tau_opt = []
 
 #first, just get data sets that were just measuring projection noise of CSS
 data_path = "/Users/jgb/Data/20150813/Collect_justPN_data"
@@ -234,6 +237,7 @@ for i,fn in enumerate(folders[1:]):
     Jbar = J1k/(1000.0/arm_t)
     out = squ.OAT_decoh(0.0, int_t, Jbar, N, G_el, G_ud, G_du)
     C_coherent_pred = np.real(out[1])*(k/2.0)
+    xi2_max = (4/N) *(np.real(out[0])/np.real(out[1])**2)
     
 # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -258,11 +262,22 @@ for i,fn in enumerate(folders[1:]):
     N_SE_errs.append(N_err)
     xi2_SE_fulls.append(xi2)  
     xi2_SE_fulls_errs.append(xi2_err)
+    xi2_maxs.append(xi2_max)
+    tau_opt.append(int_t[0])
     os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
 
 plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blue)
+
+J0  = 2000.
+tau_opt = np.array(tau_opt)
+Jbar_here = J0/0.001*tau_opt/2.0
+out_p = squ.OAT_decoh(0.0, tau_opt, Jbar_here, NSEround, G_el[0], G_ud[0], G_du[0])
+out = squ.OAT_decoh(-np.real(out_p[2]), tau_opt, Jbar_here, NSEround, G_el[0], G_ud[0], G_du[0])
+xi2_max = (4/NSEround) *(np.real(out[0])**2/np.real(out[1])**2)
+
+plt.plot(NSEround,xi2_max,'--',color=ps.purple)
 
 plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
