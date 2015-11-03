@@ -17,12 +17,13 @@ import squeeze_func_time as squ
 import resample_tools as re
 
 #options
+colors = ['k', ps.red, ps.blue, ps.orange]
 raw = False
 verbose = True
 save = False
 img_name = "spinNoise_10_28"
 files_to_use = [2]
-J1k = 2300.0    
+J1k = 2100.0    
 Ncal = 1.19
 
 #theory calc info
@@ -37,8 +38,8 @@ print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.001763 # rad^2/ms^2
-B = 0.0000423 # rad^2/ms^4
+A = 0.001813 # rad^2/ms^2
+B = 0.0001799 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -198,7 +199,7 @@ for i,name in enumerate(names):
     plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
     
     #where is the limit just due to technical noise?
-    tech_limit = 10*np.log10((0.5*sig_psns[i]**2)/(sig_pns[i]**2))
+    tech_limit = 10*np.log10((0.3*sig_psns[i]**2)/(sig_pns[i]**2))
     plt.plot(psis[i],tech_limit,color=cs[i+1],linestyle='--')
     
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
