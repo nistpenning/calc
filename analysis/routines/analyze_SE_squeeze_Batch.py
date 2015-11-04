@@ -17,13 +17,13 @@ import squeeze_func_time as squ
 import resample_tools as re
 
 #options
-colors = ['k', ps.red, ps.blue, ps.orange]
+colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 raw = False
 verbose = True
 save = False
-img_name = "spinNoise_10_28"
-files_to_use = [-1]
-J1k = 676*3.05    
+img_name = "spinNoise_11_03"
+files_to_use = [2,3,1,4,7]
+J1k = 2193   
 Ncal = 1.508
 
 #theory calc info
@@ -55,7 +55,6 @@ sig_psns = []
 SE = []
 Ns = []
 names = []
-cs = ['b','g','r','k','m','c','y']
 
 base_path = os.getcwd()
 fns = [os.listdir(base_path)[i] for i in files_to_use]
@@ -172,7 +171,7 @@ for i,data in enumerate(sig_obs):
     spin_noise_dB = 10*np.log10(spin_noise)
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
-    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l)
+    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
 #plt.yscale('log')
 #plt.xscale('log')
@@ -195,12 +194,12 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
-    plt.plot(psi*180/pi,R_dB,color=cs[i])
-    plt.plot(psi*180/pi,R_add_dB,color=cs[i],linestyle='--')
+    plt.plot(psi*180/pi,R_dB,color=colors[i])
+    plt.plot(psi*180/pi,R_add_dB,color=colors[i],linestyle='--')
     
     #where is the limit just due to technical noise?
     tech_limit = 10*np.log10((0.3*sig_psns[i]**2)/(sig_pns[i]**2))
-    plt.plot(psis[i],tech_limit,color=cs[i+1],linestyle='--')
+    plt.plot(psis[i],tech_limit,color=colors[i],linestyle='--')
     
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
