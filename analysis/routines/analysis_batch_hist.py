@@ -17,15 +17,15 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.2011
+Ncal = 1.5098
 verbose = True
 save = False
-ymax = 250
-files_to_use = [-1]
-hist_to_use = [0,1,2]
+ymax = 100
+files_to_use = [8]
+hist_to_use = [0,1,2,3,4]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
-num_bins = 57#sqrt(len(z_data))
+num_bins = 39#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -85,6 +85,7 @@ for i,fn in enumerate(fns):
         datas.append(Sz_data)
     
         bs = np.arange(-1.01,1.01,(2.02/num_bins))
+        trials = len(datas[i])
 
         lab = r"Scan data = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[i], int_time)
         lab = r"Scan value = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[hist_to_use[i]], int_time)
@@ -93,16 +94,18 @@ for i,fn in enumerate(fns):
         plt.axis([-1.1,1.1,0,ymax])
         plt.xlabel(r"Spin projection 2$S_\psi$/N")
         plt.ylabel("Trials")
+        gauss = (2.02/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0)
+        plt.plot(bs,gauss,color=ps.red)   
         
         plt.show()
         plt.close()
         
         k2,pval = mstats.normaltest(datas[i])
         print(lab)
-        print("# of trials: {}".format(len(datas[i])))
+        print("# of trials: {}".format(trials))
         print("Mean: {0:.3g}, Median: {1:.3g}, Min: {2:.3g}, Max {3:.3g}".format(np.mean(datas[i]),np.median(datas[i]),np.min(datas[i]),np.max(datas[i])))
         print("Std Dev: {0:3g}, Variance: {1:.3g}".format(np.std(datas[i]),np.var(datas[i])))        
-        #print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
+        print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
     
