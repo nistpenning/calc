@@ -16,7 +16,7 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-save = False
+save = True
 img_name = "Ramsey_squeeze_param"
 plot_axis_extent = [0,230, 0.0,1.2]
 
@@ -134,6 +134,8 @@ for i,fn in enumerate(folders[1:]):
     match = np.array([i.decode('ascii')==date for i in datadb['data_set']])
     row = datadb[match]
     Ncal = float(row['Ncal'])
+    if date == "2015-11-03":
+        Ncal = 1.3197  # using the Ncal measured right after image, slightly diff
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncal
     date = file_name[:10]
