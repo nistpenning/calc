@@ -22,9 +22,9 @@ raw = False
 verbose = True
 save = False
 img_name = "spinNoise_10_28"
-files_to_use = [2]
-J1k = 2100.0    
-Ncal = 1.19
+files_to_use = [-1]
+J1k = 676*3.05    
+Ncal = 1.508
 
 #theory calc info
 G_el =  67.4
@@ -38,8 +38,8 @@ print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.001813 # rad^2/ms^2
-B = 0.0001799 # rad^2/ms^4
+A = 0.0006175 # rad^2/ms^2
+B = 0.0001634 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
