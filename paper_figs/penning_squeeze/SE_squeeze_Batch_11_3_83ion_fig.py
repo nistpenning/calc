@@ -21,7 +21,7 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 raw = False
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_11_03"
 files_to_use = [2,3,1]
 J1k = 2193   
@@ -177,7 +177,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([3,181,-10,11])
+plt.axis([3,181,-10,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance [dB]",fontsize=14)
 plt.grid('off')
@@ -217,7 +217,7 @@ if len(names) is 1:
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)
