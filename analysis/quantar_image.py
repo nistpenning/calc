@@ -200,20 +200,26 @@ class QuantarImage:
         
         :[-256,256,-256,256] is full range for Quantar
         """
-        
+        normalized = True  # this allows for subtracting bck that has many more points for lower noise
         plt.subplot(111, aspect='equal')
         ax = plt.gca()
         ax.grid(True)
         counts, xedges, yedges, RotFrame = plt.hist2d(xyt[:,0], xyt[:,1],
                                          bins=self.bins,
-                                         cmap=cmap, normed=False)
+                                         cmap=cmap, normed=normalized)
         extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
         if bck is False:
             counts_filter = ndi.gaussian_filter(counts,gfilter)
         else:
             counts_background, xedges, yedges, RotFrame = plt.hist2d(bck[:,0], bck[:,1],bins=self.bins,
-                                                   cmap=cmap, normed=False)
+                                                   cmap=cmap, normed=normalized)
             counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
+
+        """ add contrast stretching here, but don't like how it looks
+        p2, p98 = np.percentile(counts_filter, (0.1, 99.9))
+        counts_filter = skimage.exposure.rescale_intensity(counts_filter, in_range=(p2, p98))
+        """
+        
         if int_range is 'auto':    
             RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
                               vmin = 0.0, vmax = np.max(counts_filter))
@@ -227,15 +233,74 @@ class QuantarImage:
         
         return counts_filter
 
-    def get_ion_positions(self, img, extent=None, min_distance=3.0,threshold_rel=0.4):
-        coordinates = peak_local_max(img,
-                                          min_distance=min_distance,
-                                          threshold_rel=threshold_rel)
+    def make_fig_image(self, xyt, im_range=[-256,256,-256,256], gfilter=0.0, 
+                   bck=False,
+                   int_range='auto',
+                   cmap=mpl.cm.Blues,
+                   fig_axis=True,
+                   save_name=False):
+        """plot image
+
+        :param im_range: sets output image axis values
+        :gfilter: ndi.gaussian_filter() argument
+        :bck: xyt of background data
+        :int_range: a tuple giving the low and high value for intensity range
+        :cmap: colormap
+        :fig_axis: toggle axis ticks and labels
+        :save_name: if False, not saved, otherwise needs to be string.pdf
+        :return: 2d histogram
+        
+        :[-256,256,-256,256] is full range for Quantar
+        """
+        normalized = True  # this allows for subtracting bck that has many more points for lower noise
+        plt.subplot(111, aspect='equal')
+        ax = plt.gca()
+        ax.grid(False)
+        counts, xedges, yedges, RotFrame = plt.hist2d(xyt[:,0], xyt[:,1],
+                                         bins=self.bins,
+                                         cmap=cmap, normed=normalized)
+        extent = [yedges[0], yedges[-1], xedges[0], xedges[-1]]
+        if bck is False:
+            counts_filter = ndi.gaussian_filter(counts,gfilter)
+        else:
+            counts_background, xedges, yedges, RotFrame = plt.hist2d(bck[:,0], bck[:,1],bins=self.bins,
+                                                   cmap=cmap, normed=normalized)
+            counts_filter = ndi.gaussian_filter(counts-counts_background,gfilter)
+
+        """ add contrast stretching here, but don't like how it looks
+        p2, p98 = np.percentile(counts_filter, (0.1, 99.9))
+        counts_filter = skimage.exposure.rescale_intensity(counts_filter, in_range=(p2, p98))
+        """
+        
+        if int_range is 'auto':    
+            RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
+                              vmin = 0.0, vmax = np.max(counts_filter))
+        else:
+            RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
+                              vmin = int_range[0], vmax = int_range[1])
+        plt.axis(im_range)
+        plt.xlabel("x [$\mu$m]")
+        plt.ylabel("y [$\mu$m]")
+        if fig_axis is False:
+            plt.axis('off')
+        
+        if save_name is False:
+            print("Not saved")
+        else:
+            plt.savefig(save_name,dpi=300,bbox='tight')
+
+        plt.show(RotFrame)        
+        
+        return counts_filter
+
+    def get_ion_positions(self, img, extent=None, min_distance=3.0,threshold_rel=0.4,
+                          int_range='auto'):
+        coordinates = peak_local_max(img, min_distance=min_distance, threshold_rel=threshold_rel)
         plt.close()
         x = np.transpose(coordinates)[1]
         y = np.transpose(coordinates)[0]
         plt.plot(x,y,'r.')
-        plt.imshow(img)
+        plt.imshow(img, vmin = 0.0, vmax = np.max(img))
         if extent is None:
             pass
         else:
