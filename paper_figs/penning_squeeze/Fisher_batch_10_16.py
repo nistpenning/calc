@@ -16,14 +16,15 @@ import plot_model_fit as pt
 
 #run script in the with "Fisher_batch# as the working directory
 #inputs for loading data and histograms
-
+save = False
+fig_name = "SqHelDist_109ions_10_16_3ms.pdf"
 files_to_use = [3]
 Ncal = 1.2
-hist_to_use = 'all'
+hist_to_use = 8
 
-bin_width = 2  # found from Strobel this was optimum
+bin_width = 2.0  # found from Strobel this was optimum
 h = 50  #block size for resampling
-base_path = os.getcwd()
+base_path = os.path.normpath("/Users/jgb/Data/20151016/fisher_batch")
 data_path = base_path
 os.chdir(data_path)
 
@@ -140,34 +141,51 @@ if hist_to_use == 'all':
                           yerr = data_hist_jack_errs[0:],
                           hold=np.array([False,True,False]),
                           labels=l)
-"""
+
 else:
-    fit_res = pt.plot_polyfit(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
+    if hist_to_use>len(tipping_angles[0][1:]):
+        print("Error, hist_to_use must be <= {}".format(len(tipping_angles[0][1:])))
+    else: 
+        fit_res = pt.plot_polyfit(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
                           np.array([0,0,1]),
                           yerr = data_hist_jack_errs[0:hist_to_use-1],
                           hold=np.array([False,True,False]),
                           labels=l)
-"""
+
 
 k2 = fit_res[0][1]
+frac_err_k2 = fit_res[1][1]/k2
 NormF = k2/N[0]/( (1/8.0) ) #dont' need the 1/M term from teh estimate
-print("F = 8*k2, and then F/N is {:.3g}".format(NormF))
+print("F = 8*k2, and then F/N is {:.3g} +- {:.3g}".format(NormF, NormF*frac_err_k2))
 print("number of samples is {:.3g}".format(np.mean(samps)))
 
 
-nonCx = np.linspace(0,0.8,num=200)
 
-nonCy = nonCx**2 * N[0]/8.0
 plt.show()
 plt.close(0)
-"""
-for row in diff_hist:
-    plt.plot(bins[:-1],row)
 
-plt.show()
-plt.close()
+#%%
 
-plt.plot(nonCx,nonCy,'b-')
-plt.errorbar(tipping_angles[0], data_hist_jacks,yerr=data_hist_jack_errs,fmt='o')
-plt.title("Data wrt entanglement witness")
-"""
+fig, ax = plt.subplots(1,figsize=[4.0,4.0])
+plt.locator_params(axis='y',nbins=1)
+plt.locator_params(axis='x',nbins=2)
+nonCx = np.linspace(0,0.021,num=200)
+nonCy = nonCx**2 * N[0]/8.0
+fitCy = fit_res[0][0] + fit_res[0][1]*nonCx**2
+#ax.plot(nonCx,nonCy,'b-',fillstyle='top')
+ax.plot(nonCx,np.ones_like(nonCx))
+ax.fill_between(nonCx, np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
+ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
+             yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko')
+ax.plot(nonCx,fitCy,'-',color=ps.red)
+ax.set_xlabel("Angle (rad)")
+ax.set_ylabel("Squared Hellinger Distance")
+ax.set_ylim([0,0.02])
+ax.set_xlim([0,0.02])
+
+ax.grid()
+if save is True:
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.tight_layout()
+    plt.savefig(fig_name,dpi=300,bbox='tight',transparent=True)
+    os.chdir(base_path)
