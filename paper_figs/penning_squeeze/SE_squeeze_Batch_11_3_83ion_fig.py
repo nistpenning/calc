@@ -21,9 +21,9 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 raw = False
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_11_03"
-files_to_use = [2,3,1]
+files_to_use = [2,1,4,9]
 J1k = 2193   
 Ncal = 1.44
 
@@ -167,12 +167,15 @@ for i,fn in enumerate(fns):
 fig, ax = plt.subplots() 
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
+    l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
     spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
     spin_noise_dB = 10*np.log10(spin_noise)
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
+    if files_to_use[i]==4:
+        psis[i] = psis[i]-2  # corect for uWave detuning error
     plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
 #plt.yscale('log')
@@ -190,7 +193,7 @@ ax.xaxis.set_major_formatter(majorFormatter)
 #________________________________________________________________________
 #add some theory curves
 
-psi = np.linspace(0.001,pi,num=100) # radians
+psi = np.linspace(0.001,pi,num=500) # radians
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
@@ -202,7 +205,7 @@ for i,name in enumerate(names):
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
-    plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
+    #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
     
     #where is the limit just due to technical noise?
     tech_limit = 10*np.log10((0.3*sig_psns[i]**2)/(sig_pns[i]**2))

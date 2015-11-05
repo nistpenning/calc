@@ -16,7 +16,7 @@ import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
 
-save = True
+save = False
 img_name = "Ramsey_squeeze_param"
 plot_axis_extent = [0,230, 0.0,1.2]
 

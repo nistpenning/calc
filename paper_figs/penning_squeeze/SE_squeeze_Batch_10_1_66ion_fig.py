@@ -20,7 +20,7 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 #options
 colors = ['k', ps.red, ps.blue, ps.orange]
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_10_1_66ions"
 folder_name = "/Users/jgb/Data/20151001/Load333/squeeze"
 files_to_use = [3,1,4]
@@ -178,8 +178,8 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
-    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i],linestyle='--')
-    plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i])
+    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
+    #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 

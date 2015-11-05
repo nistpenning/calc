@@ -21,8 +21,8 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 colors = ['k', ps.red, ps.blue, ps.orange]
 raw = False
 verbose = True
-save = False
-img_name = "spinNoise_10_28"
+save = True
+img_name = "spinNoise_10_16"
 files_to_use = [3,1,4]
 J1k = 2300.0    
 Ncal = 1.19
@@ -202,7 +202,7 @@ for i,name in enumerate(names):
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
-    plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
+    #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
     
     #where is the limit just due to technical noise?
     tech_limit = 10*np.log10((0.5*sig_psns[i]**2)/(sig_pns[i]**2))
@@ -217,7 +217,7 @@ if len(names) is 1:
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)

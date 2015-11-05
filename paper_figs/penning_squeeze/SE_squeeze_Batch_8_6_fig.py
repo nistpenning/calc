@@ -117,6 +117,7 @@ fig, ax = plt.subplots()
 colors = ['k', ps.blue, ps.red]
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.1f} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
+    l = r"$\tau=$ {:.1f} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
     spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
@@ -160,8 +161,8 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2)*sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2)*sin(psi)**2 
     R_dB = 10*np.log10(R)
     R_dB_add = 10*np.log10(R_add)
-    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i],linestyle='--')
-    plt.plot(np.abs(psi*180/pi -180),R_dB_add,color=colors[i])
+    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
+    #plt.plot(np.abs(psi*180/pi -180),R_dB_add,color=colors[i],linestyle='--')
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 
 if save is True:
