@@ -19,7 +19,7 @@ import squeeze_func_time as squ
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 raw = False
-save = False
+save = True
 save_txt = False
 name = "SxVsN_collapsed.pdf"
 colors = ['k', ps.red, ps.blue, ps.purple]
@@ -112,6 +112,7 @@ for i,data in enumerate(ats):
     Jt_opt = (24**(1/6.)*(Ns[i]/2)**(-2/3.))/4.*Ns[i]
     Jt = (Jbar*data*2e-6) #/ Jt_opt
     x = 2*data*2e-6*Jbar/Ns[i]*sqrt(Ns[i]-1)
+    x = 2*data*2e-6*Jbar/sqrt(Ns[i])  # approx x value to simplify
     plt.errorbar(x,Cs[i],yerr=Cerrs[i],fmt='o',label=l,marker=shapes[i],
                  color=colors[i])
     if save_txt is True:
@@ -125,6 +126,7 @@ if save_txt is True:
         
 #plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"$\bar{J}\tau \frac{\sqrt{N-1}}{N/2}$")
+plt.xlabel(r"$2\bar{J}\tau / \sqrt{N}$")
 #plt.ylabel(r"Contrast  2$\left \langle |\vec{S}| \right \rangle$/N")
 
 
