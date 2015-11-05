@@ -159,8 +159,6 @@ NormF = k2/N[0]/( (1/8.0) ) #dont' need the 1/M term from teh estimate
 print("F = 8*k2, and then F/N is {:.3g} +- {:.3g}".format(NormF, NormF*frac_err_k2))
 print("number of samples is {:.3g}".format(np.mean(samps)))
 
-
-
 plt.show()
 plt.close(0)
 
