@@ -161,6 +161,8 @@ for j,Jbar1k in enumerate(J1ks):
 
 plt.axis([0.,3.,0.0,1.05])
 plt.grid('off')
+plt.locator_params(axis='y',nbins=3)
+plt.locator_params(axis='x',nbins=3)
 #plt.xscale('log')
 
 if False:
