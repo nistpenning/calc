@@ -14,24 +14,26 @@ import quantar_image
 importlib.reload(quantar_image)
 
 #%%
-name = "10_14_124ions.png"
-x0 = 49.0
-y0 = -13.5
+name = "2_09_5ions.png"
+name = False
+x0 = -20.5
+y0 = -32.5
 num_img = 20
-num_bck_img = 70
-wrot = 187e3
-data_num = 1080
-bck_num = 1200
+num_bck_img = 0
+wrot = 53e3
+data_num = 500
+bck_num = 530
 
+intensity_range = [0,0.00003]
 intensity_range = 'auto'
-intensity_range = [0,0.000055]
+intensity_range = [1e-5,5e-5]
 
 color_map = 'auto'
 color_map = quantar_image.bluehot_cmap
 
 
 base_path = os.getcwd()
-fdir = os.path.normpath("/Users/jgb/Data/20151014/image")
+fdir = os.path.normpath("/Volumes/688/Public/penning_britton/dailyLabBookFiles/2015/20150209/QuadWall_5brightIonCrystal_53kHz")
 
 qi = quantar_image.QuantarImage(x0=x0,y0=y0,fwall=wrot)
 
@@ -45,13 +47,11 @@ if color_map == 'auto':
     img = qi.make_fig_image(xytr, bck=xytr_bg, gfilter=0.2, im_range=quantar_image.im_extent(110),
                         int_range=intensity_range)
 else:
-    img = qi.make_fig_image(xytr, bck=xytr_bg, gfilter=0.2, im_range=quantar_image.im_extent(110),
-                        int_range=intensity_range, cmap=color_map, save_name=name)
-    img = qi.make_fig_image(xytr, bck=xytr_bg, gfilter=0.2, im_range=quantar_image.im_extent(110),
-                        int_range=intensity_range, cmap=color_map, fig_axis=False, save_name="noaxis_"+name)
+    img = qi.make_fig_image(xytr, gfilter=0.2, im_range=quantar_image.im_extent(110),
+                        int_range=intensity_range, cmap=color_map, fig_axis=False, save_name=name)
 
 coord = qi.get_ion_positions(img, extent=[90,160,90,160], min_distance=1.5,
-                             threshold_rel=0.14)
+                             threshold_rel=0.3)
                              
 print("File for creation: "+str(fdir))
 print("x0: {}, y0: {}, File#: {}, # of files: {}".format(x0,y0,data_num,num_img))

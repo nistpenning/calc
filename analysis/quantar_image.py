@@ -274,7 +274,7 @@ class QuantarImage:
         
         if int_range is 'auto':    
             RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
-                              vmin = 0.0, vmax = np.max(counts_filter))
+                              vmin = 0.0, vmax = np.max(counts_filter)*0.7)
         else:
             RotFrame = plt.imshow(counts_filter,extent=extent, cmap=cmap,
                               vmin = int_range[0], vmax = int_range[1])
