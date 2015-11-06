@@ -45,7 +45,7 @@ class QuantarImage:
     :param y0: 
     :param num_to_read: 
     :param file_time: integration time for each file [s]
-    :param fwall: rotating wall freq [kHz]
+    :param fwall: rotating wall freq [Hz]
     :param first_file: string of first file to read
     :param fdir: absolute path to data folder (e.g. 'c:\\my_data')
     :return: return description
@@ -70,7 +70,7 @@ class QuantarImage:
         """Read binary file written by niquantar.exe
         :param fnum: file number
         :param fdir: absolute path to file directory
-        :return: (x,y,t)
+        :return: (x,y,t), with t in s
         """
 
         fname = str(fnum).zfill(8) + ".dat" # e.g. 00000001.dat
@@ -125,7 +125,7 @@ class QuantarImage:
         """Return xyt in rotating frame"""
         x_lab = (xyt[:, 0] + self.x0)*self.scale_xy
         y_lab = (xyt[:, 1] + self.y0)*self.scale_xy
-        phase_of_wall = 2*pi*self.fw*xyt[:, 2]
+        phase_of_wall = 2*pi*self.fw*xyt[:, 2]  # fw in Hz, t in s
 
         x_rot = x_lab*np.cos(phase_of_wall) + y_lab * np.sin(phase_of_wall)
         y_rot = y_lab*np.cos(phase_of_wall) - x_lab * np.sin(phase_of_wall)

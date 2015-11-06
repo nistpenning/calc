@@ -52,6 +52,6 @@ else:
 coord = qi.get_ion_positions(img, extent=[90,160,90,160], min_distance=1.5,
                              threshold_rel=0.14)
                              
-print("File for creation: "+str(fdir))
+print("File for creation: "+str(fdir)+", total integration time: {} s".format(xyt[-1][2]- xyt[1][2]))
 print("x0: {}, y0: {}, File#: {}, # of files: {}".format(x0,y0,data_num,num_img))
 print("Ion number counting: {}".format(np.shape(coord)))
