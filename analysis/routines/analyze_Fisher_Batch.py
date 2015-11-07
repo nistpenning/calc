@@ -18,12 +18,12 @@ import plot_model_fit as pt
 #inputs for loading data and histograms
 save = False
 fig_name = "SqHelDist.pdf"
-files_to_use = [3]
-Ncal = 1.2
+files_to_use = [4]
+Ncal = 1.1598
 hist_to_use = 'all'
 
 bin_width = 2  # found from Strobel this was optimum
-h = 50  #block size for resampling
+h = 100  #block size for resampling
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -161,23 +161,31 @@ print("number of samples is {:.3g}".format(np.mean(samps)))
 
 
 #%%
-
-fig, ax = plt.subplots(1,figsize=[4.0,4.0])
-plt.locator_params(axis='y',nbins=1)
-plt.locator_params(axis='x',nbins=2)
-nonCx = np.linspace(0,0.021,num=200)
+l = "F/N: {:.3g} +- {:.3g}".format(NormF, NormF*frac_err_k2)
+xmax = 1.25*np.max(tipping_angles[0])
+ymax = 1.25*np.max(data_hist_jacks)
+#fig, ax = plt.subplots(1,figsize=[4.0,4.0])
+fig, ax = plt.subplots(1)
+plt.locator_params(axis='y',nbins=4)
+plt.locator_params(axis='x',nbins=4)
+nonCx = np.linspace(0,xmax,num=200)
 nonCy = nonCx**2 * N[0]/8.0
 fitCy = fit_res[0][0] + fit_res[0][1]*nonCx**2
 #ax.plot(nonCx,nonCy,'b-',fillstyle='top')
 ax.plot(nonCx,np.ones_like(nonCx))
 ax.fill_between(nonCx, np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
-ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
-             yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko')
+if hist_to_use == 'all':
+    ax.errorbar(tipping_angles[0][1:],data_hist_jacks[0:],
+             yerr=data_hist_jack_errs[0:],fmt='ko',label=l)    
+else:
+    ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
+             yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko',label=l)
 ax.plot(nonCx,fitCy,'-',color=ps.red)
 ax.set_xlabel("Angle (rad)")
 ax.set_ylabel("Squared Hellinger Distance")
-ax.set_ylim([0,0.02])
-ax.set_xlim([0,0.02])
+ax.set_ylim([0.0,ymax])
+ax.set_xlim([0.0,xmax])
+plt.legend(loc=0)
 
 ax.grid()
 if save is True:
