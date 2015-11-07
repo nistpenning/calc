@@ -16,14 +16,14 @@ import plot_model_fit as pt
 
 #run script in the with "Fisher_batch# as the working directory
 #inputs for loading data and histograms
-save = False
+save = True
 fig_name = "SqHelDist_109ions_10_16_3ms.pdf"
 files_to_use = [3]
 Ncal = 1.2
 hist_to_use = 8
 
 bin_width = 2.0  # found from Strobel this was optimum
-h = 50  #block size for resampling
+h = 100  #block size for resampling
 base_path = os.path.normpath("/Users/jgb/Data/20151016/fisher_batch")
 data_path = base_path
 os.chdir(data_path)
@@ -139,7 +139,7 @@ if hist_to_use == 'all':
     fit_res = pt.plot_polyfit(tipping_angles[0][1:],data_hist_jacks[0:],
                           np.array([0,0,1]),
                           yerr = data_hist_jack_errs[0:],
-                          hold=np.array([False,True,False]),
+                          hold=np.array([True,True,False]),
                           labels=l)
 
 else:
@@ -176,7 +176,7 @@ ax.fill_between(nonCx, np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
 ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
              yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko')
 ax.plot(nonCx,fitCy,'-',color=ps.red)
-ax.set_xlabel("Angle (rad)")
+ax.set_xlabel(r"Angle $\theta$ (rad)")
 ax.set_ylabel("Squared Hellinger Distance")
 ax.set_ylim([0,0.02])
 ax.set_xlim([0,0.02])
