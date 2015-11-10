@@ -135,7 +135,7 @@ if save_txt is True:
         
 #plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"Interaction time $\tau$ (ms)")
-plt.ylabel(r"Contrast  2$\left \langle |\vec{S}| \right \rangle$/N")
+plt.ylabel(r"Contrast  2$|\left \langle \vec{S} \right \rangle|$/N")
 
 
 #________________________________________________________________________

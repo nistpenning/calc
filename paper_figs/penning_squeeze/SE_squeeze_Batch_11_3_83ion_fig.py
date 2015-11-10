@@ -182,7 +182,7 @@ for i,data in enumerate(sig_obs):
 plt.xscale('log')
 plt.axis([3,181,-10,15])
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
-plt.ylabel("Spin variance [dB]",fontsize=14)
+plt.ylabel("Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
 
 majorLocator = FixedLocator([5,50,180])

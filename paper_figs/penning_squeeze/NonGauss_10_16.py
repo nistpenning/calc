@@ -19,7 +19,7 @@ importlib.reload(ps)
 #options
 Ncal = 1.2
 verbose = True
-save = False
+save = True
 ymax = 8.0
 files_to_use = [6]
 hist_to_use = [2,5]
@@ -130,9 +130,10 @@ for i,fn in enumerate(fns):
         elif hist_to_use[i] == 5:
             yt = tdata['pdf88']
             plt.plot(tdata['S_psi'],yt,'-',color='k')
-            ymax = 6.0
+            ymax = 3.0
             axis_list = [-1.1,1.1,0.0,ymax]
             plt.axis(axis_list)
+            plt.locator_params(axis='y',nbins=3)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
             plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
