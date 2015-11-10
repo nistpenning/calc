@@ -17,12 +17,12 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.5098
+Ncal = 1.16
 verbose = True
 save = False
-ymax = 100
-files_to_use = [8]
-hist_to_use = [0,1,2,3,4]
+ymax = 8.0
+files_to_use = [6]
+hist_to_use = [0,1,2,3,4,5,6,7]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
 num_bins = 39#sqrt(len(z_data))
@@ -60,9 +60,9 @@ for i,fn in enumerate(fns):
     #Load properties data
     prop_name = [x for x in files if "_props.csv" in x][0]
     file_name, data_p = hf.get_gen_csv(prop_name, skip_header=False)
-    bm = data_p['det_brightMean']
-    dm = data_p["det_darkMean"]
-    det_t = data_p["det_t"]
+    bm = float(data_p['det_brightMean'])
+    dm = float(data_p["det_darkMean"])
+    det_t = float(data_p["det_t"])
     int_time = 2*data_p["squeeze_arm_t"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals
@@ -75,7 +75,12 @@ for i,fn in enumerate(fns):
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
 
     
-    hdata_to_use = np.array([hdata[i] for i in hist_to_use])    
+    hdata_to_use = np.array([hdata[i] for i in hist_to_use])
+    
+    num_plots = len(hist_to_use)
+    f, axarr = plt.subplots(num_plots, sharex=True)
+    plt.xlabel(r"Spin projection 2$S_\psi$/N")
+    plt.ylabel("Trials")
     for i,row in enumerate(hdata_to_use):
         print("_________________________________________")
         det_array = np.copy(row)
@@ -84,23 +89,24 @@ for i,fn in enumerate(fns):
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5)
         datas.append(Sz_data)
     
-        bs = np.arange(-1.01,1.01,(2.02/num_bins))
+        bs = np.arange(-1.00,1.00,(2.0/num_bins))
         trials = len(datas[i])
 
         lab = r"Scan data = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[i], int_time)
-        lab = r"Scan value = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[hist_to_use[i]], int_time)
+        lab = r"Scan value: {0:.4g}, Squeeze time: {1:.4g}, Detect time: {2:.4g} ms".format(scan_data[hist_to_use[i]], int_time, det_t*1e-3)
 
-        plt.hist(datas[i],bs,label=lab,alpha=0.6)#, align='right')
-        plt.axis([-1.1,1.1,0,ymax])
-        plt.xlabel(r"Spin projection 2$S_\psi$/N")
-        plt.ylabel("Trials")
-        gauss = (2.02/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0)
-        plt.plot(bs,gauss,color=ps.red)   
-        
-        plt.show()
-        plt.close()
+        w = np.zeros_like(datas[i]) + (1/trials) #for weighting the normalized hist
+        axarr[i].hist(datas[i],bs,label=lab,alpha=0.6,normed=False,log=False,weights=w)#, align='right')
+        axarr[i].axis([-1.1,1.1,0.0,ymax])
+        gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0)
+        gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0)
+        axarr[i].plot(bs,gauss,color=ps.red)   
         
         k2,pval = mstats.normaltest(datas[i])
+        if type(k2) == np.ma.core.MaskedConstant:
+            k2 = 0.0
+            pval = 0.0
+            print("Normality test had divide by zero error")
         print(lab)
         print("# of trials: {}".format(trials))
         print("Mean: {0:.3g}, Median: {1:.3g}, Min: {2:.3g}, Max {3:.3g}".format(np.mean(datas[i]),np.median(datas[i]),np.min(datas[i]),np.max(datas[i])))
