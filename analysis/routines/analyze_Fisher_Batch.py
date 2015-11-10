@@ -17,13 +17,12 @@ import plot_model_fit as pt
 #run script in the with "Fisher_batch# as the working directory
 #inputs for loading data and histograms
 save = False
-fig_name = "SqHelDist.pdf"
-files_to_use = [4]
-Ncal = 1.1598
+fig_name = "SqHelDist_10_28.pdf"
+files_to_use = [3]
+Ncal = 1.16
 hist_to_use = 'all'
-
-bin_width = 2  # found from Strobel this was optimum
-h = 100  #block size for resampling
+bin_width = 2.0  # found from Strobel this was optimum
+h = 200  #block size for resampling
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -73,7 +72,8 @@ for i,fn in enumerate(fns):
     print("File name: "+file_name)
     lab = r"Squeeze time = {0:.4g}".format(int_time)
     print(lab)
- 
+    
+
     # parse histogram raw data
     for i,row in enumerate(hdata):
         det_array = np.copy(row)
@@ -81,19 +81,21 @@ for i,fn in enumerate(fns):
    
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5) * (N/2.)
         datas.append(Sz_data)
-
+        
+        
     its.append(int_time)
     Ns.append(N)
     tipping_angles.append(tip_angle_rad)
     os.chdir(data_path)
 
 #define scale
-bin_def = np.arange(-N/2.0,N/2.0,bin_width)  
+bin_def = np.arange(-N/2.0,N/2.0,bin_width)
+w = np.zeros_like(datas[0]) + (1/np.size(datas[0])) #for weighting the normalized hist  
 
 #calculate reference histogram
 data_ref = datas[0]
-vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=True)
-
+vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=False,weights=w)
+plt.close()
 #remove the reference data from the rest
 datas = datas[1:]
 
@@ -103,8 +105,25 @@ data_hist_jacks = []
 data_hist_jack_errs = []
 n_bin_fills = []
 samps = []
-for row in datas:
-    vals = plt.hist(row, bin_def,normed=True)[0]
+
+#first setup a figure for displaying the histograms
+num_of_plots = np.size(hdata,axis=0)
+num_rows = int(np.ceil(num_of_plots/2.))
+#    fig, ax = plt.subplots(nrows=num_rows,ncols=2)
+    
+for i,row in enumerate(datas):
+    plt.figure(1,figsize=(5.0,8.0))
+    l = r"$\theta$: {:.3g} deg".format(tip_angle_rad[i]*180/pi)
+    plt.subplot(num_rows,2,i+1)
+    gauss = (2/sqrt(2*pi)/sqrt(N))*np.exp(-((bin_def*2)**2)/2.0/sqrt(N)**2)
+    plt.hist(row, bin_def,normed=True)
+    plt.plot(bin_def,gauss,color=ps.red,label=l)
+    plt.locator_params(axis='y',nbins=2)
+    plt.title(l,fontsize=9)
+    
+    plt.figure(2)
+    w = np.zeros_like(row) + (1/np.size(row)) #for weighting the normalized hist      
+    vals = plt.hist(row, bin_def,normed=False,weights=w)[0]
     h_dist = np.sum((sqrt(vals_ref) - sqrt(vals))**2)
     samp = np.size(row)
     n_bin_fill = np.size(vals[vals!=0])  #number of discrete bins for which P!=0
@@ -116,7 +135,8 @@ for row in datas:
     for i in range(0,g):
         re_row = np.reshape(np.concatenate((jack_trials[:i],jack_trials[i+1:])), (samp-h))
         #vals = plt.hist(re_row, bin_def,normed=True)[0]
-        re_vals = plt.hist(re_row, bin_def,normed=True)[0]
+        w = np.zeros_like(re_row) + (1/np.size(re_row)) #for weighting the normalized hist  
+        re_vals = plt.hist(re_row, bin_def,normed=False,weights=w)[0]
         re_h_dist = np.sum((sqrt(vals_ref) - sqrt(re_vals))**2)
         re_hds.append(re_h_dist)
     h_dist_jack = g*h_dist - ((g-1)/float(g)* np.sum(re_hds))
@@ -130,8 +150,11 @@ for row in datas:
     samps.append(samp)
 
 l=['Tipping angle (rad)', r'dh$^2$','Extract Fisher Info']
+plt.close()
 
-
+plt.figure(1)
+plt.tight_layout()
+plt.show()
 plt.close()
 
 #note: tipping angle starts at 1 because 0 corresponds to the reference
@@ -155,19 +178,20 @@ else:
 
 k2 = fit_res[0][1]
 frac_err_k2 = fit_res[1][1]/k2
-NormF = k2/N[0]/( (1/8.0) ) #dont' need the 1/M term from teh estimate
+NormF = 8*k2/N[0] #dont' need the 1/M term from teh estimate
 print("F = 8*k2, and then F/N is {:.3g} +- {:.3g}".format(NormF, NormF*frac_err_k2))
 print("number of samples is {:.3g}".format(np.mean(samps)))
 
+plt.show()
+plt.close(0)
 
 #%%
-l = "F/N: {:.3g} +- {:.3g}".format(NormF, NormF*frac_err_k2)
-xmax = 1.25*np.max(tipping_angles[0])
-ymax = 1.25*np.max(data_hist_jacks)
-#fig, ax = plt.subplots(1,figsize=[4.0,4.0])
-fig, ax = plt.subplots(1)
-plt.locator_params(axis='y',nbins=4)
-plt.locator_params(axis='x',nbins=4)
+
+fig, ax = plt.subplots(1,figsize=[4.0,4.0])
+xmax = np.max(tipping_angles[0])*1.1
+ymax = np.max(data_hist_jacks)*1.1
+plt.locator_params(axis='y',nbins=2)
+plt.locator_params(axis='x',nbins=3)
 nonCx = np.linspace(0,xmax,num=200)
 nonCy = nonCx**2 * N[0]/8.0
 fitCy = fit_res[0][0] + fit_res[0][1]*nonCx**2
@@ -176,16 +200,15 @@ ax.plot(nonCx,np.ones_like(nonCx))
 ax.fill_between(nonCx, np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
 if hist_to_use == 'all':
     ax.errorbar(tipping_angles[0][1:],data_hist_jacks[0:],
-             yerr=data_hist_jack_errs[0:],fmt='ko',label=l)    
+             yerr=data_hist_jack_errs[0:],fmt='ko')
 else:
     ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
-             yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko',label=l)
+             yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko')
 ax.plot(nonCx,fitCy,'-',color=ps.red)
-ax.set_xlabel("Angle (rad)")
+ax.set_xlabel(r"Angle $\theta$ (rad)")
 ax.set_ylabel("Squared Hellinger Distance")
-ax.set_ylim([0.0,ymax])
-ax.set_xlim([0.0,xmax])
-plt.legend(loc=0)
+ax.set_ylim([0,ymax])
+ax.set_xlim([0,xmax])
 
 ax.grid()
 if save is True:
