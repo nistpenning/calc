@@ -18,8 +18,8 @@ import plot_model_fit as pt
 #inputs for loading data and histograms
 save = False
 fig_name = "SqHelDist_10_28.pdf"
-files_to_use = [3]
-Ncal = 1.16
+files_to_use = [-1]
+Ncal = 1.70
 hist_to_use = 'all'
 bin_width = 2.0  # found from Strobel this was optimum
 h = 200  #block size for resampling
@@ -91,11 +91,12 @@ for i,fn in enumerate(fns):
 #define scale
 bin_def = np.arange(-N/2.0,N/2.0,bin_width)
 w = np.zeros_like(datas[0]) + (1/np.size(datas[0])) #for weighting the normalized hist  
-
 #calculate reference histogram
 data_ref = datas[0]
 vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=False,weights=w)
 plt.close()
+
+
 #remove the reference data from the rest
 datas = datas[1:]
 
@@ -109,13 +110,20 @@ samps = []
 #first setup a figure for displaying the histograms
 num_of_plots = np.size(hdata,axis=0)
 num_rows = int(np.ceil(num_of_plots/2.))
-#    fig, ax = plt.subplots(nrows=num_rows,ncols=2)
+plt.figure(1,figsize=(5.0,8.0))
+plt.subplot(num_rows,2,1)
+l = r"$\theta$: {:.3g} deg".format(tip_angle_rad[0]*180/pi)
+gauss = (1/sqrt(2.*pi)/(sqrt(N)/2.))*np.exp(-((bin_def)**2)/2.0/(sqrt(N)/2.)**2)
+plt.hist(data_ref, bin_def,normed=True)
+plt.plot(bin_def,gauss,color=ps.red,label=l)
+plt.locator_params(axis='y',nbins=2)
+plt.title(l,fontsize=9)
     
 for i,row in enumerate(datas):
     plt.figure(1,figsize=(5.0,8.0))
-    l = r"$\theta$: {:.3g} deg".format(tip_angle_rad[i]*180/pi)
-    plt.subplot(num_rows,2,i+1)
-    gauss = (2/sqrt(2*pi)/sqrt(N))*np.exp(-((bin_def*2)**2)/2.0/sqrt(N)**2)
+    l = r"$\theta$: {:.3g} deg".format(tip_angle_rad[i+1]*180/pi)
+    plt.subplot(num_rows,2,i+2)
+    gauss = (1/sqrt(2.*pi)/(sqrt(N)/2.))*np.exp(-((bin_def)**2)/2.0/(sqrt(N)/2.)**2)
     plt.hist(row, bin_def,normed=True)
     plt.plot(bin_def,gauss,color=ps.red,label=l)
     plt.locator_params(axis='y',nbins=2)
@@ -190,14 +198,13 @@ plt.close(0)
 fig, ax = plt.subplots(1,figsize=[4.0,4.0])
 xmax = np.max(tipping_angles[0])*1.1
 ymax = np.max(data_hist_jacks)*1.1
-plt.locator_params(axis='y',nbins=2)
-plt.locator_params(axis='x',nbins=3)
+plt.locator_params(axis='y',nbins=5)
+plt.locator_params(axis='x',nbins=5)
 nonCx = np.linspace(0,xmax,num=200)
 nonCy = nonCx**2 * N[0]/8.0
 fitCy = fit_res[0][0] + fit_res[0][1]*nonCx**2
 #ax.plot(nonCx,nonCy,'b-',fillstyle='top')
-ax.plot(nonCx,np.ones_like(nonCx))
-ax.fill_between(nonCx, np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
+ax.fill_between(nonCx, 10*np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
 if hist_to_use == 'all':
     ax.errorbar(tipping_angles[0][1:],data_hist_jacks[0:],
              yerr=data_hist_jack_errs[0:],fmt='ko')
