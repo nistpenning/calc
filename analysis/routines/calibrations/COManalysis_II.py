@@ -40,7 +40,7 @@ def COMfit(scandata, nm, K0, G, w_a, tau):
     """
     scandata: ODF beatnote, kHz
     nm: motional quanta
-    K0:
+    K0: Scale Factor for Jbar
     G: total Ramsey contrast decay rate, 1/s
     w_a: axial mode frequency, 1/s
     """

@@ -22,9 +22,8 @@ name = "SE_Sx_batch_analysis"
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
     
-J1k = 2193.0
-J1k = 676*3.05
-Ncal = 1.5
+J1k = 2110 
+Ncal = 1.70
 
 #theory calc info
 G_el =  67.4

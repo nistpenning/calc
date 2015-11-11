@@ -21,10 +21,10 @@ colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 raw = False
 verbose = True
 save = False
-img_name = "spinNoise_11_03"
-files_to_use = [2,3,1,4,7]
-J1k = 2193   
-Ncal = 1.508
+img_name = "spinNoise_11_10"
+files_to_use = [-1]
+J1k = 2112   
+Ncal = 1.70
 
 #theory calc info
 G_el =  67.4

@@ -17,25 +17,18 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.16
+Ncal = 1.72
 verbose = True
 save = False
 ymax = 8.0
-files_to_use = [6]
-hist_to_use = [0,1,2,3,4,5,6,7]
+files_to_use = [-1]
+hist_to_use = [0,1,2,3]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
 num_bins = 39#sqrt(len(z_data))
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
-
-#load theory data
-theory_file = "ConvolvedTheoryPDF_N127.txt"
-theory_path = os.path.normpath("/Users/jgb/Data/20151016/")
-os.chdir(theory_path)
-
-tdata = np.genfromtxt(theory_file, dtype='float', names=True)
 
 #%%
 
