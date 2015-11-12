@@ -19,7 +19,7 @@ importlib.reload(ps)
 #options
 Ncal = 1.2
 verbose = True
-save = True
+save = False
 ymax = 8.0
 files_to_use = [6]
 hist_to_use = [2,5]
@@ -100,7 +100,7 @@ for i,fn in enumerate(fns):
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5)
         datas.append(Sz_data)
     
-        bs = np.arange(-1.00,1.00,(2.0/num_bins))
+        bs = np.arange(-1.00,1.0,(2.0/num_bins))
         trials = len(datas[i])
 
         lab = r"Scan data = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[i], int_time)
@@ -111,7 +111,7 @@ for i,fn in enumerate(fns):
         plt.hist(datas[i],bs,label=lab,alpha=1,normed=False,weights=1,
                  histtype='stepfilled',color=ps.purple,edgecolor='k')  # rel freq
         """
-        plt.hist(datas[i],bs,label=lab,alpha=1,normed=True,
+        vals,bins,patchs = plt.hist(datas[i],bs,label=lab,alpha=1,normed=True,
                  histtype='stepfilled',color=ps.purple,edgecolor='k')  #PDF
         gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
         gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0) #rel. freq
@@ -136,17 +136,23 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=3)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
+            #plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
         elif hist_to_use[i] == 2:
+            bs_to_use = bins[1:]
             yt = tdata['pdf174p6']
             plt.plot(tdata['S_psi'],yt,'-',color='k')
+            scaling = (yt/((sqrt(N)/sqrt(2*pi))*np.exp(-(((tdata['S_psi']*sqrt(N))**2)/2.0))))
+            yt_save = yt
+            scaling = (vals/((sqrt(N)/sqrt(2*pi))*np.exp(-(((bs_to_use-np.mean(datas[i]))*sqrt(N))**2)/2.0)))            
+            yt_save = vals
             ymax = 8.5
             axis_list = [-1.1,1.1,0.0,ymax]        
             plt.axis(axis_list)
+            plt.locator_params(axis='y',nbins=4)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
+            #plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
 
         plt.show()
@@ -164,6 +170,17 @@ for i,fn in enumerate(fns):
         print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
+    
+    #scaling plot
+    plt.plot(tdata['S_psi'],((sqrt(N)/sqrt(2*pi))*np.exp(-(((tdata['S_psi']*sqrt(N))**2)/2.0))))
+    plt.plot(bs_to_use,yt_save)
+    plt.show()
+    plt.close()
+    plt.plot(bs_to_use[:],(scaling[:]))
+    plt.ylim(-1,1)
+    plt.xlabel(r"Spin projection 2$S_\psi$/N")
+    plt.ylabel(r"Log[$P_\psi$(z)/$P_{SQL}$(z)]")
+    
     
 if save is True:    
     ps.save_data_txt(text_name+".txt",datas)

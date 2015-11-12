@@ -274,8 +274,8 @@ plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blu
 
 ## calcuate the best possible Xi for OAT with no decoherence not accounting for 
 ## decoupling times
-Ns = np.linspace(2,260)
-J0  = 2000.
+Ns = np.arange(6,260,2,dtype=float)
+J0  = 1900.
 tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
 tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
 
@@ -283,12 +283,41 @@ out_p = squ.OAT_decoh(0.0, tau_opt, J0, Ns, 0, 0, 0)
 out = squ.OAT_decoh(-np.real(out_p[2]), tau_opt, J0, Ns, 0, 0, 0)
 xi2_max = (4/Ns) *(np.real(out[0])**2/np.real(out[1])**2)
 
+G_el = 0.0
+G_ud = 0.
+G_du = 0.
+taus = np.linspace(0.01,3.0,num=150) * 1e-3 
+xi2_max = np.zeros_like(Ns)
+for j,n in enumerate(Ns):
+    xi_o_t = np.zeros_like(taus)
+    for i,t in enumerate(taus):
+        out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
+        out = squ.OAT_decoh(-np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+        xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
+    xi2_max[j] = np.min(xi_o_t)
+
 plt.plot(Ns,xi2_max,'-',color=ps.red)
+#plt.plot(Ns,xi2_max,'-',color=ps.red)
 
 plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
 plt.grid('off')
+
+G_el =  67.4 + 80.0
+G_ud =  10.1
+G_du =  7.1
+xi2_G_max = np.zeros_like(Ns)
+for j,n in enumerate(Ns):
+    xi_o_t = np.zeros_like(taus)
+    for i,t in enumerate(taus):
+        out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
+        out = squ.OAT_decoh(-np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+        xi_o_t[i] = (4/n) *( (np.real(out[0])**2 + 0.13*n/4.)/np.real(out[1])**2)
+    xi2_G_max[j] = np.min(xi_o_t)
+
+plt.plot(Ns,xi2_G_max,'--')
+#plt.axis([0,10,0,0.6])
 
 """
 majorLocator = FixedLocator([20,50,100,200])

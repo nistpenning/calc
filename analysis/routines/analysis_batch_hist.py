@@ -17,13 +17,19 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.72
+red = False
+Ncal = 1.4396
 verbose = True
 save = False
-ymax = 8.0
-files_to_use = [1]
-hist_to_use = [0,1,2,3,4,5,6]
-text_name = "batch_hist_1016_wODF_tau3000.pdf"
+ymax = 6.5
+
+files_to_use = [6]
+hist_to_use = [0,3,8]
+
+files_to_use = [2]
+hist_to_use = [0,3,10,11,14]
+
+text_name = "batch_hist_1011.pdf"
 img_name = "batch_hist_img_1016"
 num_bins = 39#sqrt(len(z_data))
 base_path = os.getcwd()
@@ -109,7 +115,8 @@ for i,fn in enumerate(fns):
         gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
         gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0) #rel. freq
         gauss = (sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0)  # PDF
-        plt.plot(bs,gauss,color=ps.red)
+        if red is True:        
+            plt.plot(bs,gauss,color=ps.red)
         plt.xlabel(r"Spin projection 2$S_\psi$/N")
         plt.ylabel("Probability Density")
         plt.grid('off')

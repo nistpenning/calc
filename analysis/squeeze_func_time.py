@@ -494,7 +494,7 @@ def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         z = (SzyA+SyzA)/(SzzA-SyyA)
         opt_squ_angle = np.real(0.5*np.arctan(z))
         Jz_std = sqrt(cos(-psi)**2*SzzA + sin(-psi)**2*SyyA + sin(-psi)*cos(-psi)*(SyzA+SzyA))
-        R = (Jz_std/(sqrt(N)/(2.0)))**2  # reduction in spin noise variance
+        R = (Jz_std/(sqrt(N)/2.0))**2  # reduction in spin noise variance
         C = 2*Sx  # fringe contrast
     
         Xi2 = R * (C)**(-2)  # Ramsey squeezing parameter squared
