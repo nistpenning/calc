@@ -21,8 +21,9 @@ fig_name = "SqHelDist_10_28.pdf"
 files_to_use = [-1]
 Ncal = 1.70
 hist_to_use = 'all'
-bin_width = 2.0  # found from Strobel this was optimum
-h = 200  #block size for resampling
+bin_width = 2.
+h = 50  #block size for resampling
+first_points = 3
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
@@ -81,24 +82,25 @@ for i,fn in enumerate(fns):
    
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5) * (N/2.)
         datas.append(Sz_data)
-        
-        
+                
     its.append(int_time)
     Ns.append(N)
     tipping_angles.append(tip_angle_rad)
     os.chdir(data_path)
 
+tipping_angles = tip_angle_rad
 #define scale
+data_ref = np.hstack(np.array(datas[:first_points]))
 bin_def = np.arange(-N/2.0,N/2.0,bin_width)
-w = np.zeros_like(datas[0]) + (1/np.size(datas[0])) #for weighting the normalized hist  
+w = np.zeros_like(data_ref) + (1/np.size(data_ref)) #for weighting the normalized hist  
 #calculate reference histogram
-data_ref = datas[0]
+
 vals_ref, bins, patches = plt.hist(data_ref,bin_def,normed=False,weights=w)
 plt.close()
 
 
 #remove the reference data from the rest
-datas = datas[1:]
+datas = datas[first_points:]
 
 #containers
 data_hist = []
@@ -130,9 +132,9 @@ for i,row in enumerate(datas):
     plt.title(l,fontsize=9)
     
     plt.figure(2)
-    w = np.zeros_like(row) + (1/np.size(row)) #for weighting the normalized hist      
+    w = (1/np.size(row))+np.zeros_like(row) #for weighting the normalized hist      
     vals = plt.hist(row, bin_def,normed=False,weights=w)[0]
-    h_dist = np.sum((sqrt(vals_ref) - sqrt(vals))**2)
+    h_dist = 0.5*np.sum((sqrt(vals_ref) - sqrt(vals))**2)
     samp = np.size(row)
     n_bin_fill = np.size(vals[vals!=0])  #number of discrete bins for which P!=0
     
@@ -145,7 +147,7 @@ for i,row in enumerate(datas):
         #vals = plt.hist(re_row, bin_def,normed=True)[0]
         w = np.zeros_like(re_row) + (1/np.size(re_row)) #for weighting the normalized hist  
         re_vals = plt.hist(re_row, bin_def,normed=False,weights=w)[0]
-        re_h_dist = np.sum((sqrt(vals_ref) - sqrt(re_vals))**2)
+        re_h_dist = 0.5*np.sum((sqrt(vals_ref) - sqrt(re_vals))**2)
         re_hds.append(re_h_dist)
     h_dist_jack = g*h_dist - ((g-1)/float(g)* np.sum(re_hds))
     h_dist_jack_err = np.sqrt(np.var(re_hds))
@@ -167,17 +169,17 @@ plt.close()
 
 #note: tipping angle starts at 1 because 0 corresponds to the reference
 if hist_to_use == 'all':
-    fit_res = pt.plot_polyfit(tipping_angles[0][1:],data_hist_jacks[0:],
+    fit_res = pt.plot_polyfit(tipping_angles[first_points:],data_hist_jacks[0:],
                           np.array([0,0,1]),
                           yerr = data_hist_jack_errs[0:],
                           hold=np.array([False,True,False]),
                           labels=l)
 
 else:
-    if hist_to_use>len(tipping_angles[0][1:]):
-        print("Error, hist_to_use must be <= {}".format(len(tipping_angles[0][1:])))
+    if hist_to_use>len(tipping_angles[1:]):
+        print("Error, hist_to_use must be <= {}".format(len(tipping_angles[1:])))
     else: 
-        fit_res = pt.plot_polyfit(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
+        fit_res = pt.plot_polyfit(tipping_angles[first_points:hist_to_use],data_hist_jacks[0:hist_to_use-1],
                           np.array([0,0,1]),
                           yerr = data_hist_jack_errs[0:hist_to_use-1],
                           hold=np.array([False,True,False]),
@@ -196,7 +198,7 @@ plt.close(0)
 #%%
 
 fig, ax = plt.subplots(1,figsize=[4.0,4.0])
-xmax = np.max(tipping_angles[0])*1.1
+xmax = np.max(tipping_angles)*1.1
 ymax = np.max(data_hist_jacks)*1.1
 plt.locator_params(axis='y',nbins=5)
 plt.locator_params(axis='x',nbins=5)
@@ -206,10 +208,10 @@ fitCy = fit_res[0][0] + fit_res[0][1]*nonCx**2
 #ax.plot(nonCx,nonCy,'b-',fillstyle='top')
 ax.fill_between(nonCx, 10*np.ones_like(nonCx), nonCy, facecolor='grey', alpha=0.5)
 if hist_to_use == 'all':
-    ax.errorbar(tipping_angles[0][1:],data_hist_jacks[0:],
+    ax.errorbar(tipping_angles[first_points:],data_hist_jacks[0:],
              yerr=data_hist_jack_errs[0:],fmt='ko')
 else:
-    ax.errorbar(tipping_angles[0][1:hist_to_use],data_hist_jacks[0:hist_to_use-1],
+    ax.errorbar(tipping_angles[first_points:hist_to_use],data_hist_jacks[0:hist_to_use-1],
              yerr=data_hist_jack_errs[0:hist_to_use-1],fmt='ko')
 ax.plot(nonCx,fitCy,'-',color=ps.red)
 ax.set_xlabel(r"Angle $\theta$ (rad)")

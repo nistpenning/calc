@@ -17,18 +17,18 @@ from scicons import pi, hbar, m_Be, k_b
 import hfGUIdata
 importlib.reload(hfGUIdata)
        
-folders = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [0]]
+folders = [hfGUIdata.get_immediate_subdirectories(os.getcwd())[i] for i in [-1]]
 
 #known inputs
-lACSS = 2*pi*18.8e3  # per sec
-uACSS = 2*pi*18.8e3  # per sec
-w_z = 2*pi*1573.0*1e3
+lACSS = 2*pi*19.7e3  # per sec
+uACSS = 2*pi*19.7e3  # per sec
+w_z = 2*pi*1570.0*1e3
 wa_hold = False
 
 Gamma, Jbar_1kHz, F0 = ODF.IsingCalc(lACSS, uACSS, w_z)
 
-Nion = 145.0
-Jbar_1kHz = 1753.0  # per s, measured for this data set
+Nion = 40.0
+Jbar_1kHz = 2100.0  # per s, measured for this data set
 F0 = sqrt(Jbar_1kHz * (4*hbar*m_Be*w_z*(2*pi*1.0*1e3)))
 
 print("F0: {}".format(F0))
@@ -104,7 +104,7 @@ for folder in folders:
     w_as = np.append(w_as, res[1])
     data_set = np.append(data_set,folder)
     
-    print("Fitted Gamma: {0:.3g} 1/s".format(res[0]))
-    print("Fitted Gamma uncert: {0:.3g} 1/s".format(res_err[0]))
+    print("Fitted Gamma: {0:.3g} 1/s".format(res[1]))
+    print("Fitted Gamma uncert: {0:.3g} 1/s".format(res_err[1]))
     
     os.chdir('..')

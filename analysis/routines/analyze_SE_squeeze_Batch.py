@@ -23,7 +23,7 @@ verbose = True
 save = False
 img_name = "spinNoise_11_10"
 files_to_use = [-1]
-J1k = 2112   
+J1k = 1500   
 Ncal = 1.70
 
 #theory calc info
@@ -32,7 +32,7 @@ G_ud =  10.1
 G_du =  7.1
 
 #adjust for extra decohrence
-G_add = 100.0
+G_add = 60.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
