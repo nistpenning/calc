@@ -17,7 +17,7 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-red = False
+red = True
 Ncal = 1.4396
 verbose = True
 save = False

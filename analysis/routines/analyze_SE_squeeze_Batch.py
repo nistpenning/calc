@@ -21,6 +21,7 @@ colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 raw = False
 verbose = True
 save = False
+
 img_name = "spinNoise_11_10"
 files_to_use = [-1]
 J1k = 1500   
@@ -38,8 +39,8 @@ print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.0006175 # rad^2/ms^2
-B = 0.0001634 # rad^2/ms^4
+A = 0.00068 # rad^2/ms^2
+B = 0.0002323 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -229,3 +230,4 @@ if verbose is True:
     #comparing different error estimates
     if raw is True:
         plt.plot(sig_ob_errs[0], sig_rob_errs[0])
+

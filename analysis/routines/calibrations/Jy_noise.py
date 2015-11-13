@@ -19,7 +19,8 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 #inputs
 Ncal = 1.508
 
-files_to_use = [-1]
+
+files_to_use = [-2]
 t4term = False
 
 verbose = False
@@ -125,7 +126,7 @@ if verbose is True:
     plt.close()
 
 def added_noise(tau, N, m, k, A, B):
-    sig_tot_2 = m + (k**2/4.0/N) + A*tau + B*tau**4 
+    sig_tot_2 = m + (k**2/4.0/N) + A*tau**2 + B*tau**4 
     return sqrt(sig_tot_2)
     
 
