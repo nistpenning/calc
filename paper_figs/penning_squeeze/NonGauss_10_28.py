@@ -17,25 +17,27 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-Ncal = 1.2
+Ncal = 1.1598
 verbose = True
-save = True
-ymax = 8.0
-files_to_use = [6]
-hist_to_use = [2,5,0]
-text_name = "batch_hist_1016_wODF_tau3000.pdf"
-img_name = "batch_hist_img_1016"
-num_bins = 63#sqrt(len(z_data))
-base_path = os.path.normpath("/Users/jgb/Data/20151016/squeeze")
+save = False
+files_to_use = [3]
+hist_to_use = [0,1,2,4]
+axis_list = [-1.1,1.1,0.0,0.30]
+text_name = "batch_hist_1028"
+img_name = "batch_hist_img_1028"
+num_bins = 27#sqrt(len(z_data))
+base_path = os.path.normpath("/Users/jgb/Data/20151028/Load 346/squeeze")
 data_path = base_path
 os.chdir(data_path)
 
 #load theory data
-theory_file = "ConvolvedTheoryPDF_N127.txt"
-theory_path = os.path.normpath("/Users/jgb/Data/20151016/")
-os.chdir(theory_path)
-
-tdata = np.genfromtxt(theory_file, dtype='float', names=True)
+show_theory = False
+if show_theory is True:
+    theory_file = "ConvolvedTheoryPDF_N127.txt"
+    theory_path = os.path.normpath("/Users/jgb/Data/20151016/")
+    os.chdir(theory_path)
+    
+    tdata = np.genfromtxt(theory_file, dtype='float', names=True)
 
 #%%
 
@@ -55,7 +57,7 @@ fns = [os.listdir(data_path)[i] for i in files_to_use]
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
 for i,fn in enumerate(fns):
-    print("_________________________________________")
+    print("__________________________________________________________________")
     folder = os.path.join(data_path,fn)
     os.chdir(folder)
     files = os.listdir(os.getcwd())
@@ -71,7 +73,7 @@ for i,fn in enumerate(fns):
     prop_name = [x for x in files if "_props.csv" in x][0]
     file_name, data_p = hf.get_gen_csv(prop_name, skip_header=False)
     bm = float(data_p['det_brightMean'])
-    dm = float(data_p["det_darkMean"])
+    dm = float(data_p["det_darkMean"])-4.0
     det_t = float(data_p["det_t"])
     int_time = 2*data_p["squeeze_arm_t"]
     k = bm-dm  # phtns per N atoms
@@ -83,8 +85,11 @@ for i,fn in enumerate(fns):
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
     scan_data = np.array(data.T[0][0:],dtype='float')
     avg_pmt_counts = np.array(data.T[1][0:],dtype='float')
-
     
+    sig_S_psn = np.mean(sqrt(avg_pmt_counts)*N/k)
+    print("Std Dev of S_psi from PSN (norm to N/2): {:5g}".format(sig_S_psn / (N/2.)))
+    print("Ratio SNvar/PNvar: {:.5g}".format((sig_S_psn/(N/2.) / (1/sqrt(N)))**2))
+
     hdata_to_use = np.array([hdata[i] for i in hist_to_use])
     
     num_plots = len(hist_to_use)
@@ -100,28 +105,36 @@ for i,fn in enumerate(fns):
         Sz_data = 2*(((counts_data-dm)/(bm - dm)) - 0.5)
         datas.append(Sz_data)
     
-        bs = np.arange(-1.00,1.0,(2.0/num_bins))
+        bs = np.arange(-1.0,1.01,(2.0/num_bins))
         trials = len(datas[i])
 
         lab = r"Scan data = {0:.4g}, Squeeze time = {1:.4g}".format(scan_data[i], int_time)
         lab = r"Scan value: {0:.4g}, Squeeze time: {1:.4g}, Detect time: {2:.4g} ms".format(scan_data[hist_to_use[i]], int_time, det_t*1e-3)
         
-        """
+        
         w = np.zeros_like(datas[i]) + (1/trials) #for weighting the normalized hist
-        plt.hist(datas[i],bs,label=lab,alpha=1,normed=False,weights=1,
-                 histtype='stepfilled',color=ps.purple,edgecolor='k')  # rel freq
+        vals, bins, patchs = plt.hist(datas[i],bs,label=lab,alpha=1,normed=False,weights=w,
+                 histtype='stepfilled',color='lightgray',edgecolor='k')  # rel freq
         """
         vals,bins,patchs = plt.hist(datas[i],bs,label=lab,alpha=1,normed=True,
                  histtype='stepfilled',color='lightgray',edgecolor='k')  #PDF
-        gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
+        """
+        #gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
         gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0) #rel. freq
-        gauss = (sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0)  # PDF
-        #plt.plot(bs,gauss,color=ps.red)
+        #gauss = (sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0)  # PDF
+        plt.plot(bs,gauss,color=ps.red)
         plt.xlabel(r"Spin projection 2$S_\psi$/N")
-        plt.ylabel("Probability Density")
+        plt.ylabel("Probability")
         plt.grid('off')
+        if save is True:
+            plt.axis(axis_list)
+            plt.locator_params(axis='y',nbins=3)
+            plt.tight_layout()
+            os.chdir(os.path.dirname(os.path.realpath(__file__)))
+            plt.savefig(text_name+str(scan_data[i])+"_"+str(int_time)+".pdf",dpi=300,bbox='tight',transparent=True)
+            os.chdir(base_path)
         
-                
+        """        
         #add theory curves
         if hist_to_use[i] == 0:
             yt = np.zeros_like(tdata['pdf88'])
@@ -131,7 +144,7 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=3)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            plt.savefig('127ions_pdf180'+".pdf",dpi=300,bbox='tight',transparent=True)
+            #plt.savefig('127ions_pdf180'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
         elif hist_to_use[i] == 5:
             yt = tdata['pdf88']
@@ -142,7 +155,7 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=3)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
+            #plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
         elif hist_to_use[i] == 2:
             bs_to_use = bins[1:]
@@ -159,9 +172,10 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=4)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
+            #plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
-
+        """
+        
         plt.show()
         plt.close()
         
@@ -177,17 +191,6 @@ for i,fn in enumerate(fns):
         print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
 
     os.chdir(data_path)
-    
-    #scaling plot
-    plt.plot(tdata['S_psi'],((sqrt(N)/sqrt(2*pi))*np.exp(-(((tdata['S_psi']*sqrt(N))**2)/2.0))))
-    plt.plot(bs_to_use,yt_save)
-    plt.show()
-    plt.close()
-    plt.plot(bs_to_use[:],(scaling[:]))
-    plt.ylim(-1,1)
-    plt.xlabel(r"Spin projection 2$S_\psi$/N")
-    plt.ylabel(r"Log[$P_\psi$(z)/$P_{SQL}$(z)]")
-    
     
 if save is True:    
     ps.save_data_txt(text_name+".txt",datas)
