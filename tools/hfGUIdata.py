@@ -92,6 +92,7 @@ def get_ionProp_dict(keys, where='props'):
 
 def parse_raw_counts(array):
     bad = 0
+    verbose = False
     for x in np.nditer(array, op_flags=['readwrite']):
         if x == -1:
             print('Found bad data point')
@@ -104,8 +105,9 @@ def parse_raw_counts(array):
         else:
             x[...] = int(x) & 0x1fff
     if bad > 0:
-        print("# of bad points: {}".format(bad))
-        print("removing all bad points in return value")
+        if verbose is True:
+            print("# of bad points: {}".format(bad))
+            print("removing all bad points in return value")
         array = array[array!=-1]
     return array
 
