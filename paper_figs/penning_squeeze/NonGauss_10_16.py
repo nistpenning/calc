@@ -19,10 +19,10 @@ importlib.reload(ps)
 #options
 Ncal = 1.2
 verbose = True
-save = False
+save = True
 ymax = 8.0
 files_to_use = [6]
-hist_to_use = [2,5]
+hist_to_use = [2,5,0]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
 num_bins = 63#sqrt(len(z_data))
@@ -112,7 +112,7 @@ for i,fn in enumerate(fns):
                  histtype='stepfilled',color=ps.purple,edgecolor='k')  # rel freq
         """
         vals,bins,patchs = plt.hist(datas[i],bs,label=lab,alpha=1,normed=True,
-                 histtype='stepfilled',color=ps.purple,edgecolor='k')  #PDF
+                 histtype='stepfilled',color='lightgray',edgecolor='k')  #PDF
         gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
         gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0) #rel. freq
         gauss = (sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0)  # PDF
@@ -125,8 +125,14 @@ for i,fn in enumerate(fns):
         #add theory curves
         if hist_to_use[i] == 0:
             yt = np.zeros_like(tdata['pdf88'])
-            axis_list = [-0.5,0.5,0.0,5.5]
-            plt.axis(axis_list)  
+            plt.plot(bs,gauss,color=ps.red)
+            axis_list = [-1.1,1.1,0.0,5.5]
+            plt.axis(axis_list)
+            plt.locator_params(axis='y',nbins=3)
+            os.chdir(os.path.dirname(os.path.realpath(__file__)))
+            plt.tight_layout()
+            plt.savefig('127ions_pdf180'+".pdf",dpi=300,bbox='tight',transparent=True)
+            os.chdir(base_path)
         elif hist_to_use[i] == 5:
             yt = tdata['pdf88']
             plt.plot(tdata['S_psi'],yt,'-',color='k')
@@ -136,11 +142,12 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=3)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            #plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
+            plt.savefig('127ions_pdf88'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
         elif hist_to_use[i] == 2:
             bs_to_use = bins[1:]
             yt = tdata['pdf174p6']
+            plt.plot(bs,gauss,color=ps.red)
             plt.plot(tdata['S_psi'],yt,'-',color='k')
             scaling = (yt/((sqrt(N)/sqrt(2*pi))*np.exp(-(((tdata['S_psi']*sqrt(N))**2)/2.0))))
             yt_save = yt
@@ -152,7 +159,7 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=4)
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
-            #plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
+            plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
 
         plt.show()

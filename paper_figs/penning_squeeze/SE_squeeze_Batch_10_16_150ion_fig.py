@@ -21,9 +21,9 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 colors = ['k', ps.red, ps.blue, ps.orange]
 raw = False
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_10_16"
-files_to_use = [3,1,4]
+files_to_use = [3,5]
 J1k = 2300.0    
 Ncal = 1.19
 

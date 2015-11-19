@@ -18,12 +18,16 @@ import resample_tools as re
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
-colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
+colors = [ ps.green, 'k', ps.red, ps.blue, ps.orange, ps.pink,ps.aqua, ps.navy]
 raw = False
 verbose = True
 save = True
-img_name = "spinNoise_11_03"
+img_name = "spinNoise_11_03_talk_greenOnly"
+legend = True
 files_to_use = [2,1,4,9]
+files_to_use = [2,4,9]
+files_to_use = [2,1,4,5,7,9]
+files_to_use = [9]
 J1k = 2193   
 Ncal = 1.44
 
@@ -54,6 +58,8 @@ sig_2_in_err = []
 sig_pns = []
 sig_psns = []
 SE = []
+SN = []
+xi_R2 = []
 Ns = []
 names = []
 
@@ -157,6 +163,8 @@ for i,fn in enumerate(fns):
     sig_pns.append(sig_pn)
     sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
+    SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
+    xi_R2.append(np.min((csi_R2)))
     Ns.append(N)
     names.append(hf.n_slice(file_name))
     os.chdir(base_path)
@@ -165,12 +173,14 @@ for i,fn in enumerate(fns):
 #________________________________________________________________________
 # visualizing the experimental data
 fig, ax = plt.subplots() 
+SN_err = []
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
     l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
     spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
+    SN_err.append(np.min(spin_noise_err))    
     spin_noise_dB = 10*np.log10(spin_noise)
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
@@ -214,13 +224,11 @@ for i,name in enumerate(names):
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
-plt.legend(loc=0,fontsize=10)
-if len(names) is 1:
-    plt.title(names[0])
+if legend is True: plt.legend(loc=0,fontsize=10)
 
 if save is True:
     os.chdir('..')
-    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=False)
     # make a copy of the analysis at the folder
     shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)
@@ -231,11 +239,47 @@ plt.close()
 if verbose is True:
 
     int_times = np.array(its)*1e3
-    plt.plot(int_times,SE,'o')
+    plt.plot(int_times,SE,'-o')
     plt.ylabel('Spectroscopic Enhancement [dB]')
     plt.xlabel('Interaction time [ms]')
+    plt.grid('off')
+    plt.axis([0,2.3,-16,5.0])
+    if save is True:
+        os.chdir('..')
+        plt.savefig(img_name+"SE"+".pdf",dpi=300,bbox='tight',transparent=False)
+        os.chdir(base_path)
     plt.show()
-
+    plt.close()
+    
+    int_times= np.insert(int_times,0,[0.])
+    SN = np.insert(SN,0,[1.])
+    SN_err = np.insert(np.array(SN_err),0,[0.1])
+    plt.errorbar(int_times[:-1],SN[:-1],yerr=SN_err[:-1],fmt='-o')
+    plt.ylabel('Minimum spin variance $(\Delta S_\psi)^2$/N/4')
+    plt.xlabel('Interaction time [ms]')
+    plt.axis([0,2.3,0,1])
+    plt.grid('off')
+    if save is True:
+        os.chdir('..')
+        plt.savefig(img_name+"SN"+".pdf",dpi=300,bbox='tight',transparent=False)
+        os.chdir(base_path)
+    plt.show()
+    plt.close()
+    
+    xi_R2 = np.insert(xi_R2,0,[1.])
+    plt.plot(int_times[:],10*np.log10(xi_R2[:]),'-o')
+    plt.ylabel(r'Squeezing Parameter $\xi_R^2$ (dB)')
+    plt.xlabel(r'Interaction time $\tau$ [ms]')
+    plt.fill_between(np.linspace(0,3.0), np.zeros_like(np.linspace(0,3.0)), y2=-10*np.ones_like(np.linspace(0,3.0)),color='k',alpha=0.2 )
+    plt.axis([0,2.65,-10,20])
+    plt.grid('off')
+    if save is True:
+        os.chdir('..')
+        plt.savefig(img_name+"xi_R2"+".pdf",dpi=300,bbox='tight',transparent=False)
+        os.chdir(base_path)
+    plt.show()
+    plt.close()    
+    
     #comparing different error estimates
     if raw is True:
         plt.plot(sig_ob_errs[0], sig_rob_errs[0])
