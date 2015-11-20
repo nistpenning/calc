@@ -15,10 +15,11 @@ import hfGUIdata as hf
 import plot_style as ps
 importlib.reload(ps)
 import squeeze_func_time as squ
+importlib.reload(squ)
 
-save = False
-img_name = "Ramsey_squeeze_param"
-plot_axis_extent = [10,260, 0.01,1.2]
+save = True
+img_name = "Ramsey_squeeze_param_with_PSN"
+plot_axis_extent = [0.0,235, 0.0,1.2]
 
 base_path = os.getcwd()
 
@@ -43,6 +44,8 @@ sig_PN_fulls = []
 sig_PN_fulls_errs = []
 xi2_SE_fulls = []
 xi2_SE_fulls_errs = []
+xi2_SE_subs = []
+xi2_SE_subs_errs = []
 
 xi2_maxs = []
 tau_opt = []
@@ -188,7 +191,6 @@ plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='k')
 
 #sfe = 2* np.array(sig_fulls) * np.array(sig_fulls_errs)
 
-
 #_________________________________________________
 #Here get actual spectroscopic enhancement
 
@@ -252,18 +254,24 @@ for i,fn in enumerate(folders[1:]):
     pmterr_err = pmterr/np.sqrt(2*reps)
     m_len = avg_pmt_counts-dm
     
-    sig_sub = np.min(pmterr**2 - avg_pmt_counts)**2/C_coherent_pred**2
+    sig2_sub = np.min(pmterr**2 - avg_pmt_counts)/C_coherent_pred[0]**2
     sig2_full = np.min(pmterr)**2/C_coherent_pred[0]**2
     sig_full_err = sqrt(sig2_full)/sqrt(2*reps)
+    sig_sub_err = 2*sqrt(sig2_sub)/sqrt(2*reps)
     
     xi2 = sig2_full * N
     xi2_err = sqrt( (2*sqrt(sig2_full)*N*sig_full_err)**2 + (sig2_full * N_err)**2 )
+    
+    xi2_sub = sig2_sub * N
+    xi2_sub_err = sqrt( (2*sqrt(sig2_sub)*N*sig_sub_err)**2 + (sig2_sub * N_err)**2 )
     
     dataSE_names.append(file_name)
     N_SEs.append(N)  
     N_SE_errs.append(N_err)
     xi2_SE_fulls.append(xi2)  
     xi2_SE_fulls_errs.append(xi2_err)
+    xi2_SE_subs.append(xi2_sub)
+    xi2_SE_subs_errs.append(xi2_sub_err)
     xi2_maxs.append(xi2_max)
     tau_opt.append(int_t[0])
     os.chdir(base_path)
@@ -271,17 +279,19 @@ for i,fn in enumerate(folders[1:]):
 NSEround = np.array([round(n) for n in N_SEs])
 
 plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blue)
+plt.errorbar(NSEround, xi2_SE_subs, yerr=xi2_SE_subs_errs, fmt='^',
+             color=ps.blue,alpha=0.5)
 
 ## calcuate the best possible Xi for OAT with no decoherence not accounting for 
 ## decoupling times
 taus = np.linspace(0.1,6.0,num=200) * 1e-3 
-Ns = np.arange(6,260,2,dtype=float)
+Ns = np.arange(6,240,2,dtype=float)
 J0  = 1900.
 tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
 tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
 
 out_p = squ.OAT_decoh(0.0, tau_opt, J0, Ns, 0, 0, 0)
-out = squ.OAT_decoh(-np.real(out_p[2]), tau_opt, J0, Ns, 0, 0, 0)
+out = squ.OAT_decoh(np.real(out_p[2]), tau_opt, J0, Ns, 0, 0, 0)
 xi2_max = (4/Ns) *(np.real(out[0])**2/np.real(out[1])**2)
 
 G_el = 0.0
@@ -293,17 +303,17 @@ for j,n in enumerate(Ns):
     xi_o_t = np.zeros_like(taus)
     for i,t in enumerate(taus):
         out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-        out = squ.OAT_decoh(-np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+        out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
         xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
     xi2_max[j] = np.min(xi_o_t)
 
-plt.plot(Ns,xi2_max,'-',color=ps.red)
-#plt.plot(Ns,xi2_max,'-',color=ps.red)
+plt.plot(Ns,xi2_max,'-',color=ps.blue)
 
 plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
-plt.grid('on')
+plt.grid('off')
+
 
 G_el =  67.4 + 80.0
 G_ud =  10.1
@@ -313,13 +323,13 @@ for j,n in enumerate(Ns):
     xi_o_t = np.zeros_like(taus)
     for i,t in enumerate(taus):
         out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-        out = squ.OAT_decoh(-np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
-        xi_o_t[i] = (4/n) *( (np.real(out[0])**2 + 0.0*n/4.)/np.real(out[1])**2)
+        out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+        xi_o_t[i] = (4/n) *( (np.real(out[0])**2)/np.real(out[1])**2)
     xi2_G_max[j] = np.min(xi_o_t)
 
-plt.plot(Ns,xi2_G_max,'--')
-plt.yscale('Log')
-#plt.axis([0,10,0,0.6])
+plt.plot(Ns,xi2_G_max,'--',color=ps.blue)
+#plt.yscale('Log')
+#plt.axis([10,50,0.01,1])
 
 """
 majorLocator = FixedLocator([20,50,100,200])
