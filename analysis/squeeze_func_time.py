@@ -422,7 +422,7 @@ def hist_data_browser(max_c, min_c, num):
     for i in range(num):
         data_point_histogram(i, max_c, min_c, save=directory)
 
-def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
+def OAT_decoh_NJP(psi, ti, J, N, G_el, G_ud, G_du):
         """
         Model for OAT accounting for decohrence based on paper by MFF
         psi: angle of final rotation about x, radians
@@ -470,6 +470,8 @@ def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         # collective spin length
         Sx = 0.5*exp(-G*ti) * (Phi(ti,J,G_ud, G_du))**(N-1)
         Sx = np.real(Sx)
+
+        Sy = np.imag(Sx)
     
         # pm correlations
         Cmz = 0.5*exp(-G*ti) * Psi(ti, -J ,G_ud, G_du) * (Phi(ti, -J, G_ud, G_du))**(N-2)
@@ -500,4 +502,105 @@ def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         Xi2 = R * (C)**(-2)  # Ramsey squeezing parameter squared
     
         return np.array([Jz_std, C, opt_squ_angle])
+        
+def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
+        """
+        Model for OAT accounting for decohrence based on paper by MFF
+        psi: angle of final rotation about x, radians
+        ti: total interaction tim, seconds
+        J: interaction strength from mean field rotation
+        N: ion number
+        G_el: elastic scattering rate (1/sec)
+        G_ud: up down rate (1/sec)
+        G_du: down up rate (1/sec)
+    
+        Returns:
+        Jz_std: normalize to sqrt(N)/2
+        C: fringe contrast
+        opt_squ_angle: angle of minimum in Jz_std, in radians
+        """
 
+        G_r = G_ud + G_du
+        G = (G_el + G_r)/2.
+    
+        # Key functions
+        def Phi(t, J, G_ud, G_du):
+            theta = pi/2.  # because this is fixed, equations are simplified here
+            g = (G_ud-G_du)/4.
+            G_r = G_ud + G_du
+            s = 2*J/N + 2j*g  # this is the param in the paper where N should go
+            r= G_ud*G_du
+    
+            a = t*sqrt(s**2-r)
+    
+            out = exp(-G_r*t/2.)*( cos(a) + 0.5*G_r*t*(np.sinc(a/pi) ))
+            return out
+    
+        def Psi(t, J, G_ud, G_du):
+            theta = pi/2.  # because this is fixed, equations are simplified here
+            g = (G_ud-G_du)/4.
+            G_r = G_ud + G_du
+            s = 2*J/N + 2j*g
+            r= G_ud*G_du
+    
+            a = t*sqrt(s**2-r)
+    
+            out = exp(-G_r*t/2.)*( 1j*s - 2*g)*t*(np.sinc(a/pi))
+            return out
+        
+        # collective spin length
+        Sx = 0.5*exp(-G*ti) * (Phi(ti,J,G_ud, G_du))**(N-1)
+        Sx = np.real(Sx)
+        Sy = np.imag(Sx)
+    
+        # pm correlations
+        Cmz = 0.5*exp(-G*ti) * Psi(ti, -J ,G_ud, G_du) * (Phi(ti, -J, G_ud, G_du))**(N-2)
+        Cpz = 0.5*exp(-G*ti) * Psi(ti, J, G_ud, G_du) * (Phi(ti, J, G_ud, G_du))**(N-2)
+    
+        Cpp = 0.25*exp(-2*G*ti) * (Phi(ti, 2*J, G_ud, G_du))**(N-2)
+        Cmm = 0.25*exp(-2*G*ti) * (Phi(ti, -2*J, G_ud, G_du))**(N-2)
+        Cpm = 0.25*exp(-2*G*ti) * (Phi(ti, 0.0, G_ud, G_du))**(N-2)
+        Cmp = Cpm
+    
+        # coorediate correlations
+        CyyA = -0.25*(Cpp+Cmm-Cpm-Cmp)
+        CyzA = -(0.25j)*(Cpz-Cmz)
+        CzyA = CyzA
+    
+        SyyA = N*(N-1)*CyyA + N/4.
+        SyzA = N*(N-1)*CyzA + 0.5j*N*Sx
+        SzyA = N*(N-1)*CzyA - 0.5j*N*Sx
+        SzzA = N/4.
+    
+        # calc squeezing
+        z = (SzyA+SyzA)/(SzzA-SyyA)
+        opt_squ_angle = np.real(0.5*np.arctan(z))
+        Jz_std = sqrt(cos(psi)**2*SzzA + sin(psi)**2*SyyA + sin(psi)*cos(psi)*(SyzA+SzyA))
+        R = (Jz_std/(sqrt(N)/2.0))**2  # reduction in spin noise variance
+        C = 2*Sx  # fringe contrast
+    
+        Xi2 = R * (C)**(-2)  # Ramsey squeezing parameter squared
+    
+        return np.array([Jz_std, C, opt_squ_angle])
+        #return np.array([Jz_std, C, opt_squ_angle])
+
+if __name__ == '__main__':
+    print("Starting squeeze theory tests")
+    
+    N=30
+    Jbar = 2200
+    tau = 0.001
+    G_el =  67.4 + 80.0
+    G_ud =  10.1
+    G_du =  7.1
+    G_tot = 0.5*(G_el + G_ud + G_du)
+    
+    psi = np.linspace(0.0,180.0)*pi/180.0  # rad
+    var_Spsi_Kita = OAT(psi,2*Jbar/N,N,tau)/(N/4)
+    var_Spsi_NJP = (np.real(OAT_decoh_NJP(psi,tau, Jbar, N, G_el, G_ud, G_du)[0])/(sqrt(N)/2))**2
+    var_Spsi_MW = (np.real(OAT_decoh(psi,tau, Jbar, N, G_el, G_ud, G_du)[0])/(sqrt(N)/2))**2
+
+    psi_deg = 180*psi/pi
+    plt.plot(psi_deg,var_Spsi_Kita)
+    plt.plot(np.abs(psi_deg-180),var_Spsi_NJP)
+    plt.plot(psi_deg,var_Spsi_MW)
