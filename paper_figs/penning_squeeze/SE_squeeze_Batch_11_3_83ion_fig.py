@@ -18,18 +18,16 @@ import resample_tools as re
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
-colors = [ ps.green, 'k', ps.red, ps.blue, ps.orange, ps.pink,ps.aqua, ps.navy]
+colors = ['k', ps.red, ps.blue, ps.orange, ps.pink,ps.aqua, ps.navy]
 raw = False
 verbose = True
 save = True
-img_name = "spinNoise_11_03_talk_greenOnly"
+img_name = "spinNoise_11_03"
 legend = True
 files_to_use = [2,1,4,9]
-files_to_use = [2,4,9]
-files_to_use = [2,1,4,5,7,9]
-files_to_use = [9]
 J1k = 2193   
 Ncal = 1.44
+axis_set = [2,181,-11,15]
 
 #theory calc info
 G_el =  67.4
@@ -190,7 +188,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([3,181,-10,15])
+plt.axis(axis_set)
 plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
 plt.ylabel("Spin variance $(\Delta S_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
@@ -214,7 +212,7 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
-    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
+    plt.plot(psi*180/pi,R_dB,color=colors[i])
     #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
     
     #where is the limit just due to technical noise?
@@ -227,16 +225,16 @@ for i,name in enumerate(names):
 if legend is True: plt.legend(loc=0,fontsize=10)
 
 if save is True:
-    os.chdir('..')
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
     plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=False)
     # make a copy of the analysis at the folder
-    shutil.copy(__file__, os.getcwd())
+    #shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)
 
 plt.show()
 plt.close()
 
-if verbose is True:
+if False:
 
     int_times = np.array(its)*1e3
     plt.plot(int_times,SE,'-o')
@@ -250,7 +248,7 @@ if verbose is True:
         os.chdir(base_path)
     plt.show()
     plt.close()
-    
+   
     int_times= np.insert(int_times,0,[0.])
     SN = np.insert(SN,0,[1.])
     SN_err = np.insert(np.array(SN_err),0,[0.1])

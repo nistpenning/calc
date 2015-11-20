@@ -27,6 +27,7 @@ files_to_use = [3,1,4]
 J1k = 1776.0    
 Ncal = 1.0
 ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
+axis_set = [2,181,-11,15]
 
 #theory calc info
 G_el =  61.6
@@ -154,7 +155,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([4,181,-11,15])
+plt.axis(axis_set)
 plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
 plt.ylabel(r"Spin variance $(\Delta S'_\psi)^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
@@ -178,7 +179,7 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
-    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
+    plt.plot(psi*180/pi,R_dB,color=colors[i])
     #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
@@ -189,10 +190,6 @@ if len(names) is 1:
     plt.title(names[0])
 
 if save is True:
-    os.chdir('..')
-    # make a copy of the analysis at the folder
-    shutil.copy(__file__, os.getcwd())
-    os.chdir(base_path)
     #save figure in the dir with the script, since it is a figure maker
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
     plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)

@@ -16,6 +16,7 @@ import plot_style as ps
 import plot_model_fit as pt
 importlib.reload(pt)
 import squeeze_func_time as squ
+importlib.reload(squ)
 
 props = [hf.brightMean, hf.darkMean, hf.det_t]
 

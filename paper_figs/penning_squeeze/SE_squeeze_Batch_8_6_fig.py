@@ -17,9 +17,10 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
 verbose = True
-save = True
+save = False
 img_name = "spinNoise_8_6_100ions"
 folder_name = "/Users/jgb/Data/20150806/Squeeze_186kHz/"
+axis_set = [2,181,-11,15]
 
 #added noise from Jy noise fit
 A = 0.001700  # rad^2/ms^2
@@ -128,7 +129,7 @@ for i,data in enumerate(sig_obs):
 
 #plt.yscale('log')
 plt.xscale('log')
-plt.axis([2,181,-9,15])
+plt.axis(axis_set)
 plt.xlabel(r"Tomography angle $\psi$ (deg)")
 plt.ylabel(r"Spin variance $(\Delta S_\psi)^2$/N/4 (dB)")
 plt.grid('off')
@@ -161,7 +162,7 @@ for i,name in enumerate(names):
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2)*sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2)*sin(psi)**2 
     R_dB = 10*np.log10(R)
     R_dB_add = 10*np.log10(R_add)
-    plt.plot(np.abs(psi*180/pi -180),R_dB,color=colors[i])
+    plt.plot(psi*180/pi,R_dB,color=colors[i])
     #plt.plot(np.abs(psi*180/pi -180),R_dB_add,color=colors[i],linestyle='--')
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
 

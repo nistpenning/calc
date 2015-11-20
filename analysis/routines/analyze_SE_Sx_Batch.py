@@ -22,8 +22,8 @@ name = "SE_Sx_batch_analysis"
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
     
-J1k = 2110 
-Ncal = 1.70
+J1k = 2193 
+Ncal = 1.5098
 
 #theory calc info
 G_el =  67.4
@@ -49,7 +49,7 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [-1]]
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [0]]
 J1ks = (J1k)*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
