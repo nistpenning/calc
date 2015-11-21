@@ -17,7 +17,7 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
 verbose = True
-save = False
+save = True
 img_name = "spinNoise_8_6_100ions"
 folder_name = "/Users/jgb/Data/20150806/Squeeze_186kHz/"
 axis_set = [2,181,-11,15]
@@ -126,6 +126,7 @@ for i,data in enumerate(sig_obs):
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
     plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
+    plt.plot(psis[i]*180/pi,np.zeros_like(psis[i]),color='gray', zorder=1)
 
 #plt.yscale('log')
 plt.xscale('log')

@@ -19,7 +19,7 @@ importlib.reload(ps)
 #options
 Ncal = 1.1598
 verbose = True
-save = False
+save = True
 files_to_use = [3]
 hist_to_use = [0,1,2,4]
 axis_list = [-1.1,1.1,0.0,0.30]
@@ -131,7 +131,7 @@ for i,fn in enumerate(fns):
             plt.locator_params(axis='y',nbins=3)
             plt.tight_layout()
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
-            plt.savefig(text_name+str(scan_data[i])+"_"+str(int_time)+".pdf",dpi=300,bbox='tight',transparent=True)
+            plt.savefig(text_name+str(scan_data[hist_to_use[i]])+"_"+str(int_time)+".pdf",dpi=300,bbox='tight',transparent=True)
             os.chdir(base_path)
         
         """        
@@ -192,7 +192,8 @@ for i,fn in enumerate(fns):
 
     os.chdir(data_path)
     
-if save is True:    
+if save is True:
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))    
     ps.save_data_txt(text_name+".txt",datas)
 
 """

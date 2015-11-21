@@ -180,6 +180,7 @@ for i,name in enumerate(names):
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=colors[i])
+    plt.plot(psi*180/pi,np.zeros_like(psi),color='gray')
     #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i])
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))

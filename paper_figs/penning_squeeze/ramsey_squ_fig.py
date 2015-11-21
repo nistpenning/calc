@@ -20,6 +20,7 @@ importlib.reload(squ)
 save = True
 img_name = "Ramsey_squeeze_param_with_PSN"
 plot_axis_extent = [0.0,235, 0.0,1.2]
+pred = True
 
 base_path = os.getcwd()
 
@@ -182,12 +183,12 @@ Nround = np.array([round(n) for n in Ns])
 ####################################
 #here make a choice to display all the unertianty in N as uncertainty in 
 #y, as it directly multiplies (correlated error)
-plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o')
+plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o', color='gray')
 #plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
 #             yerr=sig_PN_fulls_errs, fmt='d')
 #plt.plot(Nround, xi2_PN_fulls,'d')
 N_pred = np.linspace(0.1,250)
-plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='k')
+plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='gray')
 
 #sfe = 2* np.array(sig_fulls) * np.array(sig_fulls_errs)
 
@@ -278,58 +279,65 @@ for i,fn in enumerate(folders[1:]):
 
 NSEround = np.array([round(n) for n in N_SEs])
 
-plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.blue)
-plt.errorbar(NSEround, xi2_SE_subs, yerr=xi2_SE_subs_errs, fmt='^',
-             color=ps.blue,alpha=0.5)
+plt.errorbar(NSEround, xi2_SE_fulls,yerr=xi2_SE_fulls_errs, fmt='s',color=ps.purple)
+plt.errorbar(NSEround, xi2_SE_subs, yerr=xi2_SE_subs_errs, 
+             fmt='s',markerfacecolor='w',markeredgewidth=1.0, markeredgecolor=ps.purple,
+             ecolor=ps.purple, capsize=0)
 
 ## calcuate the best possible Xi for OAT with no decoherence not accounting for 
 ## decoupling times
-taus = np.linspace(0.1,6.0,num=200) * 1e-3 
-Ns = np.arange(6,240,2,dtype=float)
-J0  = 1900.
-tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
-tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
+if pred is True:
+    taus = np.linspace(0.1,6.0,num=200) * 1e-3 
+    Ns = np.arange(6,240,2,dtype=float)
+    J0  = 1900.
+    tau_opt = np.array(tau_opt)
+    """
+    tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
+    tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
 
-out_p = squ.OAT_decoh(0.0, tau_opt, J0, Ns, 0, 0, 0)
-out = squ.OAT_decoh(np.real(out_p[2]), tau_opt, J0, Ns, 0, 0, 0)
-xi2_max = (4/Ns) *(np.real(out[0])**2/np.real(out[1])**2)
-
-G_el = 0.0
-G_ud = 0.
-G_du = 0.
-
-xi2_max = np.zeros_like(Ns)
-for j,n in enumerate(Ns):
-    xi_o_t = np.zeros_like(taus)
-    for i,t in enumerate(taus):
-        out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-        out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
-        xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
-    xi2_max[j] = np.min(xi_o_t)
-
-plt.plot(Ns,xi2_max,'-',color=ps.blue)
+    
+    out_p = squ.OAT_decoh(0.0, tau_opt, J0, NSEround, 0, 0, 0)
+    out = squ.OAT_decoh(np.real(out_p[2]), tau_opt, J0, NSEround, 0, 0, 0)
+    xi2_max = (4/NSEround) *(np.real(out[0])**2/np.real(out[1])**2)
+    
+    #plt.plot(NSEround,xi2_max,'x',color=ps.red)
+    """
+    
+    G_el = 0.0
+    G_ud = 0.
+    G_du = 0.
+    
+    xi2_max = np.zeros_like(Ns)
+    for j,n in enumerate(Ns):
+        xi_o_t = np.zeros_like(taus)
+        for i,t in enumerate(taus):
+            out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
+            out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+            xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
+        xi2_max[j] = np.min(xi_o_t)
+    
+    plt.plot(Ns,xi2_max,'-',color=ps.purple)
+    
+    G_el =  67.4 + 80.0
+    G_ud =  10.1
+    G_du =  7.1
+    xi2_G_max = np.zeros_like(Ns)
+    for j,n in enumerate(Ns):
+        xi_o_t = np.zeros_like(taus)
+        for i,t in enumerate(taus):
+            out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
+            out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+            xi_o_t[i] = (4/n) *( (np.real(out[0])**2)/np.real(out[1])**2)
+        xi2_G_max[j] = np.min(xi_o_t)
+    
+    plt.plot(Ns,xi2_G_max,'--',color=ps.purple)
+    #plt.yscale('Log')
+    #plt.axis([10,50,0.01,1])
 
 plt.axis(plot_axis_extent)
 plt.ylabel(r'Squeezing Parameter $\xi_R^2$')
 plt.xlabel('Ion number N')
 plt.grid('off')
-
-
-G_el =  67.4 + 80.0
-G_ud =  10.1
-G_du =  7.1
-xi2_G_max = np.zeros_like(Ns)
-for j,n in enumerate(Ns):
-    xi_o_t = np.zeros_like(taus)
-    for i,t in enumerate(taus):
-        out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-        out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
-        xi_o_t[i] = (4/n) *( (np.real(out[0])**2)/np.real(out[1])**2)
-    xi2_G_max[j] = np.min(xi_o_t)
-
-plt.plot(Ns,xi2_G_max,'--',color=ps.blue)
-#plt.yscale('Log')
-#plt.axis([10,50,0.01,1])
 
 """
 majorLocator = FixedLocator([20,50,100,200])

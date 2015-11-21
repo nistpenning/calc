@@ -136,7 +136,7 @@ for i,fn in enumerate(fns):
         elif hist_to_use[i] == 5:
             yt = tdata['pdf88']
             plt.plot(tdata['S_psi'],yt,'-',color='k')
-            ymax = 3.0
+            ymax = 2.0
             axis_list = [-1.1,1.1,0.0,ymax]
             plt.axis(axis_list)
             plt.locator_params(axis='y',nbins=3)
@@ -149,6 +149,7 @@ for i,fn in enumerate(fns):
             yt = tdata['pdf174p6']
             plt.plot(bs,gauss,color=ps.red)
             plt.plot(tdata['S_psi'],yt,'-',color='k')
+            plt.locator_params(axis='y',nbins=8)
             scaling = (yt/((sqrt(N)/sqrt(2*pi))*np.exp(-(((tdata['S_psi']*sqrt(N))**2)/2.0))))
             yt_save = yt
             scaling = (vals/((sqrt(N)/sqrt(2*pi))*np.exp(-(((bs_to_use-np.mean(datas[i]))*sqrt(N))**2)/2.0)))            
@@ -156,7 +157,7 @@ for i,fn in enumerate(fns):
             ymax = 8.5
             axis_list = [-1.1,1.1,0.0,ymax]        
             plt.axis(axis_list)
-            plt.locator_params(axis='y',nbins=4)
+
             os.chdir(os.path.dirname(os.path.realpath(__file__)))
             plt.tight_layout()
             plt.savefig('127ions_pdf174p6'+".pdf",dpi=300,bbox='tight',transparent=True)

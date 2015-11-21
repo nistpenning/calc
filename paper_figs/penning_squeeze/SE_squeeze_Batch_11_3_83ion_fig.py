@@ -9,6 +9,7 @@ import os, shutil, importlib
 import numpy as np
 from numpy import pi, sqrt, sin
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 import hfGUIdata as hf
 import plot_style as ps
@@ -18,13 +19,13 @@ import resample_tools as re
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
 
 #options
-colors = ['k', ps.red, ps.blue, ps.orange, ps.pink,ps.aqua, ps.navy]
+colors = ['k', ps.red, ps.blue, ps.orange, ps.pink, ps.aqua, ps.navy]
 raw = False
 verbose = True
 save = True
 img_name = "spinNoise_11_03"
 legend = True
-files_to_use = [2,1,4,9]
+files_to_use = [2,1,4,5,7,9]
 J1k = 2193   
 Ncal = 1.44
 axis_set = [2,181,-11,15]
@@ -57,6 +58,7 @@ sig_pns = []
 sig_psns = []
 SE = []
 SN = []
+SN_max = []
 xi_R2 = []
 Ns = []
 names = []
@@ -162,6 +164,7 @@ for i,fn in enumerate(fns):
     sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
     SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
+    SN_max.append(np.max((sig_ins[i]**2)/(sig_pns[i]**2)))
     xi_R2.append(np.min((csi_R2)))
     Ns.append(N)
     names.append(hf.n_slice(file_name))
@@ -182,8 +185,6 @@ for i,data in enumerate(sig_obs):
     spin_noise_dB = 10*np.log10(spin_noise)
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
-    if files_to_use[i]==4:
-        psis[i] = psis[i]-2  # corect for uWave detuning error
     plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
 #plt.yscale('log')
@@ -213,6 +214,7 @@ for i,name in enumerate(names):
     R_dB = 10*np.log10(R) 
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=colors[i])
+    plt.plot(psi*180/pi,np.zeros_like(psi),color='gray', zorder=1)
     #plt.plot(np.abs(psi*180/pi -180),R_add_dB,color=colors[i],linestyle='--')
     
     #where is the limit just due to technical noise?
@@ -226,7 +228,7 @@ if legend is True: plt.legend(loc=0,fontsize=10)
 
 if save is True:
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=False)
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     # make a copy of the analysis at the folder
     #shutil.copy(__file__, os.getcwd())
     os.chdir(base_path)
@@ -234,7 +236,7 @@ if save is True:
 plt.show()
 plt.close()
 
-if False:
+if True:
 
     int_times = np.array(its)*1e3
     plt.plot(int_times,SE,'-o')
@@ -244,40 +246,71 @@ if False:
     plt.axis([0,2.3,-16,5.0])
     if save is True:
         os.chdir('..')
-        plt.savefig(img_name+"SE"+".pdf",dpi=300,bbox='tight',transparent=False)
+        #plt.savefig(img_name+"SE"+".pdf",dpi=300,bbox='tight',transparent=False)
         os.chdir(base_path)
     plt.show()
     plt.close()
    
+    fig, ax = plt.subplots()   
     int_times= np.insert(int_times,0,[0.])
     SN = np.insert(SN,0,[1.])
+    SN_max = np.insert(SN_max,0,[1.])
     SN_err = np.insert(np.array(SN_err),0,[0.1])
-    plt.errorbar(int_times[:-1],SN[:-1],yerr=SN_err[:-1],fmt='-o')
-    plt.ylabel('Minimum spin variance $(\Delta S_\psi)^2$/N/4')
+    plt.errorbar(int_times[:],SN[:],yerr=SN_err[:],fmt='o',color=ps.aqua, label=r"Min[$\psi$]")
+    plt.errorbar(int_times[:],SN_max[:],yerr=SN_err[:],fmt='ko',label="Max[$\psi$]")
+    it_theory = 1e-3*np.linspace(0.001,2.6,num=100)
+    SN_the = np.zeros_like(it_theory)
+    SN_max_the = np.zeros_like(it_theory)
+    for i,t in enumerate(it_theory):
+            Jbar = J1k/(0.002/t)
+            out_p = squ.OAT_decoh(0.0, t, Jbar, np.mean(Ns), G_el, G_ud, G_du)
+            out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar, np.mean(Ns), G_el, G_ud, G_du)
+            out_max = squ.OAT_decoh(np.real(out_p[2])+pi/2., t, Jbar, np.mean(Ns), G_el, G_ud, G_du)
+            SN_the[i] = (np.real(out[0])**2) / (np.mean(Ns)/4.0)
+            SN_max_the[i] = (np.real(out_max[0])**2) / (np.mean(Ns)/4.0)
+    plt.plot(it_theory*1e3, SN_the,'-',color=ps.aqua)
+    plt.plot(it_theory*1e3, SN_max_the,'k-')
+   
+    plt.ylabel('Spin variance $(\Delta S_\psi)^2$/N/4')
     plt.xlabel('Interaction time [ms]')
-    plt.axis([0,2.3,0,1])
+    plt.yscale('Log')
+    plt.axis([0,2.7,0.05,35])
     plt.grid('off')
+
+
+    majorLocatorY = FixedLocator([0.1,1,10])
+    majorFormatterY = FormatStrFormatter('%g')
+    ax.yaxis.set_major_locator(majorLocatorY)
+    ax.yaxis.set_major_formatter(majorFormatterY)
+    
+    plt.legend(loc=0)
+
     if save is True:
-        os.chdir('..')
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
         plt.savefig(img_name+"SN"+".pdf",dpi=300,bbox='tight',transparent=False)
         os.chdir(base_path)
     plt.show()
     plt.close()
     
+    """
     xi_R2 = np.insert(xi_R2,0,[1.])
     plt.plot(int_times[:],10*np.log10(xi_R2[:]),'-o')
-    plt.ylabel(r'Squeezing Parameter $\xi_R^2$ (dB)')
-    plt.xlabel(r'Interaction time $\tau$ [ms]')
+    plt.ylabel("Squeezing Parameter $\\xi_R^2$ (dB)")
+    plt.xlabel("Interaction time $\\tau$ [ms]")
+
     plt.fill_between(np.linspace(0,3.0), np.zeros_like(np.linspace(0,3.0)), y2=-10*np.ones_like(np.linspace(0,3.0)),color='k',alpha=0.2 )
     plt.axis([0,2.65,-10,20])
+
     plt.grid('off')
     if save is True:
         os.chdir('..')
-        plt.savefig(img_name+"xi_R2"+".pdf",dpi=300,bbox='tight',transparent=False)
+        #plt.savefig(img_name+"xi_R2"+".pdf",dpi=300,bbox='tight',transparent=False)
         os.chdir(base_path)
+
     plt.show()
-    plt.close()    
-    
-    #comparing different error estimates
-    if raw is True:
-        plt.plot(sig_ob_errs[0], sig_rob_errs[0])
+    plt.close()
+    """    
+
+#comparing different error estimates
+if raw is True:
+    plt.plot(sig_ob_errs[0], sig_rob_errs[0])
