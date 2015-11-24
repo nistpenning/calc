@@ -33,6 +33,30 @@ def jackknife_est(array, func, block_size=1, verbose=False):
         print("1 sig error on Jackknife estimate: {:.3g}".format(jack_std_dev_of_var))
     
     return jack_est, jack_std_dev_of_est
+    
+def resample_est(array, func, block_size=1, verbose=False):
+    """
+    Returns jack_knife est of variance and 1 std err deviation of variance of an array
+    Parameters:
+        array (numpy array): Array of values to have var estimated
+        func: func that takes an array, returns a single value
+        block_size (Optional int): Block size of jackknife. default is single value
+    Returns:
+        var, std_dev_var: variance and 1 std dev of variance as estimated with jackknife.    
+    """
+    n = np.size(array)
+    nb = int(n/block_size)  #number of blocks
+    est = func(array)
+
+    jack_pseudos = np.array([func(np.concatenate((array[:i],array[i+block_size:]))) for i in range(nb)])
+    jack_est = np.mean(jack_pseudos)  
+    jack_est_var = np.var(jack_pseudos)
+    jack_std_dev_of_est = sqrt(jack_est_var)/sqrt(nb)
+    if verbose is True:
+        print("Jackknife estimate: {:.3g}".format(jack_est))
+        print("1 sig error on Jackknife estimate: {:.3g}".format(jack_std_dev_of_var))
+    
+    return jack_est, jack_std_dev_of_est
 
 #tests    
 if __name__=='__main__':

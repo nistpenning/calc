@@ -15,11 +15,13 @@ import hfGUIdata as hf
 importlib.reload(hf)
 import plot_style as ps
 importlib.reload(ps)
+import resample_tools as re
+importlib.reload(re)
 
 #options
 Ncal = 1.2
 verbose = True
-save = True
+save = False
 ymax = 8.0
 files_to_use = [6]
 hist_to_use = [2,5,0]
@@ -166,16 +168,26 @@ for i,fn in enumerate(fns):
         plt.show()
         plt.close()
         
-        k2,pval = mstats.normaltest(datas[i])
-        if type(k2) == np.ma.core.MaskedConstant:
-            k2 = 0.0
-            pval = 0.0
-            print("Normality test had divide by zero error")
+        
+        def normtest(array):
+            k2,pval = mstats.normaltest(array)
+            if type(k2) == np.ma.core.MaskedConstant:
+                k2 = 0.0
+                pval = 0.0
+                print("Normality test had divide by zero error")
+                return 0
+            else:
+                return pval
+            
+            
+        jackpval, jackpval_err = re.jackknife_est(datas[i],normtest, block_size=100)
+
         print(lab)
         print("# of trials: {}".format(trials))
         print("Mean: {0:.3g}, Median: {1:.3g}, Min: {2:.3g}, Max {3:.3g}".format(np.mean(datas[i]),np.median(datas[i]),np.min(datas[i]),np.max(datas[i])))
         print("Std Dev: {0:3g}, Variance: {1:.3g}".format(np.std(datas[i]),np.var(datas[i])))        
-        print("Normality tests: skew+kurtosis: {0:.4g}, pval: {1:.4g}".format(k2,pval))
+        print("Normality tests pval: {:.5g} +-{:.3g}".format(jackpval, jackpval_err))
+        print("Norm test pval: {:.5g}".format(mstats.normaltest(datas[i])[1]))
 
     os.chdir(data_path)
     
