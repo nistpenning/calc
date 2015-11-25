@@ -7,9 +7,10 @@ Created on Thu Aug 13 11:24:06 2015
 
 import os,importlib, shutil
 import numpy as np
-from numpy import sqrt
+from numpy import sqrt, pi
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
+import scipy.interpolate as inter
 
 import hfGUIdata as hf
 import plot_style as ps
@@ -197,6 +198,8 @@ plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='gray')
 
 data_path = "/Users/jgb/Data/20150813/Collect_Spec_Enh_Data"
 
+Jbars = []
+
 folders = os.listdir(data_path)
 
 for i,fn in enumerate(folders[1:]):
@@ -275,6 +278,7 @@ for i,fn in enumerate(folders[1:]):
     xi2_SE_subs_errs.append(xi2_sub_err)
     xi2_maxs.append(xi2_max)
     tau_opt.append(int_t[0])
+    Jbars.append(J1k[0])
     os.chdir(base_path)
 
 NSEround = np.array([round(n) for n in N_SEs])
@@ -287,10 +291,13 @@ plt.errorbar(NSEround, xi2_SE_subs, yerr=xi2_SE_subs_errs,
 ## calcuate the best possible Xi for OAT with no decoherence not accounting for 
 ## decoupling times
 if pred is True:
-    taus = np.linspace(0.1,6.0,num=200) * 1e-3 
-    Ns = np.arange(6,240,2,dtype=float)
-    J0  = 1900.
+    taus = np.linspace(0.1,6.0,num=150) * 1e-3 
+    Ns = np.arange(8,240,2,dtype=float)
+    J0  = 1846.
     tau_opt = np.array(tau_opt)
+    
+    t_func = inter.interp1d(NSEround,tau_opt,kind='linear')
+    J_func = inter.interp1d(NSEround,Jbars,kind='linear')
     """
     tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
     tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
@@ -310,26 +317,37 @@ if pred is True:
     xi2_max = np.zeros_like(Ns)
     for j,n in enumerate(Ns):
         xi_o_t = np.zeros_like(taus)
+        
         for i,t in enumerate(taus):
             out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
             out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
             xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
+        """
+        out_p = squ.OAT_decoh(0.0, t_func(n), J_func(n), n, G_el, G_ud, G_du)
+        out = squ.OAT_decoh(np.real(out_p[2]), t_func(n), J_func(n), n, G_el, G_ud, G_du)
+        """        
         xi2_max[j] = np.min(xi_o_t)
     
     plt.plot(Ns,xi2_max,'-',color=ps.purple)
     
-    G_el =  67.4 + 80.0
+    G_el =  67.4 + 100.0
     G_ud =  10.1
     G_du =  7.1
     xi2_G_max = np.zeros_like(Ns)
+    xi2_G_u = np.zeros_like(Ns)
     for j,n in enumerate(Ns):
         xi_o_t = np.zeros_like(taus)
+        xi_u_t = np.zeros_like(taus)
         for i,t in enumerate(taus):
             out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
             out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+            out_up =  squ.OAT_decoh(np.real(out_p[2])+5*pi/180., t, J0, n, G_el, G_ud, G_du)
             xi_o_t[i] = (4/n) *( (np.real(out[0])**2)/np.real(out[1])**2)
+            xi_u_t[i] = (4/n) *( (np.real(out_up[0])**2)/np.real(out_up[1])**2)
         xi2_G_max[j] = np.min(xi_o_t)
+        xi2_G_u[j] = np.min(xi_u_t)
     
+    plt.fill_between(Ns,xi2_G_max,xi2_G_u,color=ps.purple,alpha=0.35)
     plt.plot(Ns,xi2_G_max,'--',color=ps.purple)
     #plt.yscale('Log')
     #plt.axis([10,50,0.01,1])
