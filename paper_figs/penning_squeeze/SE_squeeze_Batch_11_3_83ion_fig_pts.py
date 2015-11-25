@@ -10,7 +10,6 @@ import numpy as np
 from numpy import pi, sqrt, sin
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FormatStrFormatter
-import scipy.interpolate as inter
 
 import hfGUIdata as hf
 import plot_style as ps
@@ -23,9 +22,8 @@ from matplotlib.ticker import FixedLocator, FormatStrFormatter
 colors = ['k', ps.red, ps.blue, ps.orange, ps.pink, ps.aqua, ps.navy]
 raw = False
 verbose = True
-save = False
-save_vs_t = True
-img_name = "spinNoise_11_03"
+save = True
+img_name = "spinNoise_11_03_pts"
 legend = True
 files_to_use = [2,1,4,5,7,9]
 #files_to_use = [2,1,9]
@@ -63,8 +61,9 @@ SE = []
 SN = []
 SN_max = []
 xi_R2 = []
-Ns = []
+psi_min = []
 R_cals = []
+Ns = []
 names = []
 
 base_path = os.getcwd()
@@ -179,8 +178,9 @@ for i,fn in enumerate(fns):
     SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
     SN_max.append(np.max((sig_ins[i]**2)/(sig_pns[i]**2))) 
     xi_R2.append(np.min((csi_R2)))
-    Ns.append(N)
+    psi_min.append(psi_deg[np.argmin((sig_ins[i]**2)/(sig_pns[i]**2))])
     R_cals.append(R_cal)
+    Ns.append(N)
     names.append(hf.n_slice(file_name))
     os.chdir(base_path)
 
@@ -197,7 +197,7 @@ for i,data in enumerate(sig_obs):
     spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
     spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
     SN_err.append(np.min(spin_noise_err))
-    SNmax_err.append(np.max(spin_noise_err))        
+    SNmax_err.append(np.max(spin_noise_err))    
     spin_noise_dB = 10*np.log10(spin_noise)
     #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
@@ -273,11 +273,37 @@ if True:
     plt.close()
     """
    
-    fig, ax = plt.subplots()   
-    int_times= np.insert(int_times,0,[0.])
-    Ns = np.insert(Ns, 0, [85.0])
-    SN = np.insert(SN,0,[np.mean(R_cals[:])])
-    SN_max = np.insert(SN_max,0,[np.mean(R_cals[:])])
+    fig, ax = plt.subplots() 
+    
+    it_theory = 1e-3*np.linspace(0.001,2.7,num=100)
+    
+    SN_the = np.zeros_like(int_times)
+    SN_the_p = np.zeros_like(int_times)
+    SN_max_the = np.zeros_like(int_times)
+    
+    for i,t in enumerate(int_times*1e-3):
+        Jbar = J1k/(0.002/t)
+        plusa = 5*pi/180.0
+        out_p = squ.OAT_decoh(0.1, t, Jbar, Ns[i], G_el, G_ud, G_du)
+        out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar, Ns[i], G_el, G_ud, G_du)
+        out_u = squ.OAT_decoh(np.real(out_p[2])+plusa, t, Jbar, Ns[i], G_el, G_ud, G_du)
+        out_max = squ.OAT_decoh(np.real(out_p[2])+pi/2., t, Jbar, Ns[i], G_el, G_ud, G_du)
+        SN_the[i] = (np.real(out[0])**2) / (Ns[i]/4.0)
+        SN_the_p[i] = (np.real(out_u[0])**2) / (Ns[i]/4.0)
+        SN_max_the[i] = (np.real(out_max[0])**2) / (Ns[i]/4.0)
+        
+    int_times = np.insert(int_times, 0, [0.])
+    SN_the = np.insert(SN_the, 0, [1.])
+    SN_the_p = np.insert(SN_the_p, 0, [1.])
+    SN_max_the = np.insert(SN_max_the, 0, [1.0])
+    
+    plt.fill_between(int_times, 10*np.log10(SN_the), y2=10*np.log10(SN_the_p), color=ps.aqua, alpha=0.3)
+    plt.plot(int_times, 10*np.log10(SN_the), '-', color=ps.aqua)
+    plt.plot(int_times, 10*np.log10(SN_max_the),'k-')
+    
+
+    SN = np.insert(SN,0,[np.mean(R_cals[:-1])])
+    SN_max = np.insert(SN_max,0,[np.mean(R_cals[:-1])])
     SN_err = np.insert(SN_err,0,[0.])
     SNmax_err = np.insert(SNmax_err,0,[0.])
     
@@ -286,25 +312,8 @@ if True:
 
     plt.errorbar(int_times[:],10*np.log10(SN[:]),yerr=SN_err_dB,fmt='o',color=ps.aqua, label=r"Min[$\psi$]")
     plt.errorbar(int_times[:],10*np.log10(SN_max[:]),yerr=SNmax_err_dB,fmt='ko',label="Max[$\psi$]")
-    
-    
-    it_theory = 1e-3*np.linspace(0.001,2.58,num=100)
-    SN_the = np.zeros_like(it_theory)
-    SN_the_p = np.zeros_like(it_theory)
-    SN_max_the = np.zeros_like(it_theory)
-    
-    N_func = inter.interp1d(1e-3*int_times, Ns,kind='linear')
 
-    for i,t in enumerate(it_theory):
-            Jbar = J1k/(0.002/t)
-            plusa = 5*pi/180.0
-            out_p = squ.OAT_decoh(0.0, t, Jbar, N_func(t), G_el, G_ud, G_du)
-            out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar,  N_func(t), G_el, G_ud, G_du)
-            out_u = squ.OAT_decoh(np.real(out_p[2])+plusa, t, Jbar,  N_func(t), G_el, G_ud, G_du)
-            out_max = squ.OAT_decoh(np.real(out_p[2])+pi/2., t, Jbar,  N_func(t), G_el, G_ud, G_du)
-            SN_the[i] = (np.real(out[0])**2) / ( N_func(t)/4.0)
-            SN_the_p[i] = (np.real(out_u[0])**2) / ( N_func(t)/4.0)
-            SN_max_the[i] = (np.real(out_max[0])**2) / ( N_func(t)/4.0)
+
     """
     for i,t in enumerate(1e-3*int_times[:-1]):
         Jbar = J1k/(0.002/t)
@@ -314,14 +323,20 @@ if True:
         SN_the[i] = (np.real(out[0])**2) / (np.mean(Ns[:-1])/4.0)
         SN_max_the[i] = (np.real(out_max[0])**2) / (np.mean(Ns[:-1])/4.0)
     """
+ 
+    
+    """
     plt.fill_between(it_theory*1e3, 10*np.log10(SN_the), y2=10*np.log10(SN_the_p), color=ps.aqua, alpha=0.3)
     plt.plot(it_theory*1e3, 10*np.log10(SN_the), '-', color=ps.aqua)
     plt.plot(it_theory*1e3, 10*np.log10(SN_max_the),'k-')
-    plt.plot(it_theory*1e3,np.zeros_like(it_theory),color='gray', zorder=1)
+    """
+    linex = 1e-3*np.linspace(-0.2,2.7,num=100)
+    plt.plot(linex*1e3,np.zeros_like(linex),color='gray', zorder=1)
+
    
-    plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4 (dB)")
+    plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4")
     plt.xlabel('Interaction time [ms]')
-    plt.axis([-0.05,2.7,-12,16])
+    plt.axis([-0.1,2.7,-12,16])
     plt.grid('off')
 
     """
@@ -333,7 +348,7 @@ if True:
     
     #plt.legend(loc=0)
 
-    if save_vs_t is True:
+    if save is True:
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
         plt.savefig(img_name+"SN"+".pdf",dpi=300,bbox='tight',transparent=True)
         os.chdir(base_path)
