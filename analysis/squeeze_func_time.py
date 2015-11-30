@@ -584,6 +584,31 @@ def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         return np.array([Jz_std, C, opt_squ_angle])
         #return np.array([Jz_std, C, opt_squ_angle])
 
+def OAT_fit_func(psi, ti, J, N, G_el, G_ud, G_du, A_deph):
+    """
+    Function for fitting spin variance vs psi, including added noise 
+    Uses OAT_decoh funciton in this module
+    ________________________
+    Parameters:
+    psi: angle of final rotation about x, radians
+    ti: total interaction tim, seconds
+    J: interaction strength from mean field rotation
+    N: ion number
+    G_el: elastic scattering rate (1/sec)
+    G_ud: up down rate (1/sec)
+    G_du: down up rate (1/sec)
+    A_deph: std_dev of collective dephasing added in quadrature [rad]
+    _____________________
+    Returns:
+    Sz2_norm: spin variance normalized to N/4
+    """
+    Jz_std, C, opt_squ_angle = OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du)
+    Sz2_norm_pre = np.real(Jz_std)**2/(N/4.)
+    # Here I only normalize the dephasing noise by N to take the contrast out
+    Sz2_norm = Sz2_norm_pre + A_deph**2*N*sin(psi)**2
+    
+    return Sz2_norm
+
 if __name__ == '__main__':
     print("Starting squeeze theory tests")
     
