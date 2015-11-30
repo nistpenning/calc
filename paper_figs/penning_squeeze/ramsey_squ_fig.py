@@ -18,7 +18,7 @@ importlib.reload(ps)
 import squeeze_func_time as squ
 importlib.reload(squ)
 
-save = True
+save = False
 img_name = "Ramsey_squeeze_param_with_PSN"
 plot_axis_extent = [0.0,235, 0.0,1.2]
 pred = True
@@ -184,12 +184,12 @@ Nround = np.array([round(n) for n in Ns])
 ####################################
 #here make a choice to display all the unertianty in N as uncertainty in 
 #y, as it directly multiplies (correlated error)
-plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o', color='gray')
+plt.errorbar(Nround, xi2_PN_subs, yerr=xi2_PN_subs_errs, fmt='o', color='k')
 #plt.errorbar(Nround, np.array(sig_PN_fulls)**2, 
 #             yerr=sig_PN_fulls_errs, fmt='d')
 #plt.plot(Nround, xi2_PN_fulls,'d')
 N_pred = np.linspace(0.1,250)
-plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='gray')
+plt.plot(N_pred,np.ones(np.size(N_pred)),'-',color='k')
 
 #sfe = 2* np.array(sig_fulls) * np.array(sig_fulls_errs)
 
@@ -291,13 +291,15 @@ plt.errorbar(NSEround, xi2_SE_subs, yerr=xi2_SE_subs_errs,
 ## calcuate the best possible Xi for OAT with no decoherence not accounting for 
 ## decoupling times
 if pred is True:
-    taus = np.linspace(0.1,6.0,num=150) * 1e-3 
-    Ns = np.arange(8,240,2,dtype=float)
+    taus = np.linspace(0.1,4.0,num=50) * 1e-3 
+    Ns = np.arange(4,240,4,dtype=float)
     J0  = 1846.
     tau_opt = np.array(tau_opt)
     
-    t_func = inter.interp1d(NSEround,tau_opt,kind='linear')
-    J_func = inter.interp1d(NSEround,Jbars,kind='linear')
+    #t_func = inter.InterpolatedUnivariateSpline(NSEround,tau_opt,k='1')
+    Jbars_to_fit = np.array([1000.0, 1000.0, 1022.0, 1785.0, 1846.0, 1846.0])
+    NStofit = np.array([2,21.,35.,66.,86.0,250.])
+    J_func = inter.InterpolatedUnivariateSpline(NStofit,Jbars_to_fit,k='1')
     """
     tau_opt = sqrt( Ns/J0*0.001* 24**(1/6)/(Ns/2)**(2/3) )
     tau_opt = (24**(1/6.)/((Ns/2.)**(2/3.)))*Ns/4./J0
@@ -319,8 +321,9 @@ if pred is True:
         xi_o_t = np.zeros_like(taus)
         
         for i,t in enumerate(taus):
-            out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-            out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
+            Jbar = J0/(0.002/t)
+            out_p = squ.OAT_decoh(0.0, t, Jbar, n, G_el, G_ud, G_du)
+            out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar, n, G_el, G_ud, G_du)
             xi_o_t[i] = (4/n) *((np.real(out[0])**2)/np.real(out[1])**2)
         """
         out_p = squ.OAT_decoh(0.0, t_func(n), J_func(n), n, G_el, G_ud, G_du)
@@ -328,27 +331,30 @@ if pred is True:
         """        
         xi2_max[j] = np.min(xi_o_t)
     
-    plt.plot(Ns,xi2_max,'-',color=ps.purple)
+    plt.plot(Ns,xi2_max,'--',color=ps.purple)
     
     G_el =  67.4 + 100.0
     G_ud =  10.1
     G_du =  7.1
     xi2_G_max = np.zeros_like(Ns)
     xi2_G_u = np.zeros_like(Ns)
+    find_t = np.zeros_like(Ns)
     for j,n in enumerate(Ns):
         xi_o_t = np.zeros_like(taus)
         xi_u_t = np.zeros_like(taus)
         for i,t in enumerate(taus):
-            out_p = squ.OAT_decoh(0.0, t, J0, n, G_el, G_ud, G_du)
-            out = squ.OAT_decoh(np.real(out_p[2]), t, J0, n, G_el, G_ud, G_du)
-            out_up =  squ.OAT_decoh(np.real(out_p[2])+5*pi/180., t, J0, n, G_el, G_ud, G_du)
+            Jbar = J0/(0.002/t)  # trying out interpolating J to account for lower J_func(n)/(0.002/t)
+            out_p = squ.OAT_decoh(0.0, t, Jbar, n, G_el, G_ud, G_du)
+            out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar, n, G_el, G_ud, G_du)
+            out_up =  squ.OAT_decoh(np.real(out_p[2])-5*pi/180., t, Jbar, n, G_el, G_ud, G_du)
             xi_o_t[i] = (4/n) *( (np.real(out[0])**2)/np.real(out[1])**2)
             xi_u_t[i] = (4/n) *( (np.real(out_up[0])**2)/np.real(out_up[1])**2)
         xi2_G_max[j] = np.min(xi_o_t)
         xi2_G_u[j] = np.min(xi_u_t)
+        find_t[j] = taus[np.argmin(xi_o_t)]
     
     plt.fill_between(Ns,xi2_G_max,xi2_G_u,color=ps.purple,alpha=0.35)
-    plt.plot(Ns,xi2_G_max,'--',color=ps.purple)
+    plt.plot(Ns,xi2_G_max,'-',color=ps.purple)
     #plt.yscale('Log')
     #plt.axis([10,50,0.01,1])
 
