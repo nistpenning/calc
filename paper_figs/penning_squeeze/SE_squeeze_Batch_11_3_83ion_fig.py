@@ -24,14 +24,14 @@ colors = ['k', ps.red, ps.blue, ps.orange, ps.pink, ps.aqua, ps.navy]
 raw = False
 verbose = True
 save = False
-save_vs_t = True
+save_vs_t = False
 img_name = "spinNoise_11_03"
 legend = True
 files_to_use = [2,1,4,5,7,9]
-#files_to_use = [2,1,9]
+files_to_use = [2,1,9]
 J1k = 2193   
 Ncal = 1.44
-axis_set = [4,181,-11,16]
+axis_set = [4,190,-12,16]
 
 #theory calc info
 G_el =  67.4
@@ -176,7 +176,11 @@ for i,fn in enumerate(fns):
     sig_pns.append(sig_pn)
     sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
-    SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
+    if int_t == 0.0026:
+        temp = (sig_ins[i]**2)/(sig_pns[i]**2)
+        SN.append(temp[np.argmin(temp)])
+    else:
+        SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
     SN_max.append(np.max((sig_ins[i]**2)/(sig_pns[i]**2))) 
     xi_R2.append(np.min((csi_R2)))
     Ns.append(N)
@@ -206,12 +210,12 @@ for i,data in enumerate(sig_obs):
 #plt.yscale('log')
 plt.xscale('log')
 plt.axis(axis_set)
-plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
+plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
 plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
 plt.locator_params(axis='y',nbins=8)
 
-majorLocator = FixedLocator([5,50,180])
+majorLocator = FixedLocator([1,10,100,180])
 majorFormatter = FormatStrFormatter('%d')
 ax.xaxis.set_major_locator(majorLocator)
 ax.xaxis.set_major_formatter(majorFormatter)
@@ -261,8 +265,8 @@ if True:
     int_times = np.array(its)*1e3
     """
     plt.plot(int_times,SE,'-o')
-    plt.ylabel('Spectroscopic Enhancement [dB]')
-    plt.xlabel('Interaction time [ms]')
+    plt.ylabel('Spectroscopic Enhancement (dB)')
+    plt.xlabel('Interaction time (ms)')
     plt.grid('off')
     plt.axis([0,2.3,-16,5.0])
     if save is True:
@@ -287,7 +291,6 @@ if True:
     plt.errorbar(int_times[:],10*np.log10(SN[:]),yerr=SN_err_dB,fmt='o',color=ps.aqua, label=r"Min[$\psi$]")
     plt.errorbar(int_times[:],10*np.log10(SN_max[:]),yerr=SNmax_err_dB,fmt='ko',label="Max[$\psi$]")
     
-    
     it_theory = 1e-3*np.linspace(0.001,2.58,num=100)
     SN_the = np.zeros_like(it_theory)
     SN_the_p = np.zeros_like(it_theory)
@@ -300,7 +303,7 @@ if True:
             plusa = 5*pi/180.0
             out_p = squ.OAT_decoh(0.0, t, Jbar, N_func(t), G_el, G_ud, G_du)
             out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar,  N_func(t), G_el, G_ud, G_du)
-            out_u = squ.OAT_decoh(np.real(out_p[2])+plusa, t, Jbar,  N_func(t), G_el, G_ud, G_du)
+            out_u = squ.OAT_decoh(np.real(out_p[2])-plusa, t, Jbar,  N_func(t), G_el, G_ud, G_du)
             out_max = squ.OAT_decoh(np.real(out_p[2])+pi/2., t, Jbar,  N_func(t), G_el, G_ud, G_du)
             SN_the[i] = (np.real(out[0])**2) / ( N_func(t)/4.0)
             SN_the_p[i] = (np.real(out_u[0])**2) / ( N_func(t)/4.0)
@@ -317,11 +320,11 @@ if True:
     plt.fill_between(it_theory*1e3, 10*np.log10(SN_the), y2=10*np.log10(SN_the_p), color=ps.aqua, alpha=0.3)
     plt.plot(it_theory*1e3, 10*np.log10(SN_the), '-', color=ps.aqua)
     plt.plot(it_theory*1e3, 10*np.log10(SN_max_the),'k-')
-    plt.plot(it_theory*1e3,np.zeros_like(it_theory),color='gray', zorder=1)
+    plt.plot(np.linspace(0.0,3.0),np.zeros_like(np.linspace(0.0,3.0)),color='k', zorder=1)
    
     plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4 (dB)")
-    plt.xlabel('Interaction time [ms]')
-    plt.axis([-0.05,2.7,-12,16])
+    plt.xlabel('Interaction time (ms)')
+    plt.axis([-0.05,2.65,-12,16])
     plt.grid('off')
 
     """
