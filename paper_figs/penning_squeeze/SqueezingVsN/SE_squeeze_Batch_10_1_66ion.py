@@ -25,29 +25,30 @@ verbose = True
 save = True
 show_dynamics = False
 save_dynamics = False
-img_name = "spinNoise_11_03_N83"
+img_name = "spinNoise_10_01_N66"
 legend = True
 raw = False
 
-files_to_use = [2,1,9]
-J1k = 2193   
-Ncal = 1.44
+files_to_use = [3,1,4]
+J1k = 1776.0    
+Ncal = 1.0
+ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 axis_set = [4,190,-16,17]
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  61.6
+G_ud =  9.24
+G_du =  6.52
 
 #adjust for extra decohrence
-G_add = 100.0
+G_add = 28.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.0006175 # rad^2/ms^2
-B = 0.0001634 # rad^2/ms^4
+A = 0.001763  # rad^2/ms^2
+B = 0.00004 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -69,7 +70,7 @@ R_cals = []
 names = []
 
 base_path = os.getcwd()
-base_path = os.path.normpath("/Users/jgb/Data/20151103/squeeze")
+base_path = os.path.normpath("/Users/jgb/Data/20151001/Load333/squeeze")
 fns = [os.listdir(base_path)[i] for i in files_to_use]
 fns = [i for i in fns if not i=='.DS_Store']
 J1ks = J1k*np.ones(np.shape(fns))

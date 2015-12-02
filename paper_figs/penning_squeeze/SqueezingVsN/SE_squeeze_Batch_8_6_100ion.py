@@ -25,29 +25,29 @@ verbose = True
 save = True
 show_dynamics = False
 save_dynamics = False
-img_name = "spinNoise_11_03_N83"
+img_name = "spinNoise_08_06_N100"
 legend = True
 raw = False
 
-files_to_use = [2,1,9]
-J1k = 2193   
-Ncal = 1.44
+files_to_use = [6,1,5]
+J1k = 475.0*3.03 
+Ncal = 1.3999
 axis_set = [4,190,-16,17]
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  58.46
+G_ud =  8.76
+G_du =  6.19
 
 #adjust for extra decohrence
-G_add = 100.0
+G_add = 45.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.0006175 # rad^2/ms^2
-B = 0.0001634 # rad^2/ms^4
+A = 0.001700  # rad^2/ms^2
+B = 0.00006 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -69,9 +69,8 @@ R_cals = []
 names = []
 
 base_path = os.getcwd()
-base_path = os.path.normpath("/Users/jgb/Data/20151103/squeeze")
+base_path = os.path.normpath("/Users/jgb/Data/20150806/Squeeze_186kHz/")
 fns = [os.listdir(base_path)[i] for i in files_to_use]
-fns = [i for i in fns if not i=='.DS_Store']
 J1ks = J1k*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
@@ -90,7 +89,7 @@ for i,fn in enumerate(fns):
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
     int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
-    #reps = data_p["reps"]
+    reps = data_p["reps"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
 
@@ -106,7 +105,7 @@ for i,fn in enumerate(fns):
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
     file_name, data = hf.get_gen_csv(data_name, skip_header=True)
-    reps = np.mean(data.T[3])
+    #reps = np.mean(data.T[3])
     psi_deg = data.T[0]
     count_avg = data.T[1]
     sig_sn = sqrt(data.T[1])

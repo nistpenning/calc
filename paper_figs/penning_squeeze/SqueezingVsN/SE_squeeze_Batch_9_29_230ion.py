@@ -25,29 +25,31 @@ verbose = True
 save = True
 show_dynamics = False
 save_dynamics = False
-img_name = "spinNoise_11_03_N83"
+img_name = "spinNoise_9_29_N230"
 legend = True
 raw = False
 
-files_to_use = [2,1,9]
-J1k = 2193   
-Ncal = 1.44
+files_to_use = [1,0,3,2]
+J1k = 1785.0    
+Ncal = 0.85
+ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 axis_set = [4,190,-16,17]
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  62.3
+G_ud =  9.35
+G_du =  6.59
 
 #adjust for extra decohrence
-G_add = 100.0
+G_add = 50.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.0006175 # rad^2/ms^2
-B = 0.0001634 # rad^2/ms^4
+A =  0.002143  # rad^2/ms^2
+B = 0#.0001607 # rad^2/ms^4
+
 
 # containers for data sets
 psis=[]
@@ -69,9 +71,9 @@ R_cals = []
 names = []
 
 base_path = os.getcwd()
-base_path = os.path.normpath("/Users/jgb/Data/20151103/squeeze")
+base_path = os.path.normpath("/Users/jgb/Data/20150929/Load330/squeeze")
 fns = [os.listdir(base_path)[i] for i in files_to_use]
-fns = [i for i in fns if not i=='.DS_Store']
+fns = [i for i in fns if not i.startswith('.DS_Store')]
 J1ks = J1k*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 

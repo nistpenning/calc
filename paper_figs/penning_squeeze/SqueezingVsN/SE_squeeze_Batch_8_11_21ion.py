@@ -25,29 +25,30 @@ verbose = True
 save = True
 show_dynamics = False
 save_dynamics = False
-img_name = "spinNoise_11_03_N83"
+img_name = "spinNoise_8_11_N21"
 legend = True
 raw = False
 
-files_to_use = [2,1,9]
-J1k = 2193   
-Ncal = 1.44
+files_to_use = [7,1,6]
+J1k = 414.24*3.03    
+Ncal = 1.74
+ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
 axis_set = [4,190,-16,17]
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  58.46
+G_ud =  8.56
+G_du =  6.05
 
 #adjust for extra decohrence
-G_add = 100.0
+G_add = 120.0
 G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
 print(G_tot)
 G_el = G_el + G_add
 
 #added noise from Jy noise fit
-A = 0.0006175 # rad^2/ms^2
-B = 0.0001634 # rad^2/ms^4
+A = 0.001855  # rad^2/ms^2
+B = 0.000068 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -69,7 +70,7 @@ R_cals = []
 names = []
 
 base_path = os.getcwd()
-base_path = os.path.normpath("/Users/jgb/Data/20151103/squeeze")
+base_path = os.path.normpath("/Users/jgb/Data/20150811/Load306/squeeze_after_image_II")
 fns = [os.listdir(base_path)[i] for i in files_to_use]
 fns = [i for i in fns if not i=='.DS_Store']
 J1ks = J1k*np.ones(np.shape(fns))
@@ -89,7 +90,7 @@ for i,fn in enumerate(fns):
     bm = data_p['det_brightMean']
     dm = data_p["det_darkMean"]
     det_t = data_p["det_t"]
-    int_t = 2e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
+    int_t = ODF_seq*1e-6*data_p["squeeze_arm_t"]  #total interaction time in secs
     #reps = data_p["reps"]
     k = bm-dm  # phtns per N atoms
     N = k/(det_t*1e-3)/Ncals[i]
@@ -125,7 +126,7 @@ for i,fn in enumerate(fns):
     dB_squ_ob = 10*np.log10((sig_ob**2)/(sig_pn**2))
     
     # calc reduction in constrast (from model shown to represent data)
-    Jbar = J1ks[i] /(0.002/int_t)
+    Jbar = J1ks[i] /((ODF_seq * 0.001)/int_t)
     out = squ.OAT_decoh(0.0, int_t, Jbar, N, G_el, G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     csi_R2 = (sig_ob**2)/(sig_pn**2)/C_coherent_pred**2
@@ -227,7 +228,7 @@ ax.xaxis.set_major_formatter(majorFormatter)
 
 psi = np.linspace(0.001,pi,num=500) # radians
 for i,name in enumerate(names):
-    Jbar = J1ks[i]/(0.002/its[i])
+    Jbar = J1ks[i] /((ODF_seq * 0.001)/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
     out_perf = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], 0.0, 0.0, 0.0)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
@@ -245,7 +246,7 @@ for i,name in enumerate(names):
     
     #where is the limit just due to technical noise?
     tech_limit = 10*np.log10((0.3*sig_psns[i]**2)/(sig_pns[i]**2))
-    #plt.plot(psis[i],tech_limit,color=colors[i],linestyle='--')
+    plt.plot(psis[i],tech_limit,color=colors[i],linestyle='--')
     
     #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
@@ -290,7 +291,7 @@ if show_dynamics is True:
     N_func = inter.interp1d(1e-3*int_times, Ns,kind='linear')
 
     for i,t in enumerate(it_theory):
-            Jbar = J1k/(0.002/t)
+            Jbar = J1k/(ODF_seq * 0.001/t)
             plusa = 5*pi/180.0
             out_p = squ.OAT_decoh(0.0, t, Jbar, N_func(t), G_el, G_ud, G_du)
             out = squ.OAT_decoh(np.real(out_p[2]), t, Jbar,  N_func(t), G_el, G_ud, G_du)
