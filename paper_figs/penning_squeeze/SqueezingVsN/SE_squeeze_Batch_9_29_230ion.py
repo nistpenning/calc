@@ -29,7 +29,8 @@ img_name = "spinNoise_9_29_N230"
 legend = True
 raw = False
 
-files_to_use = [1,0,3,2]
+files_to_use = [2,4,3,5]
+files_to_use = [2,4,3]
 J1k = 1785.0    
 Ncal = 0.85
 ODF_seq = 2 # use 2 for a simple sequence, 4 for Walsh, set up to get the detunings correct
