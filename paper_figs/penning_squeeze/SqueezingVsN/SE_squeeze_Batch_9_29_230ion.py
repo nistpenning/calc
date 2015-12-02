@@ -103,8 +103,8 @@ for i,fn in enumerate(fns):
     cal_counts_avg = np.mean(data.T[1])
     sig_cal_ob = np.mean(data.T[2])
     sig_cal_sn = sqrt(cal_counts_avg)
-    sig_cal_pn = sqrt(k**2/4.0/N)
-    R_cal = (sig_cal_ob**2 - sig_cal_sn**2) / (sig_cal_pn**2)
+    sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
+    R_cal = (sig_cal_ob**2 - sig_cal_sn**2) / (sig_pn**2)
     
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -118,8 +118,6 @@ for i,fn in enumerate(fns):
     sig_in = sqrt(sig_ob**2 - sig_sn**2)  # subtract poissonian shot noise
     sig_ob_2_err = sig_ob**2 * sqrt(2/reps)
     sig_in_2_err= sqrt( (sig_ob_2_err)**2  + (sig_sn_2_err)**2)
-
-    sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
 
     sig_a = sqrt(sig_cal_ob**2 - sig_cal_sn**2 - sig_pn**2)
     sig_a_deg = (sig_a/cal_counts_avg)*180.0/pi

@@ -5,7 +5,7 @@ Created on Thu Jul 23 14:42:25 2015
 @author: jgb
 """
 
-import os, shutil, importlib
+import os, importlib
 import numpy as np
 from numpy import pi, sqrt, sin
 import matplotlib.pyplot as plt
@@ -18,9 +18,9 @@ import resample_tools as re
 
 #options
 colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
-raw = False
 verbose = True
 save = False
+raw = False
 
 img_name = "spinNoise_11_10"
 files_to_use = [-1]
@@ -34,9 +34,9 @@ G_du =  7.1
 
 #adjust for extra decohrence
 G_add = 60.0
-G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
-print(G_tot)
 G_el = G_el + G_add
+G_tot = 0.5*(G_el + (G_ud+G_du))
+print(G_tot)
 
 #added noise from Jy noise fit
 A = 0.00068 # rad^2/ms^2
@@ -54,11 +54,16 @@ sig_2_in_err = []
 sig_pns = []
 sig_psns = []
 SE = []
+SN = []
+SN_max = []
+xi_R2 = []
 Ns = []
+R_cals = []
 names = []
 
 base_path = os.getcwd()
 fns = [os.listdir(base_path)[i] for i in files_to_use]
+fns = [i for i in fns if not i.startswith('.DS_Store')]
 J1ks = J1k*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
@@ -87,6 +92,8 @@ for i,fn in enumerate(fns):
     cal_counts_avg = np.mean(data.T[1])
     sig_cal_ob = np.mean(data.T[2])
     sig_cal_sn = sqrt(cal_counts_avg)
+    sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
+    R_cal = (sig_cal_ob**2 - sig_cal_sn**2) / (sig_pn**2)
     
     # load experiment data
     data_name = [x for x in files if "_data.csv" in x][0]
@@ -101,8 +108,6 @@ for i,fn in enumerate(fns):
     sig_ob_2_err = sig_ob**2 * sqrt(2/reps)
     sig_in_2_err= sqrt( (sig_ob_2_err)**2  + (sig_sn_2_err)**2)
 
-    sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom number
-
     sig_a = sqrt(sig_cal_ob**2 - sig_cal_sn**2 - sig_pn**2)
     sig_a_deg = (sig_a/cal_counts_avg)*180.0/pi
 
@@ -114,7 +119,11 @@ for i,fn in enumerate(fns):
     out = squ.OAT_decoh(0.0, int_t, Jbar, N, G_el, G_ud, G_du)
     C_coherent_pred = np.real(out[1])
     csi_R2 = (sig_ob**2)/(sig_pn**2)/C_coherent_pred**2
+    csi_R2_err = sqrt( (sig_ob_2_err/sig_pn**2/C_coherent_pred**2)**2 + ((sig_ob/sig_pn**2/C_coherent_pred**2)**2 * 0.05)**2 + (csi_R2*0.05)**2 ) # accounting for 5% uncertainty in PN
     dB_csi_R2 = 10*np.log10(csi_R2)
+    
+    csi_R2_inf = (sig_in**2)/(sig_pn**2)/C_coherent_pred**2
+    csi_R2_inf_err = sqrt( (sig_in_2_err/sig_pn**2/C_coherent_pred**2)**2 + ((sig_in/sig_pn**2/C_coherent_pred**2)**2 * 0.05)**2 + (csi_R2_inf*0.05)**2 )
     
     if raw is True:
     # Load histgram
@@ -131,9 +140,8 @@ for i,fn in enumerate(fns):
             
         sig_robs.append(jack_sig)
         sig_rob_errs.append(jack_err_on_sig)
-
-
-    #Load data messages
+        
+ #Load data messages
     print( "______________Data set: {}__________________".format(hf.n_slice(file_name)))
     print( "Ion number from loading calibration: {:.0f}".format(N))
     if verbose:
@@ -145,6 +153,9 @@ for i,fn in enumerate(fns):
     print( "Minimum inferred spin variance: {:.3f} dB".format(np.min(dB_squ_in))) 
     print( "Minimum observed spin variance: {:.3f} dB".format(np.min(dB_squ_ob)))
     print( r"Minimum observed $\csi_R^2$: {:.3f} dB".format(np.min(dB_csi_R2)))
+    
+    print( r"Minimum observed $\csi_R^2$: {:.5g} +- {:3g}".format(np.min(csi_R2),csi_R2_err[np.argmin(csi_R2)] ))
+    print( r"Minimum inferred $\csi_R^2$: {:.5g} +- {:3g}".format(np.min(csi_R2_inf),csi_R2_inf_err[np.argmin(csi_R2_inf)] ))
 
 
     psis.append(psi_deg)
@@ -156,78 +167,74 @@ for i,fn in enumerate(fns):
     sig_pns.append(sig_pn)
     sig_psns.append(sig_sn)
     SE.append(np.max(10*np.log10(csi_R2**(-1))))
+    SN.append(np.min((sig_ins[i]**2)/(sig_pns[i]**2)))
+    SN_max.append(np.max((sig_ins[i]**2)/(sig_pns[i]**2))) 
+    xi_R2.append(np.min((csi_R2)))
     Ns.append(N)
+    R_cals.append(R_cal)
     names.append(hf.n_slice(file_name))
     os.chdir(base_path)
 
 #%%
 #________________________________________________________________________
 # visualizing the experimental data
-
+fig, ax = plt.subplots() 
+SN_err = []
+SNmax_err = []
 for i,data in enumerate(sig_obs):
     l = r"$\tau=$ {:.3g} ms, N: {:.0f}".format(its[i]*1e3,Ns[i])
+    l = r"$\tau=$ {:.3g} ms".format(its[i]*1e3)
     spin_noise = (sig_ins[i]**2)/(sig_pns[i]**2)
     spin_noise_err = sig_2_in_err[i]/(sig_pns[i]**2)
     spin_noise_err = sqrt( (sig_2_in_err[i]/sig_pns[i]**2)**2 + ((sig_ins[i]/sig_pns[i])**2 * 0.05)**2 ) # accounting for 5% uncertainty in PN
+    SN_err.append(np.min(spin_noise_err))
+    SNmax_err.append(np.max(spin_noise_err))        
     spin_noise_dB = 10*np.log10(spin_noise)
-    #spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-2*spin_noise/sqrt(2*reps))
     spin_noise_err_dB = 10*np.log10(spin_noise) - 10*np.log10(spin_noise-spin_noise_err)
-    plt.errorbar(psis[i],spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
+    plt.errorbar(np.abs(psis[i]-180),spin_noise_dB,yerr=spin_noise_err_dB, fmt='o',label=l, color=colors[i])
 
-#plt.yscale('log')
-#plt.xscale('log')
-plt.axis([-1,181,-10,17])
-plt.xlabel(r"Tomography angle $\psi$ [deg]",fontsize=14)
-plt.ylabel("Spin variance [dB]",fontsize=14)
+plt.xlabel(r"Tomography angle $\psi$ (deg)",fontsize=14)
+plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
+plt.locator_params(axis='y',nbins=8)
 
 #________________________________________________________________________
 #add some theory curves
 
-psi = np.linspace(0.001,pi,num=100) # radians
+psi = np.linspace(0.001,pi,num=500) # radians
 for i,name in enumerate(names):
     Jbar = J1ks[i]/(0.002/its[i])
     out = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], G_el, G_ud, G_du)
-    out_u = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]+5, G_el, G_ud, G_du)
+    out_perf = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i], 0.0, 0.0, 0.0)
     out_l = squ.OAT_decoh(-psi, its[i], Jbar, Ns[i]-5, G_el, G_ud, G_du)
     C = np.exp(-G_tot*its[i])  # reduction in contrast from spontaneous emission
     R = np.real(out[0]/(sqrt(Ns[i])/(2.0)))**2
+    R_perf = np.real(out_perf[0]/(sqrt(Ns[i])/(2.0)))**2
     R_add = R + (A*(its[i]*1e3)**2)*(N*C**2) * sin(psi)**2 + (B*(its[i]*1e3)**4)*(N*C**2) * sin(psi)**2
-    R_dB = 10*np.log10(R) 
+    R_dB = 10*np.log10(R)
+    R_perf_dB = 10*np.log10(R_perf)
     R_add_dB = 10*np.log10(R_add)
     plt.plot(psi*180/pi,R_dB,color=colors[i])
-    plt.plot(psi*180/pi,R_add_dB,color=colors[i],linestyle='--')
+    plt.plot(psi*180/pi,R_perf_dB,'--',color=colors[i])
+    plt.plot(psi*180/pi,np.zeros_like(psi),color='gray', zorder=1)
+    #plt.plot(psi*180/pi,R_add_dB,color=colors[i],linestyle='-.')
     
-    #where is the limit just due to technical noise?
+    #  where is the limit just due to technical noise?  #
     tech_limit = 10*np.log10((0.3*sig_psns[i]**2)/(sig_pns[i]**2))
-    plt.plot(psis[i],tech_limit,color=colors[i],linestyle='--')
-    
-    #plt.fill_between(ti*1e3,C_l,C_u,facecolor=colors[j],alpha=0.5)
+    #plt.plot(psis[i],tech_limit,color=colors[i],linestyle='--')
     print("added dephasing: {:.3g} (ratio of var to proj noise)".format((A*(its[i]*1e3)**2)*N))
 
-plt.legend(loc=0,fontsize=10)
-if len(names) is 1:
-    plt.title(names[0])
-
 if save is True:
-    os.chdir('..')
-    plt.savefig(img_name+".png",dpi=300,bbox='tight',transparent=True)
-    # make a copy of the analysis at the folder
-    shutil.copy(__file__, os.getcwd())
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    plt.savefig(img_name+".pdf",dpi=300,bbox='tight',transparent=True)
     os.chdir(base_path)
 
 plt.show()
 plt.close()
 
 if verbose is True:
-
     int_times = np.array(its)*1e3
     plt.plot(int_times,SE,'o')
     plt.ylabel('Spectroscopic Enhancement [dB]')
     plt.xlabel('Interaction time [ms]')
     plt.show()
-
-    #comparing different error estimates
-    if raw is True:
-        plt.plot(sig_ob_errs[0], sig_rob_errs[0])
-
