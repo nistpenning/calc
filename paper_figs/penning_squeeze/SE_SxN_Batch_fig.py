@@ -126,7 +126,7 @@ if save_txt is True:
         
 #plt.legend(loc=3, fontsize=10)
 plt.xlabel(r"$\bar{J}\tau \frac{\sqrt{N-1}}{N/2}$")
-plt.xlabel(r"$2\bar{J}\tau / \sqrt{N}$")
+plt.xlabel(r"$2\bar{J}\tau / \sqrt{N}$", fontsize=20)
 #plt.ylabel(r"Contrast  2$\left \langle |\vec{S}| \right \rangle$/N")
 
 
@@ -163,6 +163,7 @@ plt.axis([0.,3.,0.0,1.05])
 plt.grid('off')
 plt.locator_params(axis='y',nbins=3)
 plt.locator_params(axis='x',nbins=3)
+plt.tick_params(axis='both', which='major', labelsize=16)
 #plt.xscale('log')
 
 if False:
