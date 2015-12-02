@@ -70,6 +70,7 @@ names = []
 base_path = os.getcwd()
 base_path = os.path.normpath("/Users/jgb/Data/20151103/squeeze")
 fns = [os.listdir(base_path)[i] for i in files_to_use]
+fns = [i for i in fns if not i.startswith('.DS_Store')]
 J1ks = J1k*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 
