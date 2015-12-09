@@ -18,7 +18,7 @@ import plot_model_fit as pt
 colors = ['k', ps.red, ps.blue, ps.orange, ps.pink]
 
 files_to_use = -1
-Ncal = 1.70
+Ncal = 1.54
 
 base_path = os.getcwd()
 
@@ -39,6 +39,8 @@ tpi = hf.get_ionProp_value('sf%fitParams%sf_fitParam_tpi')
 det_t = hf.get_ionProp_value('detection%det_t')
 k = bm-dm  # phtns per N atoms
 N = k/(det_t*1e-3)/Ncal
+print("# of ions: {:.3g}".format(N))
+sig_pn = sqrt(k**2/4.0/N)  # calclated from the atom numbers
 
 os.chdir(base_path)
 plt.subplot(211)
@@ -64,3 +66,12 @@ pout,perr = pt.plot_fit(scandata,pmterr,n_pi_std_fit,guess,
 
 plt.tight_layout()
 plt.show()
+plt.close()
+
+#______________________________________
+# Average error plot
+err_deg = np.arcsin(np.abs(b_frac - 0.5)/0.5)*180/pi
+plt.plot(scandata,err_deg,'o')
+plt.xlabel("# pi pulses")
+plt.ylabel("Rotation Error (Degrees) ")
+#plt.axis([np.min(scandata),np.max(scandata),0,1.1])
