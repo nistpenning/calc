@@ -22,25 +22,25 @@ verbose = True
 save = False
 raw = False
 
-img_name = "spinNoise_11_10"
-files_to_use = [-1]
-J1k = 1500   
-Ncal = 1.70
+img_name = "spinNoise_12_10"
+files_to_use = [0]
+J1k = 1644   
+Ncal = 3.3
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  65.3
+G_ud =  9.815
+G_du =  6.91
 
 #adjust for extra decohrence
-G_add = 60.0
+G_add = 28.0
 G_el = G_el + G_add
 G_tot = 0.5*(G_el + (G_ud+G_du))
 print(G_tot)
 
 #added noise from Jy noise fit
-A = 0.00068 # rad^2/ms^2
-B = 0.0002323 # rad^2/ms^4
+A = 0.0000 # rad^2/ms^2
+B = 0.0000 # rad^2/ms^4
 
 # containers for data sets
 psis=[]
@@ -198,6 +198,8 @@ plt.ylabel("Spin variance $(\Delta S_\psi')^2$/N/4 (dB)",fontsize=14)
 plt.grid('off')
 plt.locator_params(axis='y',nbins=8)
 
+if np.size(Ns) == 1:
+    plt.title(r"File:{:}, Ions:{:.3g}, $\tau$ (ms): {:.5g}".format(names[0],Ns[0],its[0]*1e3))
 #________________________________________________________________________
 #add some theory curves
 

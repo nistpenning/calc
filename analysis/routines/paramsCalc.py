@@ -16,9 +16,9 @@ power_u = 4.85e-3  # W
 power_L = 5.12e-3  # W
 wpu = 60.0
 wpl = 36.0
-ACSS_u_pi = 2*pi*18.79e3
-ACSS_L_pi = 2*pi*21.73e3
-wz = 2*pi*1575.0*1e3  # 1/s
+ACSS_u_pi = 2*pi*18.00e3
+ACSS_L_pi = 2*pi*21.24e3
+wz = 2*pi*1557.0*1e3  # 1/s
 
 #known constants
 wpu_offset = 3

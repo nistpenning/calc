@@ -21,21 +21,21 @@ name = "SE_Sx_batch_analysis"
 # make a copy of the analysis at the folder
 if save is True:
     shutil.copy(__file__, os.path.normpath(os.getcwd()))
-    
-J1k = 2193 
-Ncal = 1.5098
+
+files_to_use = [-1]    
+J1k = 1644   
+Ncal = 3.3
 
 #theory calc info
-G_el =  67.4
-G_ud =  10.1
-G_du =  7.1
+G_el =  65.3
+G_ud =  9.815
+G_du =  6.91
 
 #adjust for extra decohrence
-
-G_add = 100.0
-G_tot = 0.5*(G_el + (G_ud+G_du) + G_add)
-print(G_tot)
+G_add = 28.0
 G_el = G_el + G_add
+G_tot = 0.5*(G_el + (G_ud+G_du))
+print(G_tot)
 
 # containers for data sets
 ats=[]
@@ -49,7 +49,7 @@ hist = []
 
 base_path = os.getcwd()
 add_path = ""
-fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in [0]]
+fns = [os.listdir(os.path.join(base_path,add_path))[i] for i in files_to_use]
 J1ks = (J1k)*np.ones(np.shape(fns))
 Ncals = Ncal * np.ones(np.shape(fns))  # #photons per ion per ms
 

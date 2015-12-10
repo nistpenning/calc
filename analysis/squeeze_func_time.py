@@ -505,7 +505,7 @@ def OAT_decoh_NJP(psi, ti, J, N, G_el, G_ud, G_du):
         
 def OAT_decoh(psi, ti, J, N, G_el, G_ud, G_du):
         """
-        Model for OAT accounting for decohrence based on paper by MFF
+        Model for OAT accounting for decohrence based on supporting materials in JGB paper
         psi: angle of final rotation about x, radians
         ti: total interaction tim, seconds
         J: interaction strength from mean field rotation

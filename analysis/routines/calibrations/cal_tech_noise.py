@@ -19,7 +19,7 @@ props = [hf.brightMean, hf.darkMean, hf.det_t]
 
 #inputs
 files_to_use = [-1]
-Ncal = 1.70
+Ncal = 3.672
 
 verbose = False
 save = False
