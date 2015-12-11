@@ -23,8 +23,8 @@ save = False
 raw = False
 
 img_name = "spinNoise_12_10"
-files_to_use = [-1]
-J1k = 1600  
+files_to_use = [4]
+J1k = 1644  
 Ncal = 3.3
 
 #theory calc info

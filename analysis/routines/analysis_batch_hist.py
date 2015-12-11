@@ -17,17 +17,14 @@ import plot_style as ps
 importlib.reload(ps)
 
 #options
-red = True
-Ncal = 1.4396
+show_initial_guassian = True
+Ncal = 3.3
 verbose = True
 save = False
 ymax = 6.5
 
-files_to_use = [6]
-hist_to_use = [0,3,8]
-
-files_to_use = [2]
-hist_to_use = [0,3,10,11,14]
+files_to_use = [5]
+hist_to_use = [0,1,2,6,7,8,9,10,11,12]
 
 text_name = "batch_hist_1011.pdf"
 img_name = "batch_hist_img_1016"
@@ -115,7 +112,7 @@ for i,fn in enumerate(fns):
         gauss = (2.0/num_bins)*trials*(sqrt(N)/sqrt(2*pi))*np.exp(-((bs*sqrt(N))**2)/2.0) #frequency
         gauss = (2.0/num_bins)*(sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0) #rel. freq
         gauss = (sqrt(N)/sqrt(2*pi))*np.exp(-(((bs-np.mean(datas[i]))*sqrt(N))**2)/2.0)  # PDF
-        if red is True:        
+        if show_initial_guassian is True:        
             plt.plot(bs,gauss,color=ps.red)
         plt.xlabel(r"Spin projection 2$S_\psi$/N")
         plt.ylabel("Probability Density")
