@@ -18,12 +18,12 @@ import plot_model_fit as pt
 #inputs for loading data and histograms
 save = False
 fig_name = "SqHelDist_10_28.pdf"
-files_to_use = [-1]
-Ncal = 1.70
+files_to_use = [-2]
+Ncal = 3.3
 hist_to_use = 'all'
 bin_width = 2.
 h = 50  #block size for resampling
-first_points = 3
+first_points = 1 # how many of the first data sets are at the same angle
 base_path = os.getcwd()
 data_path = base_path
 os.chdir(data_path)
