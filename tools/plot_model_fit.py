@@ -312,3 +312,18 @@ def plot_polyfit(x, y, fitguess,
         print(fit_message)
 
     return popt, perr
+    
+    
+if __name__=="__main__":
+    #data for test
+    x = np.array([ 0.,  1.,  2.,  3.,  4.,  5.,  6.,  7.,  8.,  9.])
+    r = np.array([ 0.82168739,  0.52697957,  0.90156699,  0.80136237,  0.7038694 ,
+        0.33890979,  0.88764047,  0.9666788 ,  0.70371249,  0.0526374 ])
+    y = r + 10.0*np.exp(-0.5*x)
+    guess = np.array([1.0,3.0])
+    hold = np.array([False,False])
+    def expdecay(t,G,A):
+        return A*np.exp(-G*t)
+    plot_fit(x,y,expdecay,guess,hold=hold)    
+    
+    print("Pass")
