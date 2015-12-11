@@ -20,14 +20,10 @@ import squeeze_func_time as squ
 #options
 verbose = True
 save = False
-files_to_use = [2,12]
+files_to_use = [-1]
 img_name = "perp_hist_plot_8_11_wPrediction.pdf"
 base_path = os.getcwd()
-data_path = '/Users/jgb/Data/20151001/Load333/squeeze_raw/112913'
-#data_path = '/Users/jgb/Data/20151001/Load333/squeeze_raw/113634'
-data_path = '/Users/jgb/Data/20150930/Load331/squeeze_raw/182407'
-data_path = '/Users/jgb/Data/20150930/Load331/squeeze_raw/182856'
-os.chdir(data_path)
+os.chdir(base_path)
 
 #theory calc info
 N=33
