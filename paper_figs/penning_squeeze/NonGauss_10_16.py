@@ -28,13 +28,13 @@ hist_to_use = [2,5,0]
 text_name = "batch_hist_1016_wODF_tau3000.pdf"
 img_name = "batch_hist_img_1016"
 num_bins = 63#sqrt(len(z_data))
-base_path = os.path.normpath("/Users/jgb/Data/20151016/squeeze")
+base_path = os.path.normpath("/Users/jgb/Data/PenningSqueezeData/20151016/squeeze")
 data_path = base_path
 os.chdir(data_path)
 
 #load theory data
 theory_file = "ConvolvedTheoryPDF_N127.txt"
-theory_path = os.path.normpath("/Users/jgb/Data/20151016/")
+theory_path = os.path.normpath("/Users/jgb/Data/PenningSqueezeData/20151016/")
 os.chdir(theory_path)
 
 tdata = np.genfromtxt(theory_file, dtype='float', names=True)
